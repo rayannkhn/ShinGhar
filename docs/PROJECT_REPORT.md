@@ -1,6 +1,6 @@
 # SailAb GLOF — complete project report
 
-*Status: 10 November 2026, about 08:45 UTC (13:45 PKT). Repository: `rayannkhn/sailab-glof-live`, data as of bot commit `69378dc` (run 9). First written 9 November; updated for scheduled run 2, the scene pages and automatic reload.*
+*Status: 11 November 2026, about 21:00 UTC on 10 Nov (02:00 PKT). Repository: `rayannkhn/sailab-glof-live`, data as of commit `f5c2101` (six lakes, after backfill runs 10 and 11). First written 9 November; updated for scheduled run 2, the scene pages, automatic reload, and the four new lakes.*
 
 This file explains everything built so far: what the system is, how each part works, every problem met on the way
 and how it was solved, the web app screen by screen with every number on it explained, the tests and how far they
@@ -18,7 +18,7 @@ can be trusted, and what is still open. Every number here comes from the databas
 5. [The data in the database right now](#5-the-data-in-the-database-right-now)
 6. [Timeline: what was done, in order](#6-timeline-what-was-done-in-order)
 7. [Every problem we hit, and how it was solved](#7-every-problem-we-hit-and-how-it-was-solved)
-8. [Radar (Sentinel-1) in detail](#8-radar-sentinel-1-in-detail)
+8. [Radar (Sentinel-1) in detail](#8-radar-sentinel-1-in-detail); 8b. [The four new lakes, in detail](#8b-the-four-new-lakes-in-detail)
 9. [The web app (GUI), screen by screen](#9-the-web-app-gui-screen-by-screen)
 10. [Every number on the GUI, explained](#10-every-number-on-the-gui-explained)
 11. [The tests: what they prove, and whether they are legit](#11-the-tests-what-they-prove-and-whether-they-are-legit)
@@ -40,23 +40,23 @@ can be trusted, and what is still open. Every number here comes from the databas
 
 > **Acquisition → Measurement → Risk Scoring →** Downstream Analysis → Alerting
 
-**This build covers the first three stages**, for **two lakes**, running **automatically every night** on real
+**This build covers the first three stages**, for **six lakes** (two from the start, four added on 10 November), running **automatically every night** on real
 satellite data. Downstream Analysis (flood path, roads, bridges) and Alerting were **out of scope by agreement**.
 
 | | |
 |---|---|
-| Lakes | **Karambar Lake (KRB)** and **Atro Sar (ATS)**, Gilgit-Baltistan |
+| Lakes | **Karambar (KRB)**, **Atro Sar (ATS)**, and from 10 Nov **Shishper (SHP)**, **Darkut (DKT)**, **Borith (BRT)**, **Passu (PSU)**, Gilgit-Baltistan |
 | Satellites | **Sentinel-2** (optical, cloud-blocked) and **Sentinel-1** (radar, sees through cloud) |
 | Data source | ESA Copernicus data through **Google Earth Engine**, signed in with a service account (no person needed) |
 | Runs | **GitHub Actions**, every night at **23:00 PKT (18:00 UTC)**, commits its results back to the repository |
 | Stores | One SQLite database, `sailab_glof.db` (5 tables) |
 | Shows | A local web app (FastAPI + Jinja2): Dashboard, Lake Detail, a page per scene (NDWI / radar threshold views), Live check, three inert design previews; reloads itself after a `git pull` |
-| Code | **3,958 lines** of new code (new `sailab/` modules, `webapp/` Python, templates and CSS, `scripts/`, `app.py`; tests not counted), **246 tests**, all passing |
-| History | **1,053 scenes** from 5 Jan 2023 to 9 Nov 2026 (611 optical, 442 radar) |
+| Code | **4,298 lines** of new code (new `sailab/` modules, `webapp/` Python, templates and CSS, `scripts/`, `app.py`; tests not counted), **265 tests**, all passing |
+| History | **4,454 scenes** from 1 Jan 2019 (Shishper; the others from 2023) to 10 Nov 2026 (2,122 optical, 2,332 radar) |
 
 **What it is not.** It is a working, automated **monitoring prototype**. It sends **no alerts**, it has **never
-detected a real outburst** (neither lake has one on record), and its risk score is a **statistical deviation**, not a
-danger level or a probability.
+detected an outburst as it happened** (Shishper's past outbursts are in its stored record, and 2 of 3 are visible
+looking back, section 8b), and its risk score is a **statistical deviation**, not a danger level or a probability.
 
 **The rules this build followed** (from the build brief): never claim something works without logs or evidence; never
 show placeholder data as real; reuse the earlier, already-tested modules unchanged; hand-write the algorithms; ask
@@ -107,19 +107,19 @@ The 20 tests that came with them still pass unchanged (`logs/2026-11-07_step1_py
 
 | File | Lines | Purpose |
 |---|---|---|
-| `sailab/db.py` | 267 | SQLite schema (5 tables), inserts with validation, history queries, the two seed lakes with a guard that refuses silently changing a stored lake |
+| `sailab/db.py` | 345 | SQLite schema (5 tables), inserts with validation, history queries, the six seed lakes with a guard that refuses silently changing a stored lake; adds new lake columns to an older file in place |
 | `sailab/earth_engine_client.py` | 431 | Sign-in; list Sentinel-2 and Sentinel-1 scenes; count cloud over the lake from Sentinel-2's own SCL band; download the lake window; download the DEM; check every downloaded file (projection, pixel size, band count) |
-| `sailab/pipeline.py` | 446 | The run: for each lake, list new scenes, decide (too cloudy / download), measure, apply checks C, D, F, score, log; resume after a crash; radar path; run log |
+| `sailab/pipeline.py` | 496 | The run: for each lake, list new scenes, decide (too cloudy / download), measure, apply checks C, D, F, "no lake detected", score, log; per-lake history start; resume after a crash; radar path; run log |
 | `sailab/radar.py` | 110 | Radar measurement: slope from the DEM (hand-written), drop steep pixels, Otsu over flat ground, region growing from the lake centre |
-| `sailab/queries.py` | 129 | Read-only queries behind every number the web app shows |
+| `sailab/queries.py` | 135 | Read-only queries behind every number the web app shows |
 | `webapp/main.py` | 382 | The web app: routes, working copy of the DB, provenance, live check, previews, scene pages, reload and automatic reload |
-| `webapp/pages.py` | 155 | Builds the data for each page, including one scene's record |
-| `webapp/scene_view.py` | 178 | One scene re-measured from its file with the pipeline's own functions, and its pictures: true colour, NDWI, cloud/snow; VV backscatter, threshold map |
-| `webapp/charts.py` | 197 | Charts drawn as SVG on the server (no internet, no chart library) |
+| `webapp/pages.py` | 157 | Builds the data for each page, including one scene's record |
+| `webapp/scene_view.py` | 187 | One scene re-measured from its file with the pipeline's own functions, and its pictures: true colour, NDWI, cloud/snow; VV backscatter, threshold map |
+| `webapp/charts.py` | 212 | Charts drawn as SVG on the server (no internet, no chart library) |
 | `webapp/images.py` | 73 | True-colour and radar images with the measured outline, recomputed from the stored file |
 | `webapp/live.py` | 133 | The Live check button: one real pipeline run, plain-language error messages |
-| `webapp/templates/*.html`, `static/style.css` | 810 | Page layouts and styling, matched to the 18 reference designs |
-| `scripts/` | 643 | `run_once.py` (nightly entry point), `init_db.py`, `verify_gui_numbers.py`, `validate_radar.py`, `count_radar_errors.py`, `mutation_check.py`, `check_slope_reference.py`, `check_scene_recompute.py` |
+| `webapp/templates/*.html`, `static/style.css` | 819 | Page layouts and styling, matched to the 18 reference designs |
+| `scripts/` | 814 | `run_once.py` (nightly entry point; `--backfill --lakes`), `init_db.py`, `verify_gui_numbers.py`, `validate_radar.py`, `count_radar_errors.py`, `mutation_check.py`, `check_slope_reference.py`, `check_scene_recompute.py`, `check_shishper_outbursts.py`, `compare_water_index.py` |
 
 ### 3.2 The database (`sailab_glof.db`)
 
@@ -133,12 +133,18 @@ The 20 tests that came with them still pass unchanged (`logs/2026-11-07_step1_py
 
 A refused measurement is stored as `insufficient_observation` with **no number**, never as a zero.
 
-### 3.3 The two lakes (fixed values)
+### 3.3 The six lakes (fixed values)
 
-| Code | Lake | Centre (lon, lat) | Window radius | Growth limit |
-|---|---|---|---|---|
-| KRB | Karambar Lake | 73.7053229, 36.880833 | 2500 m | 2500 m |
-| ATS | Atro Sar | 73.65037, 36.64458 | 1500 m (was 800 m, see problem P3) | 1500 m |
+| Code | Lake | Centre (lon, lat) | Window radius | Growth limit | History from | "No lake" check |
+|---|---|---|---|---|---|---|
+| KRB | Karambar Lake | 73.7053229, 36.880833 | 2500 m | 2500 m | 2023 | no |
+| ATS | Atro Sar | 73.65037, 36.64458 | 1500 m (was 800 m, see problem P3) | 1500 m | 2023 | no |
+| SHP | Shishper glacier lake | 74.5650, 36.3590 | 1500 m | 1500 m | **2019** | yes |
+| DKT | Darkut glacial lake | 73.40701, 36.64219 (published position) | 1000 m | 1000 m | 2023 | yes |
+| BRT | Borith Lake | 74.86214, 36.43053 | 1000 m | 1000 m | 2023 | no |
+| PSU | Passu glacier lake | 74.87979, 36.45744 | 1000 m | 1000 m | 2023 | no |
+
+Why these four, and how each was tested before it was added: section 8b.
 
 ---
 
@@ -172,35 +178,38 @@ A refused measurement is stored as `insufficient_observation` with **no number**
 
 ## 5. The data in the database right now
 
-*(as of bot commit `69378dc`; last pipeline run: run 9, the second scheduled run, 10 Nov 01:02 UTC)*
+*(as of commit `f5c2101`; last pipeline run: run 11, the resumed backfill of the new lakes, 10 Nov 20:21 UTC)*
 
 ### 5.1 Scenes and measurements
 
-| | Karambar (KRB) | Atro Sar (ATS) | Total |
-|---|---|---|---|
-| Optical scenes (5 Jan 2023 → 5 Nov 2026) | 307 | 304 | 611 |
-| … too cloudy over the lake (recorded, not downloaded) | 178 | 179 | 357 (58 %) |
-| … downloaded and measured | 129 | 125 | 254 |
-| … usable (`ok`) | 20 | 25 | 45 |
-| … refused (`insufficient_observation`) | 109 | 100 | 209 |
-| Optical usable area range | 198.31 – 257.83 ha | 105.16 – 107.17 ha | |
-| Radar passes (Jan 2023 → 9 Nov 2026) | 221 | 221 | 442 |
-| … usable / refused | 191 / 30 | 172 / 49 | 363 / 79 |
-| Optical risk scores `ok` / `insufficient_history` | 8 / 12 | 11 / 14 | 19 / 26 |
-| Radar risk scores | none (not scored) | none | 0 |
+| | KRB | ATS | SHP | DKT | BRT | PSU | Total |
+|---|---|---|---|---|---|---|---|
+| Optical scenes | 307 | 304 | 594 | 305 | 306 | 306 | 2,122 |
+| … too cloudy (recorded, not downloaded) | 178 | 179 | 385 | 165 | 165 | 150 | 1,222 (58 %) |
+| … usable (`ok`) | 20 | 25 | 6 | 86 | 81 | 3 | 221 |
+| … refused (`insufficient_observation`) | 109 | 100 | 108 | 54 | 60 | 153 | 584 |
+| … no lake found (`no_lake_detected`) | 0 | 0 | 95 | 0 | 0 | 0 | 95 |
+| Optical usable area range (ha) | 198.31–257.83 | 105.16–107.17 | 0.09–19.49 | 14.74–17.80 | 0.01–13.75 | 0.48–4.17 | |
+| Radar passes | 221 | 221 | 881 | 339 | 335 | 335 | 2,332 |
+| … usable / refused | 191 / 30 | 172 / 49 | 0 / 881 | 327 / 12 | 304 / 31 | 277 / 58 | 1,271 / 1,061 |
+| Optical risk scores `ok` / `insufficient_history` | 8 / 12 | 11 / 14 | 0 / 6 | 45 / 41 | 25 / 56 | 0 / 3 | 89 / 132 |
+| First scene | 2023-01-05 | 2023-01-05 | 2019-01-01 | 2023-01-04 | 2023-01-05 | 2023-01-05 | |
+
+Borith's and Passu's optical values are shown but **not trustworthy** (section 8b); they are still risk-scored.
 
 ### 5.2 The two measurement counts people mix up
 
 | | Optical | Radar | Total |
 |---|---|---|---|
-| Scenes recorded | 611 | 442 | **1,053** |
-| Too cloudy: no measurement row at all | 357 | 0 | 357 |
-| **Measurement rows written** (every attempt) | 254 | 442 | **696** |
-| of which refused | 209 | 79 | 288 |
-| of which **usable** | 45 | 363 | **408** |
+| Scenes recorded | 2,122 | 2,332 | **4,454** |
+| Too cloudy: no measurement row at all | 1,222 | 0 | 1,222 |
+| **Measurement rows written** (every attempt) | 900 | 2,332 | **3,232** |
+| of which refused | 584 | 1,061 | 1,645 |
+| of which no lake found (no area) | 95 | 0 | 95 |
+| of which **usable** | 221 | 1,271 | **1,492** |
 
-So **696** is every measurement attempt stored and **408** is the usable subset (408 + 288 = 696). Neither is a scene count.
-(Before run 9, on 9 November: 1,051 / 694 / 406.)
+So **3,232** is every measurement attempt stored and **1,492** is the usable subset (1,492 + 1,645 + 95 = 3,232).
+Neither is a scene count. (Two lakes, before run 9 on 9 Nov: 1,051 / 694 / 406; after run 9: 1,053 / 696 / 408.)
 
 ### 5.3 The run log
 
@@ -215,6 +224,8 @@ So **696** is every measurement attempt stored and **408** is the usable subset 
 | 7 | 9 Nov 06:50 | Radar backfill (by hand) | Completed: 440 radar passes downloaded and measured |
 | 8 | 9 Nov 12:09 | GitHub run (by hand) to check radar on GitHub | Completed, no new scene |
 | 9 | 10 Nov 01:02 | **Second scheduled run** (the 9 Nov 18:00 slot, started about 7 h late by GitHub) | Completed; 216 tests passed in 8.51 s; **2 new radar passes** (9 Nov 13:05): Karambar 257.55 ha, Atro Sar 97.14 ha; first images committed to `data/scenes/` (`logs/2026-11-10_scheduled_run_2_report.md`) |
+| 10 | 10 Nov 17:40 | Backfill of the four new lakes (by hand) | **Failed** at Passu, after Shishper, Darkut and Borith: Earth Engine HTTP 503 "memory capacity exceeded" (2,998 scenes recorded before it). Kept as a real failure record |
+| 11 | 10 Nov 20:04 | Same backfill, resumed | Completed: resumed after the last finished lake; Passu, 403 scenes |
 
 ---
 
@@ -258,6 +269,14 @@ So **696** is every measurement attempt stored and **408** is the usable subset 
 - Built **scene pages** (each pass re-measured from its file and drawn: NDWI for optical, threshold map for radar);
   checked all 696 stored measurements reproduce exactly.
 - Built the newer-data banner and **automatic reload** after a `git pull` (problem P12 solved).
+- **Four lakes added** with the project owner (section 8b). Searched the literature and Earth Engine's surface-water
+  map for lakes with recorded outbursts; tested six candidates with the pipeline's own download and measurement on
+  real scenes; left out Khurdopin and Ghulkin (no lake to measure); added Shishper, Darkut, Borith, Passu.
+- Added the **"no lake detected"** status for clear-water lakes, and a per-lake history start (Shishper from 2019).
+- Backfilled the four lakes (runs 10 and 11, about 2 h 40 min; run 10 failed on an Earth Engine 503 and run 11
+  resumed). Re-checked all 2,536 new measurements against their files (0 differ).
+- Checked Shishper against its published outburst dates: 2 of 3 visible. Tested MNDWI against NDWI (no single
+  index fixes every lake). Pushed as commit `f5c2101` before the nightly run.
 
 ---
 
@@ -351,6 +370,34 @@ from the file and compared with what was stored.
 
 **P17. Radar measured 975.9 ha for a ~250 ha lake.** → Explained and fixed on that file (section 8): 267.52 ha.
 
+### New lakes (10-11 November)
+
+**P19. "Add renowned lakes with past outbursts" — but which, and where exactly?** Pakistan's official list of 33
+hazardous lakes could not be found by name. → Lakes were picked from published events and studies, located on
+Earth Engine's JRC surface-water map and on Sentinel-2, and **tested with the pipeline's own download and
+measurement** before being added (`logs/2026-11-10_new_lake_candidates/README.md`). Darkut uses its published position.
+
+**P20. Two of the requested lakes have nothing to measure.** Khurdopin's surge-dammed lake drained (dry river
+plain in 2019 and 2025); Ghulkin's "lakes" are ponds on the moving glacier surface. → Left out, with the owner's
+agreement; the evidence is kept.
+
+**P21. NDWI does not see silty glacial water.** Passu: 0 of 4 test scenes, then 3 of 156 in the backfill, all wrong
+(0.48–4.17 ha against about 19 ha). Borith: often only part of the lake. → Radar measures both; NDWI left
+unchanged (an original module). Tried MNDWI (shortwave infrared): finds Passu but over-measures Darkut and leaks at
+Karambar (`logs/2026-11-11_ndwi_vs_mndwi.log`). **Not solved;** Borith and Passu optical values are still
+risk-scored, which gave false scores such as −8.81 and −7.94 at Borith.
+
+**P22. An outburst looked like a bad image.** When Shishper drained, every scene said "centre not water", the same as
+a frozen or cloudy day. → New status `no_lake_detected` with no area, only for clear-water lakes, May–October, with
+no cloud, snow/ice or missing data within 150 m of the centre and under 10 % water there. Tested on synthetic files
+(winter, snow, cloud, shadow and a data gap all stay refusals) and checked by eye on Shishper's real scenes.
+
+**P23. Earth Engine refused a download mid-backfill** ("memory capacity exceeded", HTTP 503) at the sixth lake. →
+The run recorded the failure (run 10); the existing resume logic restarted after the last finished lake (run 11).
+
+**P24. Radar never measures Shishper** (0 of 881 passes: narrow, steep, debris-covered valley). → Documented;
+Shishper is an optical-only lake.
+
 **P18. Wet snow in spring looks like water on radar.** 29 of 361 usable radar values (now 29 of 363) are clearly wrong, 16 of them in
 April-June; they produced the largest false anomalies (+50.3, −7.4). → Radar scoring turned off; the 361 radar scores
 deleted (archived copy kept). → `logs/2026-11-09_radar_scores_removed.log`, `logs/2026-11-09_radar_error_count.log`.
@@ -366,6 +413,7 @@ deleted (archived copy kept). → `logs/2026-11-09_radar_scores_removed.log`, `l
 | Comparison doc: "Radar is not built" | Rewritten for the current screens | `docs/comparison/README.md` |
 | "Valley floor ≈ −15 dB" | The flat ground's median is −11.3 dB; −15.3 dB is the cut-off (found while checking this report) | `logs/2026-11-09_radar_backscatter_levels.log` |
 | Network-cut failure "about 33 s" | Varies: 32 s and 23 s in two real tests, now "20-35 s" | evidence file above |
+| Shishper check, first version: "3 of 3 outbursts seen" | The script let a usable value from up to a year earlier count as "before"; for 2020 it used July 2019. With both sides limited to 45 days: **2 of 3** | `logs/2026-11-11_shishper_outburst_check.log` (header notes the fix) |
 | This report: "about 3,900 lines" of code (9 Nov) | Not reproducible: counting the same files at commit `6e94e09` gives **3,437**; now 3,958 after the scene pages and reload, counted the same way | `wc -l` over the files listed in section 3.1 |
 
 ---
@@ -412,6 +460,47 @@ exists, which needs ground truth we do not have.
 (`logs/2026-11-09_radar_s1_coverage_check.log`). **The gap is closed:** run 9 recorded the 9 Nov 13:05 pass, and a live
 check found the 10 Nov 01:05 pass (opposite orbit direction).
 
+**Radar on the four new lakes** (not validated against optical like Karambar and Atro Sar): Darkut 327 of 339 passes
+usable (about 14.7 ha against 16.1 ha optical; outliers only in winter and spring); Borith 304 of 335 (about 11–12 ha,
+steadier than its optical); Passu 277 of 335 (about 11 ha; the only usable measure of this silty lake);
+Shishper 0 of 881.
+
+## 8b. The four new lakes, in detail
+
+**How they were chosen.** The project owner asked for well-known lakes with past outbursts, 6–7 in total, "with rich
+data and very sure results". Candidates: Shishper, Khurdopin, Passu, Ghulkin, plus two of our choice from the
+dangerous ones. Each was located from published sources and the JRC surface-water map, then tested on real
+Sentinel-2 (and later Sentinel-1) scenes with the pipeline's own code. Evidence: `logs/2026-11-10_new_lake_candidates/`.
+
+| Lake | Why | Test result | Decision |
+|---|---|---|---|
+| Shishper (Hassanabad) | Ice-dammed lake beside a surging glacier; outbursts 22–23 Jun 2019, 29 May 2020, 7 May 2022 (KKH bridge) | Lake measured in 2019 and Apr 2022; gone since; radar never | **Added**, history from 2019, "no lake" check on |
+| Darkut (Yasin) | Grew 4.5 → 15.4 ha; risk to Darkut village (Amin et al. 2020) | 6 of 6 optical, 6 of 6 radar, 15.3–16.7 ha | **Added**, "no lake" check on |
+| Borith (Hunza) | Named a possible GLOF source (Iqbal et al. 2023) | Radar 6 of 6 (10.7–11.3 ha); optical 2 of 4 | **Added** |
+| Passu (Hunza) | Past outbursts (Jan 2008); May 2022 release | Optical 0 of 4 (silty); radar 3 of 6 | **Added** (radar only) |
+| Khurdopin (Shimshal) | 2017 outburst; 20-year surge cycle | No lake at the site in 2019 or 2025 | Left out |
+| Ghulkin | 2008–2009 outbursts | Only ponds on the glacier surface | Left out |
+
+**Shishper's outbursts in the stored record** (`scripts/check_shishper_outbursts.py`, 45 days either side):
+
+| Outburst | Before | After | Verdict |
+|---|---|---|---|
+| 22–23 Jun 2019 | 11.77 ha, 31 May | 0.09 ha, 5 Jul; no lake from 4 Aug | **Seen** |
+| 29 May 2020 | the lake was there (10.48 ha, 25 May) but **refused by check D** (cloud touching it) | no usable or no-lake scene within 45 days | **Not seen** |
+| 18 May 2021 (one thesis only; uncertain) | no usable value | no lake, 9 Jun | cannot tell |
+| 7 May 2022 | 17.05 ha 10 Apr; 5.83 ha 30 Apr | no lake, 14 Jun | **Seen** |
+
+Every "no lake" scene was checked on the image (`logs/2026-11-11_shishper_timeline_truecolour.png`): none shows
+water at the lake site. Note what this is: the record **shows** the outbursts looking back. The system did not
+detect them as they happened, and the risk score gave nothing (check F: too little same-month history).
+A further check is possible against Lovell & Muhammad (2024), who date six fill-and-drain phases.
+
+**Methods: what the panel's criticism means here.** At the FYP-1 mid review the panel said the methods are old.
+For water detection that is confirmed by our own data: a fixed NDWI cut-off (from 1996) fails on silty or murky
+glacial water, and swapping it for another fixed index (MNDWI) helps one lake and hurts three. The newer approaches
+listed in the team's paper review are a Sentinel-1 + Sentinel-2 random-forest classifier (Wangchuk & Bolch 2020) and
+improved, terrain-corrected radar thresholds (Markert et al. 2020; Khan et al. 2025). Neither is built yet.
+
 ---
 
 ## 9. The web app (GUI), screen by screen
@@ -442,7 +531,7 @@ no "Critical 0.86" risk tiers (the trained model is not built), no basemap (need
   this laptop" if any).
 - **Yellow banner:** "Prototype. Monitoring and measurement only: Downstream Analysis and Alerting are not built, so
   this system sends no alerts."
-- **Left navigation:** Dashboard, Live check, the two lakes, and the three design previews (marked "preview").
+- **Left navigation:** Dashboard, Live check, the six lakes, and the three design previews (marked "preview").
 
 ### 9.2 Dashboard (`/`)
 - **"Last pipeline run"** at the top right (from the newest `run_log` row, in PKT).
@@ -498,7 +587,7 @@ One satellite pass. Newer / older links step through the lake's log.
   21 Oct 2026 was refused because snow touches the lake, which the cloud-and-snow picture shows.
 
 ### 9.5 Live check (`/live`)
-One button, **"Check both lakes now"**, runs the **real pipeline** for both lakes against Earth Engine, writing only to
+One button, **"Check both lakes now"** (the label predates the new lakes), runs the **real pipeline** for every lake against Earth Engine, writing only to
 the laptop's copy. The page refreshes every 3 s while it runs, then shows one of:
 - **Blue: "No new scene for either lake"** (about 10-20 s; tested for real: 11 s on 9 Nov).
 - **Blue/ochre: "N new scenes recorded"**, with the pipeline's own log (tested on a copy rewound to 15 Aug: 42 scenes
@@ -529,11 +618,14 @@ rendered page: **30 of 30 checks passed**)*
 
 | Tile | Shows | What it means | Computed from |
 |---|---|---|---|
-| Lakes monitored | **2** | Karambar Lake, Atro Sar | `lake` rows |
-| Scenes recorded | **1053** | 611 optical + 442 radar passes, 5 Jan 2023 to 9 Nov 2026 | `scene` rows |
-| Too cloudy for optical | **58 %** | 357 of 611 optical scenes had over 10 % cloud on the lake, so were not downloaded | `scene.file_path` starting `not_downloaded/` |
-| Usable measurements | **408** | 408 of 696 measurement attempts passed every check (optical 45 of 254, radar 363 of 442). Not a scene count | `measurement` rows by status |
-| Days since a usable measurement | **1** (on 10 Nov) | The freshest usable value of any lake and sensor: Karambar radar, 9 Nov 2026 | newest `ok` measurement |
+| Lakes monitored | **6** | Karambar, Atro Sar, Shishper, Darkut, Borith, Passu | `lake` rows |
+| Scenes recorded | **4454** | 2,122 optical + 2,332 radar passes, 1 Jan 2019 to 10 Nov 2026 | `scene` rows |
+| Too cloudy for optical | **58 %** | 1,222 of 2,122 optical scenes had over 10 % cloud on the lake, so were not downloaded | `scene.file_path` starting `not_downloaded/` |
+| Usable measurements | **1492** | 1,492 of 3,232 measurement attempts passed every check (optical 221 of 900, radar 1,271 of 2,332). Not a scene count | `measurement` rows by status |
+| Days since a usable measurement | **0** (on 10 Nov) | The freshest usable value of any lake and sensor: Darkut radar, 10 Nov 2026 | newest `ok` measurement |
+
+The dashboard's lake list also shows, in red, a lake whose latest clear optical scene found **no lake** (Shishper:
+28 Oct 2026). The warning banner names the lakes with no usable measurement in 7 days (on 10 Nov: Shishper only).
 
 ### Lake list and Lake Detail header
 
@@ -545,6 +637,15 @@ rendered page: **30 of 30 checks passed**)*
 | Scenes recorded | **528** (optical 307: 20 usable, 109 refused, 178 too cloudy; radar 221: 191 usable, 30 refused) | **525** (optical 304: 25 / 100 / 179; radar 221: 172 / 49) | Per lake |
 | Settings | window 2500 m, growth limit 2500 m | window 1500 m, growth limit 1500 m | From the `lake` row |
 
+**The four new lakes** (on 10 Nov):
+
+| Number | Shishper | Darkut | Borith | Passu |
+|---|---|---|---|---|
+| Latest usable optical area | 5.83 ha, 30 Apr 2022 | 16.45 ha, 21 Sep 2026 | 4.26 ha, 31 Oct 2026 (**partial**) | 4.17 ha, 17 Sep 2023 (**wrong**: silty water) |
+| Optical score chip | insufficient history | **deviation +1.08** | deviation −7.94 (**false**: from the partial area) | insufficient history |
+| Latest radar area | none usable | 14.34 ha, 10 Nov 2026 | 12.66 ha, 10 Nov 2026 | 12.03 ha, 10 Nov 2026 |
+| Special | red banner: "No lake found in the latest clear optical scene (28 Oct 2026)" | | | |
+
 ### The scores
 
 - **Atro Sar −0.96:** the 27 Aug 2026 area (105.90 ha) against **11 earlier August optical values from 4 years**
@@ -552,7 +653,9 @@ rendered page: **30 of 30 checks passed**)*
   variation (one standard deviation is about 0.47 ha). It is **not** a danger level.
 - **Karambar "insufficient history":** its latest usable optical value (6 Sep 2026, 257.02 ha) has only **3 earlier
   September values from 3 years**; check F needs 5 from 2 years, so no score is given rather than a meaningless one.
-- **All scores so far:** 19 `ok`, 26 `insufficient_history`. Largest |score|: Karambar **−2.96** (12 Aug 2025,
+- **Darkut +1.08:** the 21 Sep 2026 area (16.45 ha), about one standard deviation above its earlier September values.
+- **Borith −7.94 is not real:** NDWI saw only 4.26 ha (31 Oct) of a lake radar measures at about 11 ha in summer (12.66 ha on 10 Nov). See P21.
+- **All scores so far:** 89 `ok`, 132 `insufficient_history` (Karambar and Atro Sar alone: 19 / 26). Largest |score|: Karambar **−2.96** (12 Aug 2025,
   198.31 ha; very likely NDWI under-detection, not a real change), Atro Sar **1.74**.
 
 ### Why the numbers can look "odd"
@@ -563,7 +666,7 @@ rendered page: **30 of 30 checks passed**)*
   and most months lack 5 earlier values.
 - **Two radar values a day apart differ by 1-2 %** (Karambar 257.55 ha on 9 Nov, 261.14 ha on 10 Nov in a live check):
   opposite orbit directions and a new threshold per pass; the usual difference is 1.6 % (problem P16b).
-- **"Data gap" for both lakes in November:** from October to December, in every year on record, neither lake has a
+- **"Data gap" for Karambar and Atro Sar in November:** from October to December, in every year on record, neither has a
   single usable optical value: clear scenes are refused because the lake is frozen or snow-covered
   (`logs/2026-11-09_live_demo_lake_odds.md`). The last usable optical value of each year is in late August or
   September.
@@ -574,17 +677,17 @@ rendered page: **30 of 30 checks passed**)*
 
 ### 11.1 The numbers
 
-**246 tests, all passing** (`.venv/bin/python -m pytest tests -q`, about 21 s).
+**265 tests, all passing** (`.venv/bin/python -m pytest tests -q`, about 18 s).
 
 | Test file | Tests | Covers |
 |---|---|---|
 | `test_measurement.py`, `test_acquisition.py`, `test_risk.py`, `test_terrain.py`, `test_flood_path.py`, `test_network.py` | 20 | The inherited modules (unchanged) |
-| `test_db.py` | 23 | Schema, validation, history queries, seed guard, coordinate limits |
+| `test_db.py` | 28 | Schema, validation, history queries, seed guard, coordinate limits, the no-lake status, new lake columns added to an old file |
 | `test_earth_engine_client.py` | 34 | UTM grid, lake-cloud counting, date ranges, file checks, sign-in errors (Earth Engine **mocked**) |
-| `test_pipeline.py` | 35 | The run end to end on synthetic files; checks C, D, F; resume; duplicates; failures recorded; 2 real files |
+| `test_pipeline.py` | 45 | The run end to end on synthetic files; checks C, D, F; "no lake" and its safeguards; per-lake history start; resume; duplicates; failures recorded; 2 real files |
 | `test_radar.py`, `test_pipeline_radar.py` | 18 | Slope, mask, Otsu-over-flat, refusals, radar not scored; 2 tests on the real original SAR file |
 | `test_webapp_api.py`, `_pages.py`, `_live.py`, `_previews.py` | 92 | Every page and number, live-check outcomes, previews inert, offline, HTML structure |
-| `test_webapp_scenes.py` | 24 | Scene pages (recomputed area agrees, a planted mismatch shows "Differs", too cloudy, missing file, radar threshold), reload, automatic reload (waits one check, never copies a changing or broken file, waits for a live check, the watcher thread works) |
+| `test_webapp_scenes.py` | 28 | "No lake found" banner, chart marker, chip and recomputation; scene pages (recomputed area agrees, a planted mismatch shows "Differs", too cloudy, missing file, radar threshold), reload, automatic reload (waits one check, never copies a changing or broken file, waits for a live check, the watcher thread works) |
 
 On GitHub, the first scheduled run passed **171 tests in 6.13 s** and the second **216 in 8.51 s** (the suite was
 smaller then; `logs/2026-11-08_scheduled_run_6_github_test_step.log`, `logs/2026-11-10_scheduled_run_2_report.md`).
@@ -646,9 +749,12 @@ accuracy or of flood detection, and this report never uses them that way.
 | Atro Sar whole lake | 105.82 ha at 1500, 2000 and 2500 m windows | `logs/2026-11-08_step5_atro_sar_radius_check.log` |
 | Checks C/D/F before vs after | Impossible values removed (KRB 6 of 9, ATS 10 of 10); 43 plausible values lost | `logs/2026-11-08_cdf_before_after.md` |
 | Live check vs the nightly pipeline | 42 scenes, 12 measured, every row and all 12 file checksums identical | `logs/2026-11-08_gui_live_check_new_scenes_vs_backfill.log` |
-| Every GUI number vs independent SQL | 30 of 30 | `scripts/verify_gui_numbers.py` |
+| Every GUI number vs independent SQL | 30 of 30 (two lakes); **77 of 77** with six lakes | `scripts/verify_gui_numbers.py` |
 | Image outline vs stored area | Recomputed pixel count equals the stored area exactly (e.g. Atro Sar 10,590 px = 105.90 ha) | same script |
-| Every stored measurement vs its file | All 696 recompute to the stored status and area (0 differ, 0 errors) | `logs/2026-11-10_scene_page_recompute_check.log` |
+| Every stored measurement vs its file | All 696 (two lakes) and all **2,536 of the new lakes** recompute to the stored status and area (0 differ, 0 errors) | `logs/2026-11-10_scene_page_recompute_check.log`, `logs/2026-11-11_scene_recompute_check_new_lakes.log` |
+| New lakes before they were added | 6 candidates tested on real scenes; 4 added, 2 left out | `logs/2026-11-10_new_lake_candidates/README.md` |
+| Shishper record vs published outbursts | 2 of 3 visible; every "no lake" scene shows no water on the image | `logs/2026-11-11_shishper_outburst_check.log` |
+| NDWI vs MNDWI | MNDWI finds Passu (10 of 12) but over-measures Darkut and leaks at Karambar | `logs/2026-11-11_ndwi_vs_mndwi.log` |
 | Automatic reload on a real server | Changed file seen, copied on the next check (18 s), open page refreshed itself to the new count | `logs/2026-11-10_gui_auto_reload_check.md` |
 | Radar vs optical, within 3 days | Karambar +5.2 %, Atro Sar −6.4 % (16 independent scenes, summer) | `logs/2026-11-09_radar_validation*.log` |
 | Slope code vs numpy and Earth Engine | Identical to numpy; 97.8 % / 98.9 % same 10° decision as Earth Engine; area sensitive near the shore | `logs/2026-11-09_slope_reference_check.log` |
@@ -674,8 +780,9 @@ accuracy or of flood detection, and this report never uses them that way.
   matching the run log.
 - **Limits:** public repository, so minutes are free; each run takes about 1 minute (limit 6 h). Schedules in public
   repositories are switched off after 60 days without repository activity. Every committed image adds to the
-  repository (about 2.4 MB per radar pass for both lakes, roughly 1 GB a year), so images will need to move out of git
-  within about a year.
+  repository: about 1 GB a year with two lakes, about 3 GB with six, so images must move out of git within the year.
+- **Tonight (10–11 Nov) is the first scheduled run over six lakes.** It continues each lake from its newest stored
+  scene; its duration with six lakes is not yet known.
 
 ---
 
@@ -695,8 +802,10 @@ accuracy or of flood detection, and this report never uses them that way.
 
 ## 15. Known limitations (honest list)
 
-1. No real outburst has been detected or tested.
-2. Newly formed lakes cannot be scored (check F needs earlier years); these are often the dangerous ones.
+1. No outburst has been detected as it happened; Shishper's past outbursts are visible in its record (2 of 3) only
+   looking back, and the risk score gave nothing there.
+2. Newly formed lakes cannot be scored (check F needs earlier years); these are often the dangerous ones (Shishper:
+   6 usable values, no score).
 3. 58 % of optical scenes are too cloudy; radar fills dates but is not scored.
 4. Blind in winter: frozen or snow-covered lakes are refused (correctly); no usable optical value from October to
    December in any year.
@@ -708,7 +817,11 @@ accuracy or of flood detection, and this report never uses them that way.
 10. Measurement accuracy is only roughly known.
 11. GitHub can start scheduled runs late or skip them.
 12. Radar: a mitigation on 2 lakes in summer; unexplained offsets; 8 % clearly wrong values; winter unvalidated;
-    sensitive to the slope source near the shore; not scored.
+    sensitive to the slope source near the shore; not scored; never works at Shishper.
+13. NDWI fails on silty or murky glacial water (Passu, Borith, Shishper); Borith and Passu optical values are still
+    risk-scored, with false scores (−8.81, −7.94). MNDWI is not a fix.
+14. "No lake detected" uses judgement-call limits (May–October, 150 m, 10 %), checked by eye on Shishper only.
+15. Repository growth: about 3 GB of images a year with six lakes.
 
 ---
 
@@ -716,10 +829,14 @@ accuracy or of flood detection, and this report never uses them that way.
 
 | Item | Status |
 |---|---|
-| Scheduled run 3 | Waiting for the 10 Nov 18:00 UTC slot; then the README run table is updated from GitHub |
+| Scheduled run 3 | Waiting for the 10 Nov 18:00 UTC slot (the first over six lakes); then the README run table is updated from GitHub |
+| Borith and Passu optical scoring | Decision for the project owner: switch it off (like radar) until a better water method is tested |
+| A modern water method | Sentinel-1 + Sentinel-2 random-forest classifier, built next to NDWI and compared on all six lakes; improved radar thresholds |
+| Shishper vs Lovell & Muhammad (2024) | Compare the stored record with their six dated fill-and-drain phases |
+| Demo script and live-check fallback | `docs/DEMO_SCRIPT.md`, `docs/LIVE_CHECK_FALLBACK.md` still describe two lakes; live-check time with six lakes not yet measured |
 | The 10 Nov 01:05 radar pass | Found by a live check only; the next scheduled run should record it in the published database |
-| Hourly `git pull` cron job | For the owner to add (`crontab -e`); the app's automatic reload is built |
-| Repository size | Images committed nightly (about 1 GB a year): move them out of git within about a year |
+| Hourly `git pull` cron job | Added by the owner on 10 Nov (`crontab -l` shows it); the app's automatic reload is built |
+| Repository size | Images committed nightly (about 3 GB a year with six lakes): move them out of git within the year |
 | Report, slides and proof package outside the repo | Change Atro Sar **76.51 → 105.82 ha**; use the corrected radar wording (16 independent scenes, mitigation, not a general fix) |
 | Why the radar offsets differ by lake | Open question; shoreline slope is one plausible contributor (untested as an explanation) |
 | Whether 10° is the right slope limit | Cannot be checked without a dated, surveyed shoreline |
@@ -730,7 +847,14 @@ accuracy or of flood detection, and this report never uses them that way.
 
 ## 17. For the defence: likely questions and true answers
 
-- **"Has it ever caught a GLOF?"** No. Neither lake has a recorded outburst.
+- **"Has it ever caught a GLOF?"** Not as it happened. But Shishper, which burst in 2019, 2020 and 2022, is now
+  monitored with history from 2019, and its stored record shows 2 of those 3: the lake area, then "no lake found".
+  2020 was missed because cloud touched the lake on the one clear day before it.
+- **"Why these six lakes?"** Each has a recorded outburst or a published outburst risk, and each was tested on real
+  scenes before it was added. Two requested lakes were left out because there is no lake there to measure now.
+- **"Your methods are old."** Agreed for water detection, and we measured it: the fixed NDWI cut-off fails on silty
+  glacial water (Passu), and swapping to MNDWI does not fix it. The next step is a Sentinel-1 + Sentinel-2
+  random-forest classifier, as in the newer literature.
 - **"Can I see what the satellite saw?"** Yes: every row of the observation log opens that pass, re-measured from its
   file, with true colour, NDWI and cloud/snow (optical) or backscatter and the threshold map (radar), and whether it
   matches what was stored (all 696 do).
