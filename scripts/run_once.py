@@ -34,6 +34,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--backfill", action="store_true",
                         help="one-off historical run started by hand: same pipeline, files saved to data/backfill/")
+    parser.add_argument("--lakes", default=None,
+                        help="comma-separated lake codes to run (default: every lake), e.g. for the backfill of "
+                             "newly added lakes: --backfill --lakes SHP,DKT,BRT,PSU")
     args = parser.parse_args()
     data_dir = BACKFILL_DIR if args.backfill else DATA_DIR
 
@@ -58,9 +61,20 @@ def main() -> int:
 
     conn = db.connect(DB_PATH)
     db.seed_lakes(conn)   # no-op when the lakes exist; raises if a stored coordinate was changed
+    lake_ids = None
+    if args.lakes:
+        codes = [c.strip() for c in args.lakes.split(",") if c.strip()]
+        found = {row["code"]: row["id"] for row in conn.execute("SELECT id, code FROM lake")}
+        unknown = [c for c in codes if c not in found]
+        if unknown:
+            log.error("unknown lake code(s): %s (known: %s)", ", ".join(unknown), ", ".join(sorted(found)))
+            conn.close()
+            return 2
+        lake_ids = [found[c] for c in codes]
+        log.info("lakes: %s", ", ".join(codes))
     conn.close()
 
-    result = run_pipeline_once(DB_PATH, data_dir, INITIAL_SINCE_DATE)
+    result = run_pipeline_once(DB_PATH, data_dir, INITIAL_SINCE_DATE, lakes=lake_ids)
     log.info("summary: run_id=%s lakes=%s scenes_recorded=%s downloaded=%s measurements=%s risk_scores=%s",
              result.run_id, result.lakes_processed, result.scenes_recorded, result.scenes_downloaded,
              result.measurements, result.risk_scores)

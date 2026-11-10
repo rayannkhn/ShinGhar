@@ -82,7 +82,8 @@ def main() -> int:
             latest = q("""SELECT s.acquired_at, m.extent_ha, s.file_path FROM measurement m JOIN scene s ON s.id = m.scene_id
                           WHERE m.lake_id = ? AND m.status = 'ok' AND m.sensor = ? ORDER BY s.acquired_at DESC LIMIT 1""", lid, sensor)
             counts[sensor] = q("""SELECT COUNT(*) n, COALESCE(SUM(s.file_path LIKE 'not_downloaded/%'), 0) cloudy,
-                     COALESCE(SUM(m.status = 'ok'), 0) ok, COALESCE(SUM(m.status = 'insufficient_observation'), 0) refused
+                     COALESCE(SUM(m.status = 'ok'), 0) ok, COALESCE(SUM(m.status = 'insufficient_observation'), 0) refused,
+                     COALESCE(SUM(m.status = 'no_lake_detected'), 0) no_lake
                      FROM scene s LEFT JOIN measurement m ON m.scene_id = s.id WHERE s.lake_id = ? AND s.source = ?""", lid, source)
             if latest is None:
                 check("Dashboard", f"{code} {sensor} latest", dash, f"{label}: No usable measurement yet", "no ok measurement")
@@ -131,8 +132,16 @@ def main() -> int:
                 rows.append(f"| Lake Detail | {code} {sensor} image outline | (file not on this machine) | {latest[2]} | skipped |")
         o, r = counts["optical"], counts["radar"]
         check("Lake Detail", f"{code} scene counts", detail,
-              f"Scenes recorded {o['n'] + r['n']} optical {o['n']}: {o['ok']} usable, {o['refused']} refused, {o['cloudy']} too cloudy "
+              f"Scenes recorded {o['n'] + r['n']} optical {o['n']}: {o['ok']} usable, {o['refused']} refused, "
+              f"{str(o['no_lake']) + ' no lake found, ' if o['no_lake'] else ''}{o['cloudy']} too cloudy "
               f"radar {r['n']}: {r['ok']} usable, {r['refused']} refused", "scene + measurement counts by source")
+        latest_judged = q("""SELECT s.acquired_at, m.status FROM measurement m JOIN scene s ON s.id = m.scene_id
+                             WHERE m.lake_id = ? AND m.sensor = 'optical' AND m.status IN ('ok', 'no_lake_detected')
+                             ORDER BY s.acquired_at DESC, m.id DESC LIMIT 1""", lid)
+        if latest_judged is not None and latest_judged["status"] == "no_lake_detected":
+            check("Lake Detail", f"{code} no-lake banner", detail,
+                  f"No lake found in the latest clear optical scene ( {fd(latest_judged['acquired_at'])} )",
+                  "newest optical ok/no_lake_detected measurement")
         check("Lake Detail", f"{code} settings", detail,
               f"window {lake['boundary_radius_m']:.0f} m, growth limit {lake['growth_distance_limit_m']:.0f} m", "lake row")
 

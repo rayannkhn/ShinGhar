@@ -50,7 +50,7 @@ def write_lake_window(path, lon, lat, rows=30, cols=30):
 # --- dashboard --------------------------------------------------------------------------------
 def test_dashboard_shows_the_real_counts(client):
     text = visible_text(client.get("/").text)
-    assert "Lakes monitored 2 " in text
+    assert "Lakes monitored 6 " in text
     assert "Scenes recorded 5 5 optical, 0 radar" in text
     assert "40% 2 of 5 optical scenes" in text                       # too cloudy: 2 of 5 OPTICAL scenes
     assert ("Usable measurements 2 2 of 3 measurement attempts passed every check (optical 2 of 3, radar 0 of 0). "
@@ -63,7 +63,8 @@ def test_dashboard_shows_the_real_counts(client):
 
 def test_dashboard_banners_come_from_the_data(client):
     text = visible_text(client.get("/").text)
-    assert "for 2 of 2 lakes (Karambar Lake, Atro Sar)" in text    # both lakes over 7 days without a usable image
+    assert ("for 6 of 6 lakes (Karambar Lake, Atro Sar, Shishper glacier lake, Darkut glacial lake, Borith Lake, "
+            "Passu glacier lake)") in text                               # no lake has a usable image in 7 days
     assert "The latest pipeline run (run 2) recorded an error." in text
     assert "EarthEngineError: quota" in text
 

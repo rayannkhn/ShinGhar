@@ -15,7 +15,8 @@ RADAR = "#0e7a5f"          # the reference design's Sentinel-1 triangle colour f
 BASELINE = "#5b6470"
 GRID = "#e3e8ec"
 AXIS_TEXT = "#5b6470"
-TICK_COLOURS = {"ok": OPTICAL, "insufficient_observation": "#b08a2e", "too_cloudy": "#a7b0ba"}
+NO_LAKE = "#b3261e"         # 'no_lake_detected': a clear summer scene with no water at the centre (drained?)
+TICK_COLOURS = {"ok": OPTICAL, "insufficient_observation": "#b08a2e", "too_cloudy": "#a7b0ba", "no_lake_detected": NO_LAKE}
 MAX_LINE_GAP_DAYS = 45      # points further apart than this are not joined (a winter gap is not a trend)
 # The y axis is set by every optical value and baseline (the scored sensor), plus radar values within this
 # fraction of the optical median. In summer radar agrees with optical to about 6%, so 25% only leaves out
@@ -136,6 +137,14 @@ def extent_chart(history: list[dict], start: date, end: date, width: int = 760, 
         parts.append(f'<line x1="{x(m):.1f}" x2="{x(m):.1f}" y1="{top}" y2="{plot_bottom}" stroke="{GRID}" '
                      f'stroke-dasharray="2 3"/><text x="{x(m):.1f}" y="{plot_bottom + 16}" text-anchor="middle" '
                      f'class="axis">{label}</text>')
+    # A scene that found NO lake is also marked on the plot itself, on its bottom edge: it is not 0 ha, but it is
+    # the most important thing that can happen to an ice-dammed lake, so it must not hide in the tick strip.
+    for r in rows:
+        if r["measurement_status"] == "no_lake_detected":
+            cx, cy = x(_d(r["acquired_at"])), plot_bottom - 7
+            parts.append(f'<g class="no-lake"><path d="M{cx - 4:.1f},{cy - 4:.1f} L{cx + 4:.1f},{cy + 4:.1f} M{cx - 4:.1f},{cy + 4:.1f} '
+                         f'L{cx + 4:.1f},{cy - 4:.1f}" stroke="{NO_LAKE}" stroke-width="2"/><title>{escape(r["acquired_at"][:10])} '
+                         f'optical: no lake found at the centre (clear, snow-free scene; no area)</title></g>')
     parts.append(f'<text x="{left - 8}" y="{strip_optical + 4}" text-anchor="end" class="axis">optical</text>'
                  f'<text x="{left - 8}" y="{strip_radar + 4}" text-anchor="end" class="axis">radar</text>')
     for r in rows:
@@ -171,7 +180,7 @@ def location_map(lakes: list[dict], width: int = 620, height: int = 330) -> str:
 
     parts = [f'<svg class="map" viewBox="0 0 {width} {height}" role="img" aria-label="lake locations">',
              f'<rect width="{width}" height="{height}" fill="#e9edef"/>']
-    step = 0.1
+    step = 0.1 if max(lon1 - lon0, lat1 - lat0) < 1.5 else 0.5     # readable grid for 2 lakes or for 6
     g = round(lon0 / step) * step
     while g <= lon1:
         a, _ = px(g, lat0)
@@ -184,14 +193,20 @@ def location_map(lakes: list[dict], width: int = 620, height: int = 330) -> str:
         parts.append(f'<line x1="0" x2="{width}" y1="{b:.1f}" y2="{b:.1f}" stroke="#dde3e7"/>'
                      f'<text x="4" y="{b - 3:.1f}" class="axis">{g:.1f}°N</text>')
         g += step
+    placed: list[tuple[float, float]] = []
     for l in lakes:
         cx, cy = px(l["centre_lon"], l["centre_lat"])
+        # Two lakes a few km apart (Borith and Passu) would print one label over the other: put the second on the left.
+        label_w = len(l["code"]) * 9 + 14
+        left_side = any(abs(cx - a) < 60 and abs(cy - b) < 26 for a, b in placed)
+        placed.append((cx, cy))
+        lx = cx - 14 - label_w if left_side else cx + 14
         marker = (f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="9" fill="#ffffff" stroke="#5b6470" stroke-width="2" '
                   f'stroke-dasharray="3 2"/>' if l["data_gap"] else
                   f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="8" fill="{OPTICAL}" stroke="#ffffff" stroke-width="2"/>')
         parts.append(f'<a href="{escape(l["link"])}"><g class="lake-marker">{marker}'
-                     f'<rect x="{cx + 14:.1f}" y="{cy - 12:.1f}" width="{len(l["code"]) * 9 + 14}" height="22" rx="3" '
-                     f'fill="#ffffff"/><text x="{cx + 21:.1f}" y="{cy + 4:.1f}" class="mono">{escape(l["code"])}</text>'
+                     f'<rect x="{lx:.1f}" y="{cy - 12:.1f}" width="{label_w}" height="22" rx="3" '
+                     f'fill="#ffffff"/><text x="{lx + 7:.1f}" y="{cy + 4:.1f}" class="mono">{escape(l["code"])}</text>'
                      f'<title>{escape(l["name"])}: {l["centre_lat"]:.5f} N, {l["centre_lon"]:.5f} E</title></g></a>')
     parts.append("</svg>")
     return "".join(parts)

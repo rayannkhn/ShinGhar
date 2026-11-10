@@ -8,6 +8,7 @@ The last two tests run measure_scene on the ORIGINAL real GeoTIFFs (tests/data/,
 byte-identical copies from the proof package) and must reproduce the reported
 237.2 ha and 76.51 ha.
 """
+import sys
 from datetime import date
 from math import floor
 from pathlib import Path
@@ -129,7 +130,7 @@ def test_one_clear_and_one_cloudy_scene(repo):
 
     assert result.errors is None
     assert (result.lakes_processed, result.scenes_recorded, result.scenes_downloaded,
-            result.measurements, result.risk_scores) == (2, 2, 1, 1, 1)
+            result.measurements, result.risk_scores) == (6, 2, 1, 1, 1)
     assert client.downloads == ["20261021T0546_1_T43SCA"]
     _, db_path = repo
     scenes = rows(db_path, "SELECT * FROM scene ORDER BY acquired_at")
@@ -143,7 +144,7 @@ def test_one_clear_and_one_cloudy_scene(repo):
         ("insufficient_history", "anomaly_detector", None, None)
     [log_row] = rows(db_path, "SELECT * FROM run_log")
     assert log_row["finished_at"] is not None and log_row["errors"] is None
-    assert (log_row["lakes_processed"], log_row["scenes_downloaded"]) == (2, 1)
+    assert (log_row["lakes_processed"], log_row["scenes_downloaded"]) == (6, 1)
     assert not pipeline.resume_state_path(db_path).exists()
 
 
@@ -300,7 +301,7 @@ def test_a_failure_is_recorded_and_the_next_run_resumes_after_the_last_finished_
     resumed = run(repo, retry)
 
     assert resumed.errors is None
-    assert [code for code, _ in retry.listing_calls] == ["ATS"], "KRB was finished and must not be redone"
+    assert [code for code, _ in retry.listing_calls] == ["ATS", "SHP", "DKT", "BRT", "PSU"], "KRB was finished and must not be redone"
     assert any("resuming after lake 1" in n for n in resumed.notes)
     assert len(rows(db_path, "SELECT * FROM measurement")) == 2
     assert not pipeline.resume_state_path(db_path).exists()
@@ -379,7 +380,7 @@ def test_the_real_client_signs_in_before_listing(repo, monkeypatch):
     result = pipeline.run_pipeline_once(db_path, tmp_path / "data", initial_since_date=date(2026, 10, 1))
 
     assert result.errors is None
-    assert order == ["init", "KRB", "KRB radar", "ATS", "ATS radar"]
+    assert order == ["init"] + [x for c in ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU"] for x in (c, c + " radar")]
 
 
 # --- check F: enough same-month history before scoring ------------------------------------------
@@ -458,3 +459,74 @@ def test_a_file_without_the_SCL_band_is_an_error_not_a_silent_skip(tmp_path):
     write_window(tmp_path / "w.tif", lake, bands=5)
     with pytest.raises(ValueError, match="no SCL band"):
         pipeline.measure_scene(tmp_path / "w.tif", lake)
+
+
+# --- drained lakes and per-lake history start (added 2026-11-10) -----------------------------------
+# SHP (Shishper) is seeded with detects_drainage = 1 and history_since 2018-12-31; KRB has neither.
+def test_a_drained_lake_is_recorded_as_no_lake_not_as_a_refusal(repo):
+    client = FakeClient({"SHP": [scene("SHP", "2026-06-15", 0.0)]}, window_kwargs={"centre_is_water": False})
+    result = run(repo, client)
+    assert result.errors is None
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert (m["status"], m["extent_ha"], m["sensor"]) == ("no_lake_detected", None, "optical")   # no invented 0 ha
+    assert rows(repo[1], "SELECT * FROM risk_score") == []                                       # nothing scored
+
+
+def test_a_lake_that_is_there_is_still_measured_normally(repo):
+    run(repo, FakeClient({"SHP": [scene("SHP", "2026-06-15", 0.0)]}))
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert (m["status"], m["extent_ha"]) == ("ok", 0.25)
+
+
+def test_no_lake_is_never_claimed_in_winter(repo):
+    """November to April a frozen or snowed-in lake also shows no water: stays a plain refusal."""
+    run(repo, FakeClient({"SHP": [scene("SHP", "2026-01-15", 0.0)]}, window_kwargs={"centre_is_water": False}))
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert m["status"] == "insufficient_observation"
+
+
+@pytest.mark.parametrize("scl", ["snow_touching_lake", "cloud_touching_lake", "shadow_touching_lake"])
+def test_no_lake_needs_a_clear_snow_free_view_of_the_centre(repo, scl):
+    run(repo, FakeClient({"SHP": [scene("SHP", "2026-06-15", 0.0)]}, window_kwargs={"centre_is_water": False, "scl": scl}))
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert m["status"] == "insufficient_observation"
+
+
+def test_no_lake_needs_missing_data_to_be_absent_near_the_centre(repo, monkeypatch):
+    real = write_window
+
+    def with_gap(path, lake, **kw):
+        real(path, lake, **kw)
+        with rasterio.open(path, "r+") as dst:
+            for band in (2, 4):
+                a = dst.read(band); a[14, 14] = 0; dst.write(a, band)
+    monkeypatch.setattr(sys.modules[__name__], "write_window", with_gap)
+    run(repo, FakeClient({"SHP": [scene("SHP", "2026-06-15", 0.0)]}, window_kwargs={"centre_is_water": False}))
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert m["status"] == "insufficient_observation"
+
+
+def test_lakes_without_drainage_detection_never_report_no_lake(repo):
+    """KRB (and the silty Passu lake) keep 'centre not water' as a refusal: NDWI can miss their water."""
+    run(repo, FakeClient({"KRB": [scene("KRB", "2026-06-15", 0.0)]}, window_kwargs={"centre_is_water": False}),
+        initial_since_date=date(2026, 1, 1))
+    [m] = rows(repo[1], "SELECT * FROM measurement")
+    assert m["status"] == "insufficient_observation"
+
+
+def test_a_lake_with_its_own_history_start_is_listed_from_that_date(repo):
+    client = FakeClient({})
+    run(repo, client, initial_since_date=date(2022, 12, 31))
+    since = dict(client.listing_calls)
+    assert since["SHP"] == date(2018, 12, 31)          # Shishper: from 2019, for its own outbursts
+    assert since["KRB"] == since["DKT"] == date(2022, 12, 31)
+
+
+def test_no_lake_evidence_needs_the_lake_flag_and_the_season(tmp_path):
+    lake = {"centre_lon": 74.5650, "centre_lat": 36.3590, "growth_distance_limit_m": 1500.0, "detects_drainage": 1}
+    write_window(tmp_path / "w.tif", lake, centre_is_water=False)
+    assert pipeline.no_lake_evidence(tmp_path / "w.tif", lake, date(2026, 7, 1)).startswith("no lake: within 150 m")
+    assert pipeline.no_lake_evidence(tmp_path / "w.tif", {**lake, "detects_drainage": 0}, date(2026, 7, 1)) is None
+    assert pipeline.no_lake_evidence(tmp_path / "w.tif", lake, date(2026, 11, 1)) is None
+    write_window(tmp_path / "w5.tif", lake, centre_is_water=False, bands=5)                 # no SCL band
+    assert pipeline.no_lake_evidence(tmp_path / "w5.tif", lake, date(2026, 7, 1)) is None

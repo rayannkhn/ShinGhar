@@ -238,3 +238,52 @@ def test_banner_says_it_will_load_automatically(source_db, tmp_path):
         assert "Load the newer data now" in text
     finally:
         app.state.auto_reload_stop.set()
+
+
+# --- 'no lake found' on the pages (added 2026-11-10) ---------------------------------------------------
+@pytest.fixture
+def drained(source_db, tmp_path):
+    """SHP (id 3, detects_drainage): a usable 0.25 ha lake in July 2025, then 'no lake' in June 2026 whose file is
+    a window with no water at the centre (so the scene page recomputes the same result)."""
+    repo = tmp_path / "repo"
+    conn = db.connect(source_db)
+    s1 = db.insert_scene(conn, 3, "sentinel-2", "2025-07-01T05:58:58+00:00", 0.0, "data/scenes/SHP/full.tif")
+    db.insert_measurement(conn, s1, 3, "optical", 0.25, "ok")
+    s2 = db.insert_scene(conn, 3, "sentinel-2", "2026-06-15T05:58:58+00:00", 0.0, "data/scenes/SHP/empty.tif")
+    db.insert_measurement(conn, s2, 3, "optical", None, "no_lake_detected")
+    conn.close()
+    shp = (74.5650, 36.3590)
+    write_lake_window(repo / "data/scenes/SHP/full.tif", *shp)
+    import rasterio
+    write_lake_window(repo / "data/scenes/SHP/empty.tif", *shp)
+    with rasterio.open(repo / "data/scenes/SHP/empty.tif", "r+") as dst:       # drain it: no water anywhere
+        dst.write(np.full((30, 30), 300, np.uint16), 4)
+    return TestClient(create_app(source_db=source_db, work_dir=tmp_path / "work", today=lambda: TODAY, repo=repo)), s2
+
+
+def test_lake_page_says_no_lake_found_and_marks_it(drained):
+    client, sid = drained
+    html = client.get("/lakes/SHP").text
+    text = visible_text(html)
+    assert "No lake found in the latest clear optical scene ( 15 Jun 2026 )" in text
+    assert "not an alert: this system sends no alerts" in text
+    assert html.count('class="no-lake"') == 1                                   # the × on the chart
+    assert ">No lake found at the centre</span>" in html                         # the log chip
+    assert "1 usable, 0 refused, 1 no lake found, 0 too cloudy" in text
+
+
+def test_dashboard_flags_the_lake_with_no_lake_found(drained):
+    client, _ = drained
+    assert "Latest clear optical scene (15 Jun 2026): no lake found" in visible_text(client.get("/").text)
+
+
+def test_scene_page_recomputes_no_lake_the_same_way(drained):
+    client, sid = drained
+    text = visible_text(client.get(f"/scenes/{sid}").text)
+    assert "Result No lake found" in text and "Same as stored" in text
+    assert "no lake: within 150 m of the centre 0% water" in text
+
+
+def test_lakes_without_no_lake_results_show_no_banner(scenes):
+    text = visible_text(scenes.get("/lakes/KRB").text)
+    assert "No lake found" not in text and "no lake found" not in text

@@ -15,7 +15,7 @@ import sqlite3
 import subprocess
 import threading
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
@@ -331,7 +331,7 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
         if key not in analyses:
             try:
                 analyses[key] = (scene_view.analyse_radar(tif, rec["lake"], dem) if rec["source"] == "sentinel-1"
-                                 else scene_view.analyse_optical(tif, rec["lake"]), None)
+                                 else scene_view.analyse_optical(tif, rec["lake"], date.fromisoformat(rec["acquired_at"][:10])), None)
             except Exception as exc:     # shown on the page as it is; nothing is filled in
                 analyses[key] = (None, f"error: {type(exc).__name__}: {exc}")
         return analyses[key]

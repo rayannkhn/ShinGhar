@@ -2,13 +2,14 @@
 (webapp.scene_view, which calls the pipeline's own measurement functions), and compare with the stored row.
 
 Prints one line per scene that differs, then totals per lake and sensor. Reads sailab_glof.db read-only.
-Usage: .venv/bin/python scripts/check_scene_recompute.py
+Usage: .venv/bin/python scripts/check_scene_recompute.py [LAKE_CODE ...]   (no codes: every lake)
 """
 from __future__ import annotations
 
 import sqlite3
 import sys
 import time
+from datetime import date
 from collections import Counter
 from pathlib import Path
 
@@ -23,8 +24,10 @@ def main() -> int:
     conn = sqlite3.connect(f"file:{REPO / 'sailab_glof.db'}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
     lakes = {l["id"]: l for l in queries.list_lakes(conn)}
-    rows = conn.execute("""SELECT s.id, s.lake_id, s.source, s.acquired_at, s.file_path, m.status, m.extent_ha
+    codes = set(sys.argv[1:])
+    rows = [r for r in conn.execute("""SELECT s.id, s.lake_id, s.source, s.acquired_at, s.file_path, m.status, m.extent_ha
                            FROM scene s JOIN measurement m ON m.scene_id = s.id ORDER BY s.lake_id, s.acquired_at""").fetchall()
+            if not codes or lakes[r["lake_id"]]["code"] in codes]
     tally: Counter = Counter()
     started = time.time()
     for r in rows:
@@ -36,7 +39,7 @@ def main() -> int:
             continue
         try:
             a = (scene_view.analyse_radar(tif, lake, REPO / "data" / "dem" / f"{lake['code']}_dem.tif")
-                 if r["source"] == "sentinel-1" else scene_view.analyse_optical(tif, lake))
+                 if r["source"] == "sentinel-1" else scene_view.analyse_optical(tif, lake, date.fromisoformat(r["acquired_at"][:10])))
         except Exception as exc:
             tally[key + ("error",)] += 1
             print(f"ERROR scene {r['id']} {lake['code']} {r['acquired_at'][:10]}: {type(exc).__name__}: {exc}")

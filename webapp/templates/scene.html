@@ -37,7 +37,7 @@
 <section class="card mt">
   <h2>Recomputed now from the stored file</h2>
   <dl class="kv wide">
-    <dt>Result</dt><dd><span class="chip {{ 'ok' if a.status == 'ok' else 'warn' }}">{{ "Usable" if a.status == 'ok' else "Refused" }}</span>
+    <dt>Result</dt><dd><span class="chip {{ 'ok' if a.status == 'ok' else ('error' if a.status == 'no_lake_detected' else 'warn') }}">{{ "Usable" if a.status == 'ok' else ("No lake found" if a.status == 'no_lake_detected' else "Refused") }}</span>
       {% if a.extent_ha is not none %}<span class="mono">{{ a.extent_ha | ha }}</span>{% endif %} ({{ a.reason }})</dd>
     <dt>Against the stored result</dt><dd>{% if d.agreement == "same" %}<span class="chip ok">Same as stored</span>{% else %}<span class="chip warn">Differs from stored</span> stored: {{ s.measurement_status or "no measurement" }} {{ s.extent_ha | ha }}{% endif %}</dd>
     {% if a.region_px is not none %}<dt>Lake region</dt><dd><span class="mono">{{ "{:,}".format(a.region_px) }}</span> pixels × {{ "%.0f" | format(a.pixel_size_m) }} m × {{ "%.0f" | format(a.pixel_size_m) }} m = <span class="mono">{{ "%.2f" | format(a.region_px * a.pixel_size_m * a.pixel_size_m / 10000) }} ha</span>{% if a.status != 'ok' %} (grown, then refused: not stored as an area){% endif %}</dd>{% endif %}

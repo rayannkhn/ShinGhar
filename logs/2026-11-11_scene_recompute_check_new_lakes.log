@@ -1,0 +1,12 @@
+# 2026-11-10T20:21:52Z scripts/check_scene_recompute.py SHP DKT BRT PSU (after backfill runs 10 and 11)
+
+2536 measured scenes checked in 375 s
+  BRT optical  same          141
+  BRT radar    same          335
+  DKT optical  same          140
+  DKT radar    same          339
+  PSU optical  same          156
+  PSU radar    same          335
+  SHP optical  same          209
+  SHP radar    same          881
+exit code 0

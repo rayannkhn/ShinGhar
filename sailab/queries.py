@@ -35,9 +35,15 @@ def _sensor_summary(conn: sqlite3.Connection, lake_id: int, today: date, sensor:
         f"""SELECT COUNT(*) AS scenes,
                    COALESCE(SUM(s.file_path LIKE '{NOT_DOWNLOADED_PREFIX}%'), 0) AS too_cloudy,
                    COALESCE(SUM(m.status = 'ok'), 0) AS measured_ok,
-                   COALESCE(SUM(m.status = 'insufficient_observation'), 0) AS insufficient_observation
+                   COALESCE(SUM(m.status = 'insufficient_observation'), 0) AS insufficient_observation,
+                   COALESCE(SUM(m.status = 'no_lake_detected'), 0) AS no_lake_detected
             FROM scene s LEFT JOIN measurement m ON m.scene_id = s.id
             WHERE s.lake_id = ? AND s.source = ?""", (lake_id, source)).fetchone()
+    # The newest scene this sensor could judge (usable, or no lake found): refusals say nothing about the lake.
+    latest_judged = conn.execute(
+        """SELECT s.id AS scene_id, s.acquired_at, m.status, m.extent_ha FROM measurement m JOIN scene s ON s.id = m.scene_id
+           WHERE m.lake_id = ? AND m.sensor = ? AND m.status IN ('ok', 'no_lake_detected')
+           ORDER BY s.acquired_at DESC, m.id DESC LIMIT 1""", (lake_id, sensor)).fetchone()
     latest_ok = conn.execute(
         """SELECT m.id AS measurement_id, s.acquired_at, m.extent_ha, s.cloud_fraction, s.file_path
            FROM measurement m JOIN scene s ON s.id = m.scene_id
@@ -49,7 +55,7 @@ def _sensor_summary(conn: sqlite3.Connection, lake_id: int, today: date, sensor:
            WHERE r.lake_id = ? AND m.sensor = ? ORDER BY s.acquired_at DESC, r.id DESC LIMIT 1""",
         (lake_id, sensor)).fetchone()
     days = None if latest_ok is None else (today - date.fromisoformat(latest_ok["acquired_at"][:10])).days
-    return {"counts": dict(counts), "latest_ok_measurement": _row(latest_ok),
+    return {"counts": dict(counts), "latest_ok_measurement": _row(latest_ok), "latest_judged": _row(latest_judged),
             "latest_risk_score": _row(latest_score), "days_since_last_ok": days}
 
 

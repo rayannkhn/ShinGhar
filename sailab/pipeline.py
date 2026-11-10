@@ -72,6 +72,17 @@ RADAR_SLOPE_LIMIT_DEG = 10.0
 # stored data, radar is measured and shown, but never scored. _score() still keeps sensors apart if this is
 # ever switched on.
 SCORE_RADAR = False
+
+# Drained lake (added 2026-11-10, agreed with the project owner): an ice-dammed lake that bursts can vanish,
+# and "centre not water" then looks like any bad image. For lakes where this is trustworthy
+# (lake.detects_drainage = 1: their water is seen by NDWI when present), a refused "centre not water" scene is
+# recorded as 'no_lake_detected' (still no area) only when ALL hold: the month is May-October (outside it a
+# frozen or snow-covered lake also shows no water), and within NO_LAKE_CHECK_RADIUS_M of the centre there is
+# no cloud, cloud shadow, snow/ice or missing data, and under NO_LAKE_MAX_WATER_SHARE of the pixels are water.
+# Judgement-call limits, not calibrated. Silty lakes (Passu) must NOT use this: NDWI misses their water.
+NO_LAKE_MONTHS = range(5, 11)
+NO_LAKE_CHECK_RADIUS_M = 150.0
+NO_LAKE_MAX_WATER_SHARE = 0.10
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DEM_DIR = REPO_ROOT / "data" / "dem"
 
@@ -182,6 +193,37 @@ def measure_scene(path: str | Path, lake: Mapping[str, Any], cutoff: float = 0.2
     return MeasurementOutcome("ok", extent_ha, f"{len(region)} water pixels connected to the centre")
 
 
+def no_lake_evidence(path: str | Path, lake: Mapping[str, Any], acquired_on: date) -> str | None:
+    """Why a refused 'centre not water' scene counts as 'no lake detected', or None if it does not."""
+    import rasterio
+
+    if not int(dict(lake).get("detects_drainage") or 0):
+        return None
+    if acquired_on.month not in NO_LAKE_MONTHS:
+        return None
+    with rasterio.open(path) as src:
+        if src.count < SCL_BAND_INDEX:
+            return None
+        green = src.read(GREEN_BAND_INDEX).astype(float)
+        nir = src.read(NIR_BAND_INDEX).astype(float)
+        scl = src.read(SCL_BAND_INDEX)
+        pixel_size_m = float(src.res[0])
+    row_f, col_f = lake_centre_in_pixels(path, lake["centre_lon"], lake["centre_lat"])
+    near = _inside_circle(*green.shape, row_f, col_f, NO_LAKE_CHECK_RADIUS_M / pixel_size_m)
+    if not near.any():
+        return None
+    if ((green == 0) & (nir == 0) & near).any() or (np.isin(scl, SCL_CLOUD_CLASSES) & near).any() \
+            or ((scl == SCL_SNOW_ICE) & near).any() or ((scl == 0) & near).any():
+        return None
+    total = green + nir
+    water = np.where(total > 0, (green - nir) / np.where(total > 0, total, 1), -1) > 0.2
+    share = float((water & near).sum()) / float(near.sum())
+    if share >= NO_LAKE_MAX_WATER_SHARE:
+        return None
+    return (f"no lake: within {NO_LAKE_CHECK_RADIUS_M:.0f} m of the centre {share:.0%} water, no cloud, snow/ice or "
+            f"missing data, month {acquired_on.month:02d}")
+
+
 def _inside_circle(rows: int, cols: int, centre_row: float, centre_col: float, radius_px: float):
     """True for pixels whose centre lies within radius_px of the (fractional) lake centre."""
     r = np.arange(rows)[:, None] + 0.5
@@ -288,13 +330,16 @@ def run_pipeline_once(db_path: str | Path, data_dir: str | Path, initial_since_d
             if not resuming:
                 save_resume_state(db_path, run.log)   # survives even a hard kill part way through this lake
             lake = lake_rows[lake_id]
-            since = _since_date_for(conn, lake_id, initial_since_date)
+            # A lake can start its history earlier than the default (Shishper: from 2019, for its outbursts).
+            lake_start = dict(lake).get("history_since")
+            initial = date.fromisoformat(lake_start) if lake_start else initial_since_date
+            since = _since_date_for(conn, lake_id, initial)
             scenes = client.find_new_scenes(lake, since, until_date)
             log.info("%s: %d scenes listed after %s", lake["code"], len(scenes), since)
             for scene in scenes:
                 _process_scene(conn, client, lake, scene, data_dir, repo_root, result)
             if hasattr(client, "find_new_s1_scenes"):
-                radar_since = _since_date_for(conn, lake_id, initial_since_date, "sentinel-1")
+                radar_since = _since_date_for(conn, lake_id, initial, "sentinel-1")
                 radar_scenes = client.find_new_s1_scenes(lake, radar_since, until_date)
                 log.info("%s: %d radar scenes listed after %s", lake["code"], len(radar_scenes), radar_since)
                 slope = _slope_for(client, lake, dem_dir) if radar_scenes else None
@@ -354,11 +399,16 @@ def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, r
     log.info("%s %s: downloaded %s sha256=%s", lake["code"], scene.scene_id, stored_path, sha256_of(raster))
 
     outcome = measure_scene(raster, lake)
-    measurement_id = db.insert_measurement(conn, scene_id, lake["id"], "optical", outcome.extent_ha, outcome.status)
+    status, reason = outcome.status, outcome.reason
+    if status == "insufficient_observation" and reason.startswith("centre pixel") and "is not water" in reason:
+        why = no_lake_evidence(raster, lake, date.fromisoformat(scene.acquired_at[:10]))
+        if why is not None:
+            status, reason = "no_lake_detected", f"{reason}; {why}"
+    measurement_id = db.insert_measurement(conn, scene_id, lake["id"], "optical", outcome.extent_ha, status)
     result.measurements += 1
-    log.info("%s %s: %s %s (%s)", lake["code"], scene.scene_id, outcome.status, outcome.extent_ha, outcome.reason)
-    if outcome.status != "ok":
-        return   # nothing to score: an unobserved lake has no extent to compare
+    log.info("%s %s: %s %s (%s)", lake["code"], scene.scene_id, status, outcome.extent_ha, reason)
+    if status != "ok":
+        return   # nothing to score: an unobserved or vanished lake has no extent to compare
 
     _score(conn, lake, scene, measurement_id, outcome.extent_ha, "optical", result)
 

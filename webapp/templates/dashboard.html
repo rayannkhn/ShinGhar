@@ -62,6 +62,7 @@
       <span class="rank">{{ loop.index }}</span>
       <span><span class="code">{{ l.code }}</span> {{ l.name }}<br>
         <span class="sub">Optical: {% if s.latest_ok_measurement %}{{ s.latest_ok_measurement.extent_ha | ha }} on {{ s.latest_ok_measurement.acquired_at | date }}, {{ s.days_since_last_ok }} days ago{% else %}No usable measurement yet{% endif %}</span><br>
+        {% if s.latest_judged and s.latest_judged.status == 'no_lake_detected' %}<span class="sub" style="color:#b3261e;font-weight:600">Latest clear optical scene ({{ s.latest_judged.acquired_at | date }}): no lake found</span><br>{% endif %}
         <span class="sub">Radar: {% if r.latest_ok_measurement %}{{ r.latest_ok_measurement.extent_ha | ha }} on {{ r.latest_ok_measurement.acquired_at | date }}, {{ r.days_since_last_ok }} days ago{% else %}No usable measurement yet{% endif %}</span></span>
       <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">{{ score_chip(s.latest_risk_score, "optical") }}{{ radar_not_scored() }}</span>
       <span style="display:flex;flex-direction:column;gap:2px">{{ l.sparkline | safe }}{{ l.radar_sparkline | safe }}</span>

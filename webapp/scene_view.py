@@ -12,6 +12,7 @@ do not. Nothing is filled in when a file is missing or the recomputation fails: 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from math import floor
 from pathlib import Path
 from typing import Any, Mapping
@@ -21,7 +22,8 @@ from PIL import Image
 
 from sailab.measurement import Pixel, classify_water_ndwi, ndwi, region_grow
 from sailab.pipeline import (GREEN_BAND_INDEX, NIR_BAND_INDEX, OPTICAL_CLOUD_LIMIT_PERCENT, RADAR_SLOPE_LIMIT_DEG,
-                             SCL_BAND_INDEX, SCL_CLOUD_CLASSES, SCL_SNOW_ICE, lake_centre_in_pixels, measure_scene)
+                             SCL_BAND_INDEX, SCL_CLOUD_CLASSES, SCL_SNOW_ICE, lake_centre_in_pixels, measure_scene,
+                             no_lake_evidence)
 from sailab.radar import load_slope, measure_radar_scene
 
 REGION_RGB = (255, 196, 0)          # same outline colour as webapp/images.py
@@ -77,7 +79,7 @@ def ndwi_colours(index: np.ndarray, cutoff: float = NDWI_CUTOFF) -> np.ndarray:
     return rgb
 
 
-def analyse_optical(tif: Path, lake: Mapping[str, Any]) -> SceneAnalysis:
+def analyse_optical(tif: Path, lake: Mapping[str, Any], acquired_on: date | None = None) -> SceneAnalysis:
     import rasterio
 
     with rasterio.open(tif) as src:
@@ -85,6 +87,13 @@ def analyse_optical(tif: Path, lake: Mapping[str, Any]) -> SceneAnalysis:
         scl = src.read(SCL_BAND_INDEX) if src.count >= SCL_BAND_INDEX else None
         pixel_size_m = float(src.res[0])
     outcome = measure_scene(tif, lake, cutoff=NDWI_CUTOFF, scl_checks=scl is not None)
+    status, reason = outcome.status, outcome.reason
+    # Same rule as the pipeline's _process_scene: a refused "centre not water" can be 'no lake detected'.
+    if acquired_on is not None and status == "insufficient_observation" and reason.startswith("centre pixel") \
+            and "is not water" in reason:
+        why = no_lake_evidence(tif, lake, acquired_on)
+        if why is not None:
+            status, reason = "no_lake_detected", f"{reason}; {why}"
     rows, cols = b3.shape
 
     # The same region the pipeline grew (same functions, same seed), drawn even when a later check refused it,
@@ -118,7 +127,7 @@ def analyse_optical(tif: Path, lake: Mapping[str, Any]) -> SceneAnalysis:
         checks[snow] = (64, 200, 230)
         pictures["checks"] = _outlined(checks, inside)
         stats["cloud_px_in_window"], stats["snow_px_in_window"] = int(cloud.sum()), int(snow.sum())
-    return SceneAnalysis(outcome.status, outcome.extent_ha, outcome.reason, len(region) if region else None,
+    return SceneAnalysis(status, outcome.extent_ha, reason, len(region) if region else None,
                          pixel_size_m, ndwi_cutoff=NDWI_CUTOFF, window_px=(cols, rows), stats=stats, pictures=pictures)
 
 

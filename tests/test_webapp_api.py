@@ -34,7 +34,7 @@ def client(source_db, tmp_path):
 # --- queries ---------------------------------------------------------------------------------
 def test_lake_summary_counts_and_latest_values(conn):
     s = queries.lake_summary(conn, 1, TODAY)
-    assert s["counts"] == {"scenes": 5, "too_cloudy": 2, "measured_ok": 2, "insufficient_observation": 1}
+    assert s["counts"] == {"scenes": 5, "too_cloudy": 2, "measured_ok": 2, "insufficient_observation": 1, "no_lake_detected": 0}
     assert s["latest_scene"]["acquired_at"].startswith("2026-10-21")
     assert s["latest_scene"]["too_cloudy"] == 1 and s["latest_scene"]["measurement_status"] is None
     assert s["latest_ok_measurement"]["acquired_at"].startswith("2026-07-12")
@@ -47,7 +47,7 @@ def test_lake_summary_counts_and_latest_values(conn):
 
 def test_a_lake_with_no_data_returns_empty_values_not_invented_ones(conn):
     s = queries.lake_summary(conn, 2, TODAY)
-    assert s["counts"] == {"scenes": 0, "too_cloudy": 0, "measured_ok": 0, "insufficient_observation": 0}
+    assert s["counts"] == {"scenes": 0, "too_cloudy": 0, "measured_ok": 0, "insufficient_observation": 0, "no_lake_detected": 0}
     assert s["latest_scene"] is None
     assert s["latest_ok_measurement"] is None
     assert s["latest_risk_score"] is None
@@ -68,7 +68,7 @@ def test_lake_history_is_one_row_per_scene_oldest_first(conn):
 def test_run_log_newest_first_and_totals(conn):
     assert [r["id"] for r in queries.run_log(conn)] == [2, 1]
     assert queries.latest_run(conn)["errors"] == "EarthEngineError: quota"
-    assert queries.database_totals(conn) == {"lake": 2, "scene": 5, "measurement": 3, "risk_score": 2,
+    assert queries.database_totals(conn) == {"lake": 6, "scene": 5, "measurement": 3, "risk_score": 2,
                                              "run_log": 2, "too_cloudy": 2,
                                              "optical_scenes": 5, "optical_measurements": 3, "optical_ok": 2,
                                              "radar_scenes": 0, "radar_measurements": 0, "radar_ok": 0}
@@ -77,7 +77,7 @@ def test_run_log_newest_first_and_totals(conn):
 # --- API -------------------------------------------------------------------------------------
 def test_api_lakes_matches_the_queries(client):
     body = client.get("/api/lakes").json()
-    assert [l["code"] for l in body] == ["KRB", "ATS"]
+    assert [l["code"] for l in body] == ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU"]
     assert body[0]["summary"]["counts"]["measured_ok"] == 2
     assert body[0]["summary"]["days_since_last_ok"] == 120
     assert body[1]["summary"]["latest_ok_measurement"] is None

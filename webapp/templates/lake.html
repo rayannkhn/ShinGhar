@@ -5,6 +5,11 @@
 {% set l = d.lake %}{% set s = l.summary %}
 <div class="breadcrumb"><a href="/">Dashboard</a> / <span class="mono">{{ l.code }}</span></div>
 
+{% if s.latest_judged and s.latest_judged.status == 'no_lake_detected' %}
+<div class="banner error">{{ icon_warn() }}<div><strong>No lake found in the latest clear optical scene</strong>
+  (<a href="/scenes/{{ s.latest_judged.scene_id }}">{{ s.latest_judged.acquired_at | date }}</a>): a clear, snow-free summer scene with no water within
+  150 m of the lake centre. The lake may have drained. This is a measurement result, not an alert: this system sends no alerts.</div></div>
+{% endif %}
 <section class="card">
   <div class="card-head">
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -23,7 +28,7 @@
       <div style="color:var(--muted);font-size:13.5px">{% if rs.latest_ok_measurement %}{{ rs.latest_ok_measurement.acquired_at | date }}, {{ rs.days_since_last_ok }} days ago{% endif %}</div></div>
     <div><div style="color:var(--muted);font-size:13.5px">Scenes recorded</div>
       <div style="font-size:22px;font-weight:600" class="mono">{{ s.counts.scenes + rs.counts.scenes }}</div>
-      <div style="color:var(--muted);font-size:13.5px">optical {{ s.counts.scenes }}: {{ s.counts.measured_ok }} usable, {{ s.counts.insufficient_observation }} refused, {{ s.counts.too_cloudy }} too cloudy<br>
+      <div style="color:var(--muted);font-size:13.5px">optical {{ s.counts.scenes }}: {{ s.counts.measured_ok }} usable, {{ s.counts.insufficient_observation }} refused, {% if s.counts.no_lake_detected %}{{ s.counts.no_lake_detected }} no lake found, {% endif %}{{ s.counts.too_cloudy }} too cloudy<br>
         radar {{ rs.counts.scenes }}: {{ rs.counts.measured_ok }} usable, {{ rs.counts.insufficient_observation }} refused</div></div>
     <div><div style="color:var(--muted);font-size:13.5px">Settings</div>
       <div style="font-size:14px;margin-top:4px"><span class="mono">{{ "%.5f" | format(l.centre_lat) }} N, {{ "%.5f" | format(l.centre_lon) }} E</span><br>
@@ -46,6 +51,7 @@
       <span><svg width="11" height="10" style="vertical-align:middle;margin-right:5px"><polygon points="5.5,0 0,10 11,10" fill="#0e7a5f"/></svg>Sentinel-1 radar</span>
       <span><i class="dash" style="background:#5b6470"></i>Seasonal baseline (where scored)</span>
       <span><i class="bar" style="background:#1e4e8c"></i><i class="bar" style="background:#0e7a5f"></i><i class="bar" style="background:#b08a2e"></i><i class="bar" style="background:#a7b0ba"></i>Scenes: measured (optical, radar), refused, too cloudy</span>
+      {% if s.counts.no_lake_detected %}<span><svg width="10" height="10" style="vertical-align:middle;margin-right:5px"><path d="M1,1 L9,9 M1,9 L9,1" stroke="#b3261e" stroke-width="2"/></svg>No lake found (no area)</span>{% endif %}
     </div>
     {% if d.chart %}{{ d.chart | safe }}{% else %}<p>No scenes recorded for this lake yet.</p>{% endif %}
     <p class="footnote">{{ d.chart_start | date }} to {{ d.chart_end | date }}: {{ d.ok_in_range }} usable optical and {{ d.radar_ok_in_range }} usable radar measurements.
@@ -142,6 +148,8 @@
   </div>
   <p class="footnote" style="padding:0 20px 16px">"Refused by quality checks" (optical): centre not water, cloud or snow/ice touching the lake, or the lake cut off at the window edge.
     "Refused by radar checks": centre not darker than the radar threshold, or the region reaching the window edge.
+    {% if l.detects_drainage %}"No lake found at the centre" (this lake only checks for it because its water is clear): a May-October optical scene with no
+    cloud, snow/ice or missing data within 150 m of the centre and almost no water there; no area is stored.{% endif %}
     The exact reason for each scene is in that run's log file (logs/runs/), and on its scene page ("View image"), where the
     measurement is recomputed from the stored file and drawn: true colour, NDWI and cloud/snow for optical; backscatter and the threshold map for radar.</p>
 </section>

@@ -44,11 +44,11 @@ def test_rows_survive_closing_and_reopening_the_file(db_path):
     assert row["growth_distance_limit_m"] == 2500.0  # default from the schema
 
 
-def test_seed_inserts_the_two_lakes_with_the_exact_given_coordinates(conn):
+def test_seed_inserts_the_lakes_with_the_exact_given_coordinates(conn):
     db.seed_lakes(conn)
     lakes = {row["code"]: dict(row) for row in db.get_lakes(conn)}
 
-    assert set(lakes) == {"KRB", "ATS"}
+    assert list(lakes) == ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU"]      # the order the ids are given in
     assert lakes["KRB"]["name"] == "Karambar Lake"
     assert (lakes["KRB"]["centre_lon"], lakes["KRB"]["centre_lat"]) == (73.7053229, 36.880833)
     assert (lakes["KRB"]["boundary_radius_m"], lakes["KRB"]["growth_distance_limit_m"]) == (2500.0, 2500.0)
@@ -56,13 +56,17 @@ def test_seed_inserts_the_two_lakes_with_the_exact_given_coordinates(conn):
     assert (lakes["ATS"]["centre_lon"], lakes["ATS"]["centre_lat"]) == (73.65037, 36.64458)
     # Changed from (800, 1200) on 2026-11-08: the 800 m window cut the lake off (see db.SEED_LAKES comment)
     assert (lakes["ATS"]["boundary_radius_m"], lakes["ATS"]["growth_distance_limit_m"]) == (1500.0, 1500.0)
+    # Added 2026-11-10 (logs/2026-11-10_new_lake_candidates/README.md)
+    assert (lakes["SHP"]["centre_lon"], lakes["SHP"]["centre_lat"], lakes["SHP"]["history_since"]) == (74.5650, 36.3590, "2018-12-31")
+    assert (lakes["DKT"]["centre_lon"], lakes["DKT"]["centre_lat"]) == (73.40701, 36.64219)     # published position
+    assert {c: lakes[c]["detects_drainage"] for c in lakes} == {"KRB": 0, "ATS": 0, "SHP": 1, "DKT": 1, "BRT": 0, "PSU": 0}
 
 
 def test_seeding_twice_does_not_duplicate(conn):
     first_ids = db.seed_lakes(conn)
     second_ids = db.seed_lakes(conn)
     assert first_ids == second_ids
-    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == 2
+    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == len(db.SEED_LAKES) == 6
 
 
 def test_seeding_refuses_to_overwrite_a_changed_coordinate(conn):
@@ -227,3 +231,44 @@ def test_out_of_range_coordinates_are_refused(conn, lon, lat):
     """Added after mutation D7 (latitude limit widened to ±180) survived the whole suite: nothing tested it."""
     with pytest.raises(ValueError, match="coordinates out of range"):
         db.insert_lake(conn, "BAD", "Bad lake", lon, lat, 1000.0)
+
+
+# --- added 2026-11-10: the no-lake status and the new lake columns ------------------------------------
+def _scene(conn):
+    db.seed_lakes(conn)
+    return db.insert_scene(conn, 3, "sentinel-2", "2026-06-15T05:58:58+00:00", 0.0, "data/scenes/SHP/x.tif")
+
+
+def test_no_lake_detected_never_carries_an_area(conn):
+    sid = _scene(conn)
+    with pytest.raises(ValueError, match="must have extent_ha = None"):
+        db.insert_measurement(conn, sid, 3, "optical", 0.0, "no_lake_detected")
+    assert db.insert_measurement(conn, sid, 3, "optical", None, "no_lake_detected") > 0
+
+
+def test_no_lake_detected_is_optical_only(conn):
+    sid = _scene(conn)
+    with pytest.raises(ValueError, match="optical result only"):
+        db.insert_measurement(conn, sid, 3, "radar", None, "no_lake_detected")
+
+
+def test_an_older_database_gets_the_new_lake_columns(tmp_path):
+    import sqlite3
+    old = tmp_path / "old.db"
+    c = sqlite3.connect(old)
+    c.execute("CREATE TABLE lake (id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, "
+              "centre_lon REAL NOT NULL, centre_lat REAL NOT NULL, boundary_radius_m REAL NOT NULL, "
+              "growth_distance_limit_m REAL NOT NULL DEFAULT 2500)")
+    c.execute("INSERT INTO lake VALUES (1, 'KRB', 'Karambar Lake', 73.7053229, 36.880833, 2500.0, 2500.0)")
+    c.commit(); c.close()
+    conn = db.connect(old)
+    row = dict(conn.execute("SELECT * FROM lake WHERE code = 'KRB'").fetchone())
+    assert (row["history_since"], row["detects_drainage"]) == (None, 0)
+    db.seed_lakes(conn)                                   # the old row still matches its seed: no error
+    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == 6
+
+
+@pytest.mark.parametrize("kwargs", [{"history_since": "2019-13-01"}, {"detects_drainage": 2}])
+def test_bad_lake_settings_are_refused(conn, kwargs):
+    with pytest.raises(ValueError):
+        db.insert_lake(conn, "XXX", "Test", 74.0, 36.0, 1000.0, 1000.0, **kwargs)

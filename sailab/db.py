@@ -25,7 +25,9 @@ CREATE TABLE IF NOT EXISTS lake (
     centre_lon REAL NOT NULL,
     centre_lat REAL NOT NULL,
     boundary_radius_m REAL NOT NULL,
-    growth_distance_limit_m REAL NOT NULL DEFAULT 2500
+    growth_distance_limit_m REAL NOT NULL DEFAULT 2500,
+    history_since TEXT,
+    detects_drainage INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS scene (
@@ -71,7 +73,10 @@ CREATE TABLE IF NOT EXISTS run_log (
 
 SCENE_SOURCES = ("sentinel-2", "sentinel-1")
 SENSORS = ("optical", "radar")
-MEASUREMENT_STATUSES = ("ok", "insufficient_observation")
+# 'no_lake_detected' (added 2026-11-10): a clear, snow-free summer scene with no water at the lake centre, for
+# lakes where this is trustworthy (lake.detects_drainage = 1). It carries NO area: it is not a measured 0 ha.
+MEASUREMENT_STATUSES = ("ok", "insufficient_observation", "no_lake_detected")
+NO_AREA_STATUSES = ("insufficient_observation", "no_lake_detected")
 RISK_STATUSES = ("ok", "insufficient_history")
 RISK_METHODS = ("anomaly_detector",)
 
@@ -87,6 +92,8 @@ SEED_LAKES = (
         "centre_lat": 36.880833,
         "boundary_radius_m": 2500.0,
         "growth_distance_limit_m": 2500.0,
+        "history_since": None,
+        "detects_drainage": 0,
     },
     {
         # Centre unchanged. Window and growth limit changed on 2026-11-08 from 800 m / 1200 m to
@@ -100,6 +107,64 @@ SEED_LAKES = (
         "centre_lat": 36.64458,
         "boundary_radius_m": 1500.0,
         "growth_distance_limit_m": 1500.0,
+        "history_since": None,
+        "detects_drainage": 0,
+    },
+    # Added 2026-11-10, agreed with the project owner. Each was tested first with the pipeline's own download and
+    # measurement on real scenes: logs/2026-11-10_new_lake_candidates/README.md. history_since = the date the
+    # backfill starts after (None: scripts/run_once.py's INITIAL_SINCE_DATE, 2022-12-31).
+    {
+        # Ice-dammed lake beside the surging Shishper glacier above Hassanabad, Hunza; outbursts incl. 7 May 2022
+        # (KKH bridge destroyed). Centre: inside both the 2019 and the April 2022 lake outlines (Sentinel-2).
+        # History from 2019 so the lake's own outbursts are in the record. detects_drainage: when the lake was
+        # there its water was seen by NDWI; since the 2022 outburst there is none (correctly "no lake").
+        "code": "SHP",
+        "name": "Shishper glacier lake",
+        "centre_lon": 74.5650,
+        "centre_lat": 36.3590,
+        "boundary_radius_m": 1500.0,
+        "growth_distance_limit_m": 1500.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 1,
+    },
+    {
+        # Darkut glacial lake ("Ghamu Bar"), Yasin valley, at the Darkut glacier tongue; grown from 4.5 to 15.4 ha
+        # (Amin et al. 2020, Meteorological Applications, doi 10.1002/met.1877). Centre: the published position
+        # 36 38'31.90" N, 73 24'25.22" E (PMD study). Clear water: 6 of 6 summer optical and 6 of 6 radar scenes usable.
+        "code": "DKT",
+        "name": "Darkut glacial lake",
+        "centre_lon": 73.40701,
+        "centre_lat": 36.64219,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": None,
+        "detects_drainage": 1,
+    },
+    {
+        # Borith (Borit) Lake near Ghulkin and Passu glaciers, Hunza; named a possible future GLOF source
+        # (Iqbal et al. 2023). Centre: JRC Global Surface Water centroid. Radar stable (10.7-11.3 ha); optical
+        # only partly (2 of 4 summer scenes), so no drainage detection.
+        "code": "BRT",
+        "name": "Borith Lake",
+        "centre_lon": 74.86214,
+        "centre_lat": 36.43053,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": None,
+        "detects_drainage": 0,
+    },
+    {
+        # Proglacial lake at the Passu glacier snout, Hunza; past outbursts (e.g. Jan 2008) and a May 2022
+        # meltwater release that damaged a KKH bridge (ICIMOD). Silty water: NDWI does not see it (0 of 4 summer
+        # optical scenes); radar measured 3 of 6. Kept so the system shows that limit honestly; no drainage detection.
+        "code": "PSU",
+        "name": "Passu glacier lake",
+        "centre_lon": 74.87979,
+        "centre_lat": 36.45744,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": None,
+        "detects_drainage": 0,
     },
 )
 
@@ -115,6 +180,12 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")  # SQLite ignores REFERENCES unless this is on
     conn.executescript(SCHEMA)
+    # Columns added after the first databases were created (2026-11-10): add them to an older file in place.
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(lake)")}
+    if "history_since" not in columns:
+        conn.execute("ALTER TABLE lake ADD COLUMN history_since TEXT")
+    if "detects_drainage" not in columns:
+        conn.execute("ALTER TABLE lake ADD COLUMN detects_drainage INTEGER NOT NULL DEFAULT 0")
     conn.commit()
     return conn
 
@@ -123,13 +194,18 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
 # Inserts
 # ---------------------------------------------------------------------------
 def insert_lake(conn: sqlite3.Connection, code: str, name: str, centre_lon: float, centre_lat: float,
-                boundary_radius_m: float, growth_distance_limit_m: float = 2500.0) -> int:
+                boundary_radius_m: float, growth_distance_limit_m: float = 2500.0,
+                history_since: str | None = None, detects_drainage: int = 0) -> int:
     if not (-180.0 <= centre_lon <= 180.0) or not (-90.0 <= centre_lat <= 90.0):
         raise ValueError(f"lake {code}: coordinates out of range (lon={centre_lon}, lat={centre_lat})")
+    if history_since is not None:
+        date.fromisoformat(history_since)      # raises ValueError if not an ISO date
+    if detects_drainage not in (0, 1):
+        raise ValueError(f"lake {code}: detects_drainage must be 0 or 1, got {detects_drainage!r}")
     cursor = conn.execute(
-        "INSERT INTO lake (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m),
+        "INSERT INTO lake (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m, "
+        "history_since, detects_drainage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m, history_since, detects_drainage),
     )
     conn.commit()
     return cursor.lastrowid
@@ -162,8 +238,10 @@ def insert_measurement(conn: sqlite3.Connection, scene_id: int, lake_id: int, se
         raise ValueError(f"measurement status must be one of {MEASUREMENT_STATUSES}, got {status!r}")
     if status == "ok" and extent_ha is None:
         raise ValueError("status 'ok' needs an extent_ha value")
-    if status == "insufficient_observation" and extent_ha is not None:
-        raise ValueError("status 'insufficient_observation' must have extent_ha = None, not a number")
+    if status in NO_AREA_STATUSES and extent_ha is not None:
+        raise ValueError(f"status {status!r} must have extent_ha = None, not a number")
+    if status == "no_lake_detected" and sensor != "optical":
+        raise ValueError("'no_lake_detected' is an optical result only")
     cursor = conn.execute(
         "INSERT INTO measurement (scene_id, lake_id, sensor, extent_ha, status, measured_at) "
         "VALUES (?, ?, ?, ?, ?, ?)",
@@ -248,7 +326,7 @@ def finish_run_log(conn: sqlite3.Connection, run_id: int, lakes_processed: int, 
 # Seeding
 # ---------------------------------------------------------------------------
 def seed_lakes(conn: sqlite3.Connection) -> list[int]:
-    """Insert the two seed lakes if missing. Safe to run every time.
+    """Insert the seed lakes if missing. Safe to run every time.
 
     If a lake with the same code already exists with different values, this
     raises rather than silently keeping either version, because a changed

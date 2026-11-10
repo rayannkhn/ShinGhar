@@ -1,0 +1,19 @@
+# 2026-11-10T20:39:25Z scripts/compare_water_index.py
+KRB: radar Jul-Sep median 263.12 ha (n=54)
+     NDWI>0.2 : 11/12 found, median  254.37 ha, range 124.95-257.02
+     MNDWI>0  : 10/12 found, median  249.38 ha, range 129.45-393.62
+ATS: radar Jul-Sep median 98.94 ha (n=52)
+     NDWI>0.2 : 12/12 found, median  106.01 ha, range 104.90-106.30
+     MNDWI>0  : 12/12 found, median  111.16 ha, range 110.69-111.94
+SHP: radar Jul-Sep median none
+     NDWI>0.2 :  0/12 found
+     MNDWI>0  :  0/12 found
+DKT: radar Jul-Sep median 14.67 ha (n=87)
+     NDWI>0.2 : 12/12 found, median   16.57 ha, range 14.64-16.90
+     MNDWI>0  : 12/12 found, median   22.25 ha, range 20.85-26.43
+BRT: radar Jul-Sep median 11.24 ha (n=87)
+     NDWI>0.2 :  5/12 found, median    8.71 ha, range 3.48-10.70
+     MNDWI>0  :  5/12 found, median    1.03 ha, range 0.68-9.17
+PSU: radar Jul-Sep median 11.19 ha (n=75)
+     NDWI>0.2 :  0/12 found
+     MNDWI>0  : 10/12 found, median   22.39 ha, range 18.75-25.78

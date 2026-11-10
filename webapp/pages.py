@@ -124,6 +124,8 @@ def scene_quality(row: dict) -> tuple[str, str]:
         return "muted", "Not downloaded: cloud over lake"
     if row["measurement_status"] == "ok":
         return "ok", "Usable"
+    if row["measurement_status"] == "no_lake_detected":
+        return "error", "No lake found at the centre"
     if row["measurement_status"] == "insufficient_observation":
         return "warn", ("Refused by radar checks" if row.get("source") == "sentinel-1" else "Refused by quality checks")
     return "muted", "No measurement recorded"
