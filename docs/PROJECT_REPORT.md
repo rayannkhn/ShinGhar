@@ -226,6 +226,7 @@ Neither is a scene count. (Two lakes, before run 9 on 9 Nov: 1,051 / 694 / 406; 
 | 9 | 10 Nov 01:02 | **Second scheduled run** (the 9 Nov 18:00 slot, started about 7 h late by GitHub) | Completed; 216 tests passed in 8.51 s; **2 new radar passes** (9 Nov 13:05): Karambar 257.55 ha, Atro Sar 97.14 ha; first images committed to `data/scenes/` (`logs/2026-11-10_scheduled_run_2_report.md`) |
 | 10 | 10 Nov 17:40 | Backfill of the four new lakes (by hand) | **Failed** at Passu, after Shishper, Darkut and Borith: Earth Engine HTTP 503 "memory capacity exceeded" (2,998 scenes recorded before it). Kept as a real failure record |
 | 11 | 10 Nov 20:04 | Same backfill, resumed | Completed: resumed after the last finished lake; Passu, 403 scenes |
+| 12 | 10 Nov 22:42 | **Third scheduled run**, first over six lakes (10 Nov 18:00 slot, about 4.7 h late) | Completed in 11 s; 265 tests passed; Karambar 261.14 ha and Atro Sar 98.05 ha from the 10 Nov 01:05 radar pass, identical to the live check of the same pass (same SHA-256); 2 too-cloudy optical scenes (`logs/2026-11-11_scheduled_run_3_report.md`) |
 
 ---
 
@@ -829,12 +830,12 @@ accuracy or of flood detection, and this report never uses them that way.
 
 | Item | Status |
 |---|---|
-| Scheduled run 3 | Waiting for the 10 Nov 18:00 UTC slot (the first over six lakes); then the README run table is updated from GitHub |
+| Scheduled run 3 | **Done** (run 12, 10 Nov 22:42 UTC, success, six lakes). Three daily slots covered; by UTC start time two runs began on 10 Nov |
 | Borith and Passu optical scoring | Decision for the project owner: switch it off (like radar) until a better water method is tested |
 | A modern water method | Sentinel-1 + Sentinel-2 random-forest classifier, built next to NDWI and compared on all six lakes; improved radar thresholds |
 | Shishper vs Lovell & Muhammad (2024) | Compare the stored record with their six dated fill-and-drain phases |
 | Demo script and live-check fallback | `docs/DEMO_SCRIPT.md`, `docs/LIVE_CHECK_FALLBACK.md` still describe two lakes; live-check time with six lakes not yet measured |
-| The 10 Nov 01:05 radar pass | Found by a live check only; the next scheduled run should record it in the published database |
+| The 10 Nov 01:05 radar pass | **Recorded** by run 12 with exactly the live check's values |
 | Hourly `git pull` cron job | Added by the owner on 10 Nov (`crontab -l` shows it); the app's automatic reload is built |
 | Repository size | Images committed nightly (about 3 GB a year with six lakes): move them out of git within the year |
 | Report, slides and proof package outside the repo | Change Atro Sar **76.51 → 105.82 ha**; use the corrected radar wording (16 independent scenes, mitigation, not a general fix) |

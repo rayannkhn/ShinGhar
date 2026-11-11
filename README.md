@@ -43,7 +43,8 @@ human involved:
 The run history is public: open the **Actions** tab of this repository. Each bot commit
 ("Automated run: <UTC time> (success|failure)") contains that run's log.
 
-⏳ **Scheduled runs so far: 2** (of the 3 on different days needed).
+**Scheduled runs so far: 3**, one for each daily slot (8, 9 and 10 November). In Pakistan time they started on
+three different days; by UTC start time runs 9 and 12 both started on 10 November, because of GitHub's delays.
 
 | Date (UTC) | Trigger | Result |
 |---|---|---|
@@ -52,6 +53,7 @@ The run history is public: open the **Actions** tab of this repository. Each bot
 | **2026-11-08 21:31** | **schedule** (the 18:00 UTC slot, started 3.5 h late by GitHub) | **success**, 171 tests passed in 6.13 s (`logs/2026-11-08_scheduled_run_6_github_test_step.log`, from GitHub's job log), no new scene since 2026-11-05; bot commit `5872d48`, `run_log` row 6 |
 | 2026-11-09 12:09 | manual (checking radar on GitHub) | success, no new scene; bot commit `21ad8a6`, `run_log` row 8 |
 | **2026-11-10 01:01** | **schedule** (the 2026-11-09 18:00 UTC slot, started about 7 h late by GitHub) | **success**, 216 tests passed in 8.51 s; **new Sentinel-1 pass for both lakes** (2026-11-09 13:05 UTC): Karambar 257.55 ha, Atro Sar 97.14 ha, both within the 15 % rule, not scored; first images committed to `data/scenes/`; bot commit `69378dc`, `run_log` row 9 (`logs/2026-11-10_scheduled_run_2_report.md`) |
+| **2026-11-10 22:42** | **schedule** (the 2026-11-10 18:00 UTC slot, about 4.7 h late) | **success**, 265 tests passed in 10.80 s; first run over **six lakes**, 11 s: new Sentinel-1 pass (2026-11-10 01:05 UTC) for Karambar 261.14 ha and Atro Sar 98.05 ha, **identical to the GUI live check of the same pass** (same areas, same file SHA-256); new optical pass too cloudy; the four new lakes already had both passes from the backfill; bot commit `20ffbfc`, `run_log` row 12 (`logs/2026-11-11_scheduled_run_3_report.md`) |
 
 Manual runs do not count as automatic. GitHub can start scheduled runs late or skip them, so the
 Actions tab is the record of which ones actually happened.
@@ -243,6 +245,7 @@ Shishper never does).
 ## Current contents of the database (`sailab_glof.db`)
 
 ⏳ As of 2026-11-11, after the backfill of the four new lakes (runs 10 and 11). Newest scene: 2026-11-10.
+Scheduled run 12 then added 4 scenes for Karambar and Atro Sar (4,458 in total); the tables below are from before it.
 
 | | KRB | ATS | SHP | DKT | BRT | PSU |
 |---|---|---|---|---|---|---|
@@ -291,6 +294,7 @@ the cloud problem the project's radar fallback is meant to solve, measured with 
 | 9 | **Second scheduled run** (GitHub's scheduler, 2026-11-10 01:02 UTC) | Completed: 2 new radar passes recorded, downloaded and measured (Karambar 257.55 ha, Atro Sar 97.14 ha); no new optical scene. |
 | 10 | Backfill of the four new lakes (by hand, 2026-11-10 17:40 UTC) | **Failed** at Passu after Shishper, Darkut and Borith: Earth Engine returned HTTP 503 "memory capacity exceeded". 2,998 scenes recorded before it. Kept as a real failure record. |
 | 11 | Same backfill, resumed (2026-11-10 20:04 UTC) | Completed: resumed after the last finished lake (Borith); Passu, 403 scenes. |
+| 12 | **Third scheduled run** (GitHub's scheduler, 2026-11-10 22:42 UTC), first over six lakes | Completed in 11 s: 4 scenes recorded (2 too cloudy optical, 2 radar), Karambar 261.14 ha, Atro Sar 98.05 ha. |
 
 The pre-C/D/F database and its 5-band images are archived locally (`data/archive_v1/`, not in this
 repository); the comparison is in `logs/2026-11-08_cdf_before_after.md`.
