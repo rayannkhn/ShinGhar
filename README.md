@@ -374,7 +374,7 @@ tests inherited from the earlier project pass unchanged.
 
 ## The web app (local, for demonstration)
 
-`.venv/bin/uvicorn app:app`, then open http://localhost:8000. It needs no internet connection except for
+`.venv/bin/uvicorn app:app`, then open http://127.0.0.1:8000. It needs no internet connection except for
 the Live check button.
 
 - **Dashboard** and **Lake Detail** (six lakes): every number is read from the database (a test checks that the

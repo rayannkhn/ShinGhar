@@ -506,7 +506,7 @@ improved, terrain-corrected radar thresholds (Markert et al. 2020; Khan et al. 2
 
 ## 9. The web app (GUI), screen by screen
 
-**Start it:** `.venv/bin/uvicorn app:app`, open <http://localhost:8000>. It runs only on this laptop
+**Start it:** `.venv/bin/uvicorn app:app`, open <http://127.0.0.1:8000>. It runs only on this laptop
 (127.0.0.1), needs **no internet** except for the Live check button, and has **no sign-in** (agreed: no real accounts
 exist, so a login would only look like security).
 
@@ -918,4 +918,4 @@ The full demo script is `docs/DEMO_SCRIPT.md`.
 | Check the GUI numbers | `.venv/bin/python scripts/verify_gui_numbers.py` |
 | Re-check every stored measurement against its file | `.venv/bin/python scripts/check_scene_recompute.py` (about 10 minutes) |
 | Re-run the mutation check | `.venv/bin/python scripts/mutation_check.py` (about 3 minutes) |
-| Start the web app | `.venv/bin/uvicorn app:app`, then <http://localhost:8000> |
+| Start the web app | `.venv/bin/uvicorn app:app`, then <http://127.0.0.1:8000> |

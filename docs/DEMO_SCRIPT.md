@@ -12,7 +12,7 @@ the live check, and its three possible outcomes are planned below.
 
 ## On the day, before the jury arrives
 1. Connect to the internet and check it works (open any website).
-2. `cd ~/Documents/SAILAB_FYP1_FINAL && .venv/bin/uvicorn app:app`, then open http://localhost:8000.
+2. `cd ~/Documents/SAILAB_FYP1_FINAL && .venv/bin/uvicorn app:app`, then open http://127.0.0.1:8000.
 3. Keep these ready in separate tabs, as fallbacks:
    - `logs/2026-11-08_gui_live_check_new_scenes_vs_backfill.log` (the real "new scenes" run)
    - `docs/comparison/` (screens next to the designs)
