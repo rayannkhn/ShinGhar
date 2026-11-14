@@ -167,3 +167,55 @@ tr.alert td { background: #fbe9e9; }
   .layout { grid-template-columns: 1fr; }
   .sidebar { display: none; }
 }
+
+/* live check, step by step */
+.live-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.live-form select { font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.log-box { white-space: pre-wrap; background: #f7f9fa; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-size: 12.5px; }
+.steps { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-direction: column; gap: 14px; }
+.step { border: 1px solid var(--border); border-left: 5px solid #2e8b57; border-radius: 8px; background: var(--card); scroll-margin-top: 16px; transition: opacity .25s; }
+.step.tone-info { border-left-color: #3a6fb5; }
+.step.tone-warn { border-left-color: #c79400; }
+.step.tone-stop { border-left-color: #b3261e; }
+.step.replay { background: #fffcf2; }
+.step.fresh { animation: step-in .45s ease-out; }
+@keyframes step-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.step-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px 6px; flex-wrap: wrap; }
+.step-head h3 { margin: 0; font-size: 17px; flex: 1; min-width: 200px; }
+.step-n { width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+.step-tags { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.step-time { color: var(--muted); font-size: 13px; }
+.step-body { padding: 0 16px 12px 58px; }
+.step-in { margin: 4px 0; color: var(--muted); }
+.step-what { margin: 6px 0; padding-left: 18px; }
+.step-what li { margin: 3px 0; }
+.step-formula { background: #f2f6f9; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 13.5px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; }
+.step-pics { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; }
+.step-pics figure { margin: 0; max-width: 360px; flex: 1 1 260px; }
+.step-pics img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); image-rendering: pixelated; background: #000; }
+.step-pics figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.step-svg { max-width: 600px; margin: 8px 0; }
+.step-svg svg { width: 100%; height: auto; }
+.hb-land { fill: #b9a68c; } .hb-water { fill: #2b74c7; }
+.hb-axis { stroke: var(--muted); stroke-width: 1; } .hb-threshold { stroke: #b3261e; stroke-width: 2; stroke-dasharray: 5 3; }
+.hb-text { fill: var(--muted); font-size: 12px; font-family: Inter, system-ui, sans-serif; } .hb-strong { fill: #b3261e; font-weight: 700; }
+.hb-centre { fill: #d93025; }
+.step-table { overflow-x: auto; margin: 8px 0; } .step-table table { font-size: 13.5px; }
+.step-result { margin: 8px 0 0; font-size: 15.5px; }
+.step.dim { opacity: .28; }
+.present-bar[hidden] { display: none; }
+.present-bar { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.15); z-index: 10; }
+body.presenting .step-head h3 { font-size: 19px; }
+@media (max-width: 700px) { .step-body { padding-left: 16px; } .present-bar { left: 16px; right: 16px; transform: none; justify-content: space-between; } }
+
+/* dashboard: note on the latest nightly run */
+.run-note { margin-bottom: 18px; border-left: 5px solid #3a6fb5; }
+.run-note.tone-ok { border-left-color: #2e8b57; }
+.run-note.tone-error { border-left-color: #b3261e; }
+.run-note-meta { margin: 0 0 6px; color: var(--muted); font-size: 13.5px; }
+.run-note-lakes { margin: 6px 0 0; padding-left: 18px; columns: 2 420px; column-gap: 28px; }
+.run-note-lakes > li { break-inside: avoid; margin-bottom: 8px; }
+.run-note-lakes ul { margin: 2px 0 0; padding-left: 16px; font-size: 14px; }
+.run-note-lakes .tone-muted { color: var(--muted); }
+.run-note-lakes .tone-warn { color: var(--warn-text); font-weight: 600; }
+.run-note-lakes .tone-error { color: var(--error-text); font-weight: 600; }

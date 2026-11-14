@@ -18,7 +18,7 @@ import json
 import logging
 import traceback
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from math import floor
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -289,6 +289,20 @@ def _already_recorded(conn, lake_id: int, scene_id: str) -> bool:
     ).fetchone() is not None
 
 
+# Optional observer for the web app's step-by-step live check. The nightly run passes none. An observer that
+# fails must never change a run's outcome: its error is logged as a warning and the run goes on.
+StepObserver = Callable[[str, dict], None]
+
+
+def _emit(on_step: StepObserver | None, kind: str, **data: Any) -> None:
+    if on_step is None:
+        return
+    try:
+        on_step(kind, data)
+    except Exception as exc:  # the display failing is not a pipeline failure
+        log.warning("step observer failed on %s: %s: %s", kind, type(exc).__name__, exc)
+
+
 def sha256_of(path: str | Path) -> str:
     digest = hashlib.sha256()
     with open(path, "rb") as f:
@@ -299,7 +313,8 @@ def sha256_of(path: str | Path) -> str:
 
 def run_pipeline_once(db_path: str | Path, data_dir: str | Path, initial_since_date: date,
                       lakes: list[int] | None = None, client: Any = None,
-                      until_date: date | None = None, dem_dir: str | Path | None = None) -> RunResult:
+                      until_date: date | None = None, dem_dir: str | Path | None = None,
+                      on_step: StepObserver | None = None) -> RunResult:
     """One full run over every lake. Never raises for a stage failure: the error is written to
     run_log.errors and returned in RunResult.errors, so the caller can exit non-zero."""
     sign_in_needed = client is None
@@ -316,7 +331,9 @@ def run_pipeline_once(db_path: str | Path, data_dir: str | Path, initial_since_d
         if sign_in_needed:
             # Inside the try on purpose: a bad or expired key must end up in run_log.errors like any other
             # failure. (The first real backfill on 2026-11-08 failed because this call was missing: run_log 1.)
-            log.info("signed in to Earth Engine as %s", client.initialize())
+            account = client.initialize()
+            log.info("signed in to Earth Engine as %s", account)
+            _emit(on_step, "signed_in", account=account)
         lake_rows = {row["id"]: row for row in db.get_lakes(conn)}
         lake_ids = lakes if lakes is not None else sorted(lake_rows)
         state = load_resume_state(db_path)
@@ -336,15 +353,20 @@ def run_pipeline_once(db_path: str | Path, data_dir: str | Path, initial_since_d
             since = _since_date_for(conn, lake_id, initial)
             scenes = client.find_new_scenes(lake, since, until_date)
             log.info("%s: %d scenes listed after %s", lake["code"], len(scenes), since)
+            _emit(on_step, "searched", lake=dict(lake), sensor="optical", since=since.isoformat(),
+                  until=(until_date or datetime.now(timezone.utc).date()).isoformat(), scenes=[_scene_dict(s) for s in scenes])
             for scene in scenes:
-                _process_scene(conn, client, lake, scene, data_dir, repo_root, result)
+                _process_scene(conn, client, lake, scene, data_dir, repo_root, result, on_step)
             if hasattr(client, "find_new_s1_scenes"):
                 radar_since = _since_date_for(conn, lake_id, initial, "sentinel-1")
                 radar_scenes = client.find_new_s1_scenes(lake, radar_since, until_date)
                 log.info("%s: %d radar scenes listed after %s", lake["code"], len(radar_scenes), radar_since)
+                _emit(on_step, "searched", lake=dict(lake), sensor="radar", since=radar_since.isoformat(),
+                      until=(until_date or datetime.now(timezone.utc).date()).isoformat(),
+                      scenes=[_scene_dict(s) for s in radar_scenes])
                 slope = _slope_for(client, lake, dem_dir) if radar_scenes else None
                 for scene in radar_scenes:
-                    _process_radar_scene(conn, client, lake, scene, slope, data_dir, repo_root, result)
+                    _process_radar_scene(conn, client, lake, scene, slope, data_dir, repo_root, result, on_step)
             else:
                 log.info("%s: this client has no radar support; radar skipped", lake["code"])
             result.lakes_processed += 1
@@ -372,7 +394,14 @@ def run_pipeline_once(db_path: str | Path, data_dir: str | Path, initial_since_d
     return result
 
 
-def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, result: RunResult) -> None:
+def _scene_dict(scene) -> dict[str, Any]:
+    return {"scene_id": scene.scene_id, "acquired_at": scene.acquired_at,
+            "tile_cloud_percent": getattr(scene, "tile_cloud_percent", None),
+            "lake_cloud_percent": getattr(scene, "lake_cloud_percent", None)}
+
+
+def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, result: RunResult,
+                   on_step: StepObserver | None = None) -> None:
     raster = data_dir / lake["code"] / f"{scene.scene_id}.tif"
     try:
         stored_path = str(raster.resolve().relative_to(repo_root))
@@ -381,11 +410,16 @@ def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, r
     skipped_path = f"{NOT_DOWNLOADED_PREFIX}{lake['code']}/{scene.scene_id}"
     if _already_recorded(conn, lake["id"], scene.scene_id):
         log.info("%s %s: already recorded, skipped", lake["code"], scene.scene_id)
+        _emit(on_step, "already_recorded", sensor="optical", scene=_scene_dict(scene))
         return
 
     sensor = choose_sensor(scene.lake_cloud_percent, cloud_limit_percent=OPTICAL_CLOUD_LIMIT_PERCENT)
+    _emit(on_step, "cloud_checked", sensor="optical", scene=_scene_dict(scene), limit=OPTICAL_CLOUD_LIMIT_PERCENT,
+          decision="measure" if sensor != "radar" else "too_cloudy")
     if sensor == "radar":
-        db.insert_scene(conn, lake["id"], "sentinel-2", scene.acquired_at, scene.lake_cloud_percent, skipped_path)
+        skipped_row = db.insert_scene(conn, lake["id"], "sentinel-2", scene.acquired_at, scene.lake_cloud_percent, skipped_path)
+        _emit(on_step, "saved", sensor="optical", scene=_scene_dict(scene), scene_row=skipped_row,
+              measurement_id=None, risk_id=None, note="too cloudy: recorded, not downloaded")
         result.scenes_recorded += 1
         log.info("%s %s: lake cloud %s%% > %s%% limit: too cloudy for optical, recorded but not downloaded (radar passes are listed separately)",
                  lake["code"], scene.scene_id, scene.lake_cloud_percent, OPTICAL_CLOUD_LIMIT_PERCENT)
@@ -396,7 +430,10 @@ def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, r
     result.scenes_recorded += 1
     result.scenes_downloaded += 1
     # The checksum goes into the run log, so anyone can re-download the scene and confirm it is the same file.
-    log.info("%s %s: downloaded %s sha256=%s", lake["code"], scene.scene_id, stored_path, sha256_of(raster))
+    digest = sha256_of(raster)
+    log.info("%s %s: downloaded %s sha256=%s", lake["code"], scene.scene_id, stored_path, digest)
+    _emit(on_step, "downloaded", sensor="optical", scene=_scene_dict(scene), path=str(raster), stored_path=stored_path,
+          sha256=digest, size_bytes=raster.stat().st_size)
 
     outcome = measure_scene(raster, lake)
     status, reason = outcome.status, outcome.reason
@@ -407,13 +444,17 @@ def _process_scene(conn, client, lake, scene, data_dir: Path, repo_root: Path, r
     measurement_id = db.insert_measurement(conn, scene_id, lake["id"], "optical", outcome.extent_ha, status)
     result.measurements += 1
     log.info("%s %s: %s %s (%s)", lake["code"], scene.scene_id, status, outcome.extent_ha, reason)
-    if status != "ok":
-        return   # nothing to score: an unobserved or vanished lake has no extent to compare
+    _emit(on_step, "measured", sensor="optical", scene=_scene_dict(scene), path=str(raster), status=status,
+          extent_ha=outcome.extent_ha, reason=reason, measurement_id=measurement_id)
+    risk_id = None
+    if status == "ok":   # an unobserved or vanished lake has no extent to compare, so nothing to score
+        risk_id = _score(conn, lake, scene, measurement_id, outcome.extent_ha, "optical", result, on_step)
+    _emit(on_step, "saved", sensor="optical", scene=_scene_dict(scene), scene_row=scene_id,
+          measurement_id=measurement_id, risk_id=risk_id, note=None)
 
-    _score(conn, lake, scene, measurement_id, outcome.extent_ha, "optical", result)
 
-
-def _score(conn, lake, scene, measurement_id: int, extent_ha: float, sensor: str, result: RunResult) -> None:
+def _score(conn, lake, scene, measurement_id: int, extent_ha: float, sensor: str, result: RunResult,
+           on_step: StepObserver | None = None) -> int:
     """Seasonal baseline score against the same lake's earlier values FROM THE SAME SENSOR only."""
     acquired_on = date.fromisoformat(scene.acquired_at[:10])
     # Only scenes from before this one: a backfilled 2024 scene must never be scored against 2025 data.
@@ -422,20 +463,27 @@ def _score(conn, lake, scene, measurement_id: int, extent_ha: float, sensor: str
                if record.observed_on < acquired_on]
     same_month = [record for record in history if record.observed_on.month == acquired_on.month]
     same_month_years = {record.observed_on.year for record in same_month}
+    scored_on = [{"date": r.observed_on.isoformat(), "extent_ha": r.extent_ha} for r in same_month]
     if len(same_month) < MIN_SAME_MONTH_VALUES or len(same_month_years) < MIN_SAME_MONTH_YEARS:
         # Check F: too little history for this month to say what "normal" is.
-        db.insert_risk_score(conn, lake["id"], measurement_id, "anomaly_detector", "insufficient_history", None, None)
+        risk_id = db.insert_risk_score(conn, lake["id"], measurement_id, "anomaly_detector", "insufficient_history", None, None)
+        _emit(on_step, "scored", sensor=sensor, scene=_scene_dict(scene), extent_ha=extent_ha, status="insufficient_history",
+              same_month=scored_on, years=len(same_month_years), baseline_ha=None, score=None, risk_id=risk_id)
         result.risk_scores += 1
         log.info("%s %s: %s risk insufficient_history (check F: %d earlier values for month %02d from %d years; "
                  "need %d from %d)", lake["code"], scene.scene_id, sensor, len(same_month), acquired_on.month,
                  len(same_month_years), MIN_SAME_MONTH_VALUES, MIN_SAME_MONTH_YEARS)
-        return
+        return risk_id
     score = score_against_seasonal_baseline(history, acquired_on, extent_ha)
-    db.insert_risk_score(conn, lake["id"], measurement_id, "anomaly_detector",
-                         RISK_STATUS_FROM_RISK_MODULE[score.status], score.baseline_ha, score.deviation_score)
+    risk_id = db.insert_risk_score(conn, lake["id"], measurement_id, "anomaly_detector",
+                                   RISK_STATUS_FROM_RISK_MODULE[score.status], score.baseline_ha, score.deviation_score)
+    _emit(on_step, "scored", sensor=sensor, scene=_scene_dict(scene), extent_ha=extent_ha,
+          status=RISK_STATUS_FROM_RISK_MODULE[score.status], same_month=scored_on, years=len(same_month_years),
+          baseline_ha=score.baseline_ha, score=score.deviation_score, risk_id=risk_id)
     result.risk_scores += 1
     log.info("%s %s: %s risk %s baseline=%s score=%s", lake["code"], scene.scene_id, sensor, score.status,
              score.baseline_ha, score.deviation_score)
+    return risk_id
 
 
 # ---------------------------------------------------------------------------
@@ -457,11 +505,13 @@ def _slope_for(client, lake, dem_dir: Path):
     return slope_degrees(dem, 10.0)
 
 
-def _process_radar_scene(conn, client, lake, scene, slope, data_dir: Path, repo_root: Path, result: RunResult) -> None:
+def _process_radar_scene(conn, client, lake, scene, slope, data_dir: Path, repo_root: Path, result: RunResult,
+                         on_step: StepObserver | None = None) -> None:
     from sailab.radar import measure_radar_scene
 
     if _already_recorded(conn, lake["id"], scene.scene_id):
         log.info("%s %s: already recorded, skipped", lake["code"], scene.scene_id)
+        _emit(on_step, "already_recorded", sensor="radar", scene=_scene_dict(scene))
         return
     raster = data_dir / lake["code"] / f"{scene.scene_id}.tif"
     try:
@@ -472,7 +522,10 @@ def _process_radar_scene(conn, client, lake, scene, slope, data_dir: Path, repo_
     scene_row = db.insert_scene(conn, lake["id"], "sentinel-1", scene.acquired_at, None, stored_path)
     result.scenes_recorded += 1
     result.scenes_downloaded += 1
-    log.info("%s %s: downloaded %s sha256=%s", lake["code"], scene.scene_id, stored_path, sha256_of(raster))
+    digest = sha256_of(raster)
+    log.info("%s %s: downloaded %s sha256=%s", lake["code"], scene.scene_id, stored_path, digest)
+    _emit(on_step, "downloaded", sensor="radar", scene=_scene_dict(scene), path=str(raster), stored_path=stored_path,
+          sha256=digest, size_bytes=raster.stat().st_size)
 
     if slope is None or slope.shape != _raster_shape(raster):
         status, extent, reason = "insufficient_observation", None, "DEM grid does not match the radar window"
@@ -482,11 +535,17 @@ def _process_radar_scene(conn, client, lake, scene, slope, data_dir: Path, repo_
     measurement_id = db.insert_measurement(conn, scene_row, lake["id"], "radar", extent, status)
     result.measurements += 1
     log.info("%s %s: radar %s %s (%s)", lake["code"], scene.scene_id, status, extent, reason)
+    _emit(on_step, "measured", sensor="radar", scene=_scene_dict(scene), path=str(raster), status=status,
+          extent_ha=extent, reason=reason, measurement_id=measurement_id)
+    risk_id = None
     if status == "ok" and SCORE_RADAR:
-        _score(conn, lake, scene, measurement_id, extent, "radar", result)
+        risk_id = _score(conn, lake, scene, measurement_id, extent, "radar", result, on_step)
     elif status == "ok":
         log.info("%s %s: radar not risk-scored (SCORE_RADAR is off: snowmelt errors, see pipeline.py)",
                  lake["code"], scene.scene_id)
+        _emit(on_step, "not_scored", sensor="radar", scene=_scene_dict(scene), extent_ha=extent)
+    _emit(on_step, "saved", sensor="radar", scene=_scene_dict(scene), scene_row=scene_row,
+          measurement_id=measurement_id, risk_id=risk_id, note=None)
 
 
 def _raster_shape(path: Path) -> tuple[int, int]:

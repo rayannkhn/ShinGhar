@@ -45,6 +45,9 @@ class SceneAnalysis:
     window_px: tuple[int, int] = (0, 0)
     stats: dict[str, Any] = field(default_factory=dict)
     pictures: dict[str, np.ndarray] = field(default_factory=dict, repr=False)
+    region_mask: np.ndarray | None = field(default=None, repr=False)   # the grown lake (for the growth animation)
+    seed: tuple[int, int] | None = None                                 # (row, col) of the centre pixel
+    background: np.ndarray | None = field(default=None, repr=False)    # picture the animation is drawn on
 
 
 def _edge(inside: np.ndarray) -> np.ndarray:
@@ -117,6 +120,8 @@ def analyse_optical(tif: Path, lake: Mapping[str, Any], acquired_on: date | None
     pictures = {"truecolour": _outlined(rgb, inside), "ndwi": _outlined(ndwi_colours(index), inside)}
     stats: dict[str, Any] = {"water_px_in_window": int(np.nansum(index > NDWI_CUTOFF)),
                              "ndwi_at_centre": float(index[seed.row, seed.col]) if 0 <= seed.row < rows and 0 <= seed.col < cols and np.isfinite(index[seed.row, seed.col]) else None}
+    if 0 <= seed.row < rows and 0 <= seed.col < cols:
+        stats["green_at_centre"], stats["nir_at_centre"] = float(b3[seed.row, seed.col]), float(b8[seed.row, seed.col])
     if region:
         stats["ndwi_in_lake_median"] = float(np.nanmedian(index[inside]))
     if scl is not None:
@@ -128,7 +133,8 @@ def analyse_optical(tif: Path, lake: Mapping[str, Any], acquired_on: date | None
         pictures["checks"] = _outlined(checks, inside)
         stats["cloud_px_in_window"], stats["snow_px_in_window"] = int(cloud.sum()), int(snow.sum())
     return SceneAnalysis(status, outcome.extent_ha, reason, len(region) if region else None,
-                         pixel_size_m, ndwi_cutoff=NDWI_CUTOFF, window_px=(cols, rows), stats=stats, pictures=pictures)
+                         pixel_size_m, ndwi_cutoff=NDWI_CUTOFF, window_px=(cols, rows), stats=stats, pictures=pictures,
+                         region_mask=inside if region else None, seed=(seed.row, seed.col), background=rgb.astype(np.uint8))
 
 
 def analyse_radar(tif: Path, lake: Mapping[str, Any], dem: Path) -> SceneAnalysis:
@@ -161,9 +167,22 @@ def analyse_radar(tif: Path, lake: Mapping[str, Any], dem: Path) -> SceneAnalysi
     flat = ~steep & ~no_data & ~inside
     if flat.any():
         stats["vv_median_flat_ground_db"] = float(np.nanmedian(vv[flat]))
+    # What Otsu was given: VV of every flat pixel with data (the lake included), as a 60-bin histogram.
+    otsu_input = vv[~steep & ~no_data]
+    if otsu_input.size:
+        counts, edges = np.histogram(otsu_input, bins=60)
+        stats["otsu_histogram"] = {"counts": counts.tolist(), "edges": edges.tolist()}
+        stats["otsu_input_px"], stats["window_px_total"] = int(otsu_input.size), int(rows * cols)
+    from sailab.pipeline import lake_centre_in_pixels
+    row_f, col_f = lake_centre_in_pixels(tif, lake["centre_lon"], lake["centre_lat"])
+    seed = (floor(row_f), floor(col_f))
+    if 0 <= seed[0] < rows and 0 <= seed[1] < cols and np.isfinite(vv[seed]):
+        stats["vv_at_centre_db"] = float(vv[seed])
     return SceneAnalysis(outcome.status, outcome.extent_ha, outcome.reason, len(region) if region else None,
                          pixel_size_m, threshold_db=outcome.threshold_db, masked_steep_px=outcome.masked_steep_px,
-                         slope_limit_deg=RADAR_SLOPE_LIMIT_DEG, window_px=(cols, rows), stats=stats, pictures=pictures)
+                         slope_limit_deg=RADAR_SLOPE_LIMIT_DEG, window_px=(cols, rows), stats=stats, pictures=pictures,
+                         region_mask=inside if region else None, seed=seed,
+                         background=np.stack([grey] * 3, axis=-1).astype(np.uint8))
 
 
 def save_png(rgb: np.ndarray, out_path: Path) -> None:

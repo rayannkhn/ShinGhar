@@ -9,6 +9,30 @@
   </span>
 </div>
 
+{% set n = d.run_note %}
+{% if n %}
+<section class="card run-note tone-{{ n.tone }}">
+  <div class="card-head" style="margin-bottom:4px">
+    <h2 style="margin:0">{{ "Last night's run" if n.scheduled else "Latest pipeline run" }}: run {{ n.run_id }}, {{ n.started_at | pkt }}</h2>
+    <span class="chip {{ {'ok': 'ok', 'info': 'blue', 'error': 'error'}[n.tone] }}">{{ n.headline }}</span>
+  </div>
+  <p class="run-note-meta">The pipeline itself took {{ n.seconds }} s (the GitHub Actions job around it also sets up, runs the tests and saves the results, so it takes longer){% if provenance.copied_at %} · loaded into this GUI {{ provenance.copied_at | pkt }}{% endif %}
+    · from the run's own log (<span class="mono">{{ n.log_file }}</span>) and the database rows it wrote</p>
+  {% if n.error_line %}
+  <div class="banner error" style="margin:8px 0">{{ icon_error() }}<div>{% if n.error_plain %}<strong>{{ n.error_plain }}</strong><br>{% endif %}
+    <span class="mono" style="font-size:13px">{{ n.error_line }}</span><br>
+    <span style="font-size:14px">Nothing was filled in: lakes the run had not reached keep their earlier data, and the next run carries on.</span></div></div>
+  {% endif %}
+  {% if n.summary %}<p style="margin:6px 0 8px">{{ n.summary }}</p>{% endif %}
+  <ul class="run-note-lakes">
+    {% for l in n.lakes %}
+    <li><a href="/lakes/{{ l.code }}"><strong>{{ l.name }}</strong></a>
+      <ul>{% for i in l["items"] %}<li class="tone-{{ i.tone }}">{% if i.scene_id %}<a href="/scenes/{{ i.scene_id }}">{{ i.text }}</a>{% else %}{{ i.text }}{% endif %}</li>{% endfor %}</ul></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 {% if d.stale_lakes %}
 <div class="banner warn">{{ icon_warn() }}
   <div>No usable measurement, optical or radar, in the last {{ stale_days }} days for {{ d.stale_lakes | length }} of {{ d.lakes | length }} lakes

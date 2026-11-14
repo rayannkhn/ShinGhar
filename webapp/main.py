@@ -18,15 +18,17 @@ from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
+from urllib.parse import parse_qs
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from sailab import queries
 from webapp import images, pages, scene_view
-from webapp.live import LiveChecker
+from webapp import run_note
+from webapp.live import LiveChecker, explain_error
 
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_SOURCE_DB = REPO / "sailab_glof.db"
@@ -73,12 +75,14 @@ def make_working_copy(source_db: Path, work_dir: Path) -> dict[str, Any]:
 
 def create_app(source_db: Path | None = None, work_dir: Path | None = None,
                today: Callable[[], Any] | None = None, repo: Path | None = None,
-               live_runner: Callable[..., Any] | None = None, auto_reload_seconds: float | None = None) -> FastAPI:
+               live_runner: Callable[..., Any] | None = None, auto_reload_seconds: float | None = None,
+               esa_lookup: Callable[[str, str], dict] | None = None) -> FastAPI:
     source_db = Path(source_db or os.environ.get("SAILAB_SOURCE_DB", DEFAULT_SOURCE_DB))
     work_dir = Path(work_dir or os.environ.get("SAILAB_WORK_DIR", DEFAULT_WORK_DIR))
     today = today or (lambda: datetime.now(timezone.utc).date())
 
     app = FastAPI(title="SailAb GLOF", docs_url="/api/docs", redoc_url=None)
+    repo_root = Path(repo or os.environ.get("SAILAB_REPO", REPO))   # where scene file paths are resolved
 
     def fresh_copy() -> None:
         """(Re)make the working copy from the source database. Used at start-up and by POST /reload."""
@@ -87,7 +91,8 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
         # A fresh copy means earlier live checks (and any half-finished one's resume file) no longer apply.
         for stale in (work_dir / "live_checks.json", copy.with_suffix(".resume.json")):
             stale.unlink(missing_ok=True)
-        app.state.live = LiveChecker(copy, work_dir / "live_scenes", work_dir / "live_checks.json", runner=live_runner)
+        app.state.live = LiveChecker(copy, work_dir / "live_scenes", work_dir / "live_checks.json", runner=live_runner,
+                                     repo_root=repo_root, find_file=lambda rel: scene_file(rel), esa=esa_lookup)
 
     fresh_copy()
     working_copy = Path(app.state.provenance["working_copy"])     # same path after every reload
@@ -163,7 +168,6 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
                                   "month": lambda iso: datetime.fromisoformat(iso).strftime("%B")})
     templates.env.globals.update({"quality": pages.scene_quality, "stale_days": pages.STALE_AFTER_DAYS})
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
-    repo_root = Path(repo or os.environ.get("SAILAB_REPO", REPO))   # where scene file paths are resolved
 
     def render(request: Request, name: str, nav: str, d: dict[str, Any]) -> HTMLResponse:
         with read_only() as conn:
@@ -179,6 +183,7 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
     def dashboard_page(request: Request) -> HTMLResponse:
         with read_only() as conn:
             d = pages.dashboard(conn, today())
+            d["run_note"] = run_note.build(conn, repo_root, explain_error)
         return render(request, "dashboard.html", "dashboard", d)
 
     @app.get("/lakes/{code}", response_class=HTMLResponse)
@@ -225,10 +230,30 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
         live = app.state.live
         return render(request, "live.html", "live", {"state": live.snapshot(), "history": list(reversed(live.history))})
 
+    @app.get("/live/state.json")
+    def live_state() -> JSONResponse:
+        """What the Live check page polls while a check runs: status and the step cards so far."""
+        st = app.state.live.snapshot()
+        return JSONResponse({k: st.get(k) for k in ("status", "started_at", "finished_at", "seconds", "lake_code",
+                                                     "lake_name", "steps", "explanation", "errors")})
+
+    @app.get("/live/steps/{folder}/{name}")
+    def live_step_file(folder: str, name: str) -> FileResponse:
+        base = (work_dir / "live_steps").resolve()
+        path = (base / folder / name).resolve()
+        if base not in path.parents or not path.is_file() or path.suffix not in (".png", ".gif"):
+            raise HTTPException(status_code=404, detail="no such picture")
+        return FileResponse(path, media_type="image/gif" if path.suffix == ".gif" else "image/png")
+
     @app.post("/live/check")
-    def live_check() -> RedirectResponse:
+    async def live_check(request: Request) -> RedirectResponse:
+        fields = parse_qs((await request.body()).decode("utf-8", "replace"))
+        code = (fields.get("lake") or [request.query_params.get("lake", "")])[0].strip().upper()
         with reload_lock:
-            app.state.live.start()       # does nothing if a check is already running
+            try:
+                app.state.live.start(code)       # does nothing if a check is already running
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"unknown lake {code!r}")
         return RedirectResponse("/live", status_code=303)
 
     def reload_now() -> bool:

@@ -1,77 +1,183 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon_info, icon_warn, icon_error %}
 {% block title %}Live check{% endblock %}
-{% block head %}{% if d.state.status == 'running' %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block head %}{% if d.state.status == 'running' %}<noscript><meta http-equiv="refresh" content="3"></noscript>{% endif %}{% endblock %}
 {% block main %}
 {% set st = d.state %}{% set r = st.result %}
 <div class="page-head"><h1>Live check</h1></div>
 
 <section class="card">
-  <h2>Check for a new scene now</h2>
-  <p style="margin-top:0">Runs the real pipeline once for both lakes, exactly as the nightly run does: it asks Google Earth Engine for
-    Sentinel-2 scenes newer than the last stored one, checks the cloud over each lake, downloads and measures any clear scene,
-    and scores it. It needs an internet connection.</p>
-  <p style="color:var(--muted);font-size:14px">Results are written to this laptop's working copy of the database only, never to the
-    published record that the nightly run commits. From October to May both lakes are usually cloudy, frozen or snow-covered, so
-    "no usable observation" is the most likely honest result.</p>
-  <form method="post" action="/live/check">
+  <h2>Run the pipeline now, step by step</h2>
+  <p style="margin-top:0">Runs the real pipeline once for the chosen lake, the same code as the nightly run: it signs in to
+    Google Earth Engine, searches for Sentinel-2 (optical) and Sentinel-1 (radar) images newer than the last stored ones,
+    checks each image against ESA's own Copernicus catalogue, checks the cloud over the lake, downloads, measures the water,
+    calculates the area and the risk score, and saves the result. Each step appears below the moment it finishes, with what
+    it received, what it did and what it produced.</p>
+  <p style="color:var(--muted);font-size:14px">Results go to this laptop's working copy of the database only, never to the published
+    record. New images arrive only every few days, so a check often finds none: the newest stored image is then replayed through
+    the same steps, every card clearly marked <span class="chip amber">Replay</span>, and nothing is written.</p>
+  <form method="post" action="/live/check" class="live-form">
+    <label for="lake">Lake</label>
+    <select id="lake" name="lake" {% if st.status == 'running' %}disabled{% endif %}>
+      {% for l in nav_lakes %}<option value="{{ l.code }}" {% if l.code == (st.lake_code or 'DKT') %}selected{% endif %}>{{ l.name }} ({{ l.code }})</option>{% endfor %}
+    </select>
     <button type="submit" class="btn primary" {% if st.status == 'running' %}disabled title="A check is already running"{% endif %}>
-      {% if st.status == 'running' %}Checking…{% else %}Check both lakes now{% endif %}</button>
+      {% if st.status == 'running' %}Checking…{% else %}Run live check{% endif %}</button>
   </form>
 </section>
 
-<section class="card mt">
-  <h2>Result</h2>
+<section class="card mt" id="result">
+  <div class="card-head"><h2 style="margin:0">Result</h2>
+    <button type="button" class="btn" id="present" {% if not st.steps %}hidden{% endif %}>Step through ▸</button></div>
   {% if st.status == 'idle' %}
     <p style="color:var(--muted)">No live check has run since the app started.</p>
   {% elif st.status == 'running' %}
-    <div class="banner info">{{ icon_info() }}<div><strong>Checking both lakes…</strong> Started {{ st.started_at | utc_time }}.
-      This page refreshes every 3 seconds. A check usually takes 10 to 60 seconds.</div></div>
+    <div class="banner info" id="running-banner">{{ icon_info() }}<div><strong>Checking {{ st.lake_name }}…</strong> Started {{ st.started_at | utc_time }}.
+      Steps appear below as they finish. A check usually takes 10 to 90 seconds.</div></div>
   {% elif st.status == 'failed' %}
     <div class="banner error">{{ icon_error() }}<div><strong>The check could not complete.</strong> {{ st.explanation }}
       <br><span style="font-size:14px">It stopped after {{ st.seconds }} seconds. Nothing was filled in or assumed: no new data was recorded,
       and the failure itself is recorded in the run log{% if r and r.run_id %} (run {{ r.run_id }}){% endif %}. The pages keep showing the last stored data.</span></div></div>
     <details><summary style="cursor:pointer;font-size:14px">Technical details: the exact error</summary>
-    <pre class="mono" style="white-space:pre-wrap;background:#f7f9fa;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12.5px">{{ st.errors }}</pre>
+    <pre class="mono log-box">{{ st.errors }}</pre>
     </details>
   {% elif st.status == 'no_new_scene' %}
-    <div class="banner info">{{ icon_info() }}<div><strong>No new scene for either lake</strong> since the newest one already stored.
-      Earth Engine answered normally; Sentinel-2 passes about every 2 to 5 days and new scenes take some hours to appear.</div></div>
+    <div class="banner info">{{ icon_info() }}<div><strong>No new image for {{ st.lake_name }}</strong> since the newest one already stored.
+      Earth Engine answered normally; Sentinel-2 passes about every 5 days and Sentinel-1 about every 6 to 12, and new images take some hours to appear.
+      The steps below replay the newest stored images.</div></div>
   {% else %}
     <div class="banner {{ 'info' if r.measurements else 'warn' }}">{{ icon_info() if r.measurements else icon_warn() }}<div>
-      <strong>{{ r.scenes_recorded }} new scene{{ "s" if r.scenes_recorded != 1 }} recorded.</strong>
+      <strong>{{ r.scenes_recorded }} new scene{{ "s" if r.scenes_recorded != 1 }} recorded for {{ st.lake_name }}.</strong>
       {{ r.scenes_recorded - r.scenes_downloaded }} too cloudy over the lake (recorded, not downloaded);
-      {{ r.scenes_downloaded }} downloaded and measured; {{ r.risk_scores }} risk score{{ "s" if r.risk_scores != 1 }} written.
-      Each scene's outcome is in the log below, and on the lake pages.</div></div>
+      {{ r.scenes_downloaded }} downloaded and measured; {{ r.risk_scores }} risk score{{ "s" if r.risk_scores != 1 }} written.</div></div>
   {% endif %}
   {% if r %}
   <dl class="kv" style="max-width:520px;margin-top:6px">
     <dt>Run</dt><dd>{{ r.run_id }}</dd>
+    <dt>Lake</dt><dd>{{ st.lake_name }} ({{ st.lake_code }})</dd>
     <dt>Started / finished</dt><dd>{{ st.started_at | utc_time }} / {{ st.finished_at | utc_time }}</dd>
     <dt>Took</dt><dd>{{ st.seconds }} s</dd>
-    <dt>Lakes processed</dt><dd>{{ r.lakes_processed }}</dd>
     <dt>New scenes recorded</dt><dd>{{ r.scenes_recorded }}</dd>
     <dt>Downloaded and measured</dt><dd>{{ r.scenes_downloaded }}</dd>
     <dt>Risk scores written</dt><dd>{{ r.risk_scores }}</dd>
   </dl>
   {% endif %}
+
+  <ol class="steps" id="steps" aria-live="polite"></ol>
+
   {% if st.log %}
-  <details class="mt" {% if st.status != 'failed' %}open{% endif %}><summary style="cursor:pointer;font-weight:600">What the pipeline did (its own log)</summary>
-  <pre class="mono" style="white-space:pre-wrap;background:#f7f9fa;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12.5px;max-height:420px;overflow:auto">{% for line in st.log %}{{ line }}
+  <details class="mt"><summary style="cursor:pointer;font-weight:600">Raw evidence: the pipeline's own log</summary>
+  <pre class="mono log-box" style="max-height:420px;overflow:auto">{% for line in st.log %}{{ line }}
 {% endfor %}</pre></details>
   {% endif %}
 </section>
+
+<div class="present-bar" id="present-bar" hidden>
+  <button type="button" class="btn" id="prev">◂ Previous</button>
+  <span id="present-pos" class="mono"></span>
+  <button type="button" class="btn primary" id="next">Next ▸</button>
+  <button type="button" class="btn" id="exit">Show all</button>
+</div>
 
 {% if d.history %}
 <section class="card table-card mt">
   <h2>Live checks since the app started</h2>
   <table>
-    <tr><th>Run</th><th>Started</th><th>Finished</th><th>Outcome</th></tr>
+    <tr><th>Run</th><th>Lake</th><th>Started</th><th>Finished</th><th>Outcome</th></tr>
     {% for h in d.history %}
-    <tr><td class="mono">{{ h.run_id or "—" }}</td><td>{{ h.started_at | utc_time }}</td><td>{{ h.finished_at | utc_time }}</td>
+    <tr><td class="mono">{{ h.run_id or "—" }}</td><td>{{ h.lake_code or "—" }}</td><td>{{ h.started_at | utc_time }}</td><td>{{ h.finished_at | utc_time }}</td>
       <td>{% if h.status == 'failed' %}<span class="chip error">Failed</span>{% elif h.status == 'no_new_scene' %}<span class="chip muted">No new scene</span>{% else %}<span class="chip ok">New scenes recorded</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
 </section>
 {% endif %}
+
+<script id="initial-state" type="application/json">{{ {"status": st.status, "steps": st.steps or []} | tojson }}</script>
+<script>
+(function () {
+  const list = document.getElementById('steps');
+  const presentBtn = document.getElementById('present');
+  const bar = document.getElementById('present-bar');
+  let shown = 0, presenting = false, current = 0;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const TONE = {ok: 'ok', info: 'info', warn: 'warn', stop: 'stop'};
+
+  function card(s, fresh) {
+    const li = el('li', 'step tone-' + (TONE[s.tone] || 'ok') + (s.replay ? ' replay' : '') + (fresh ? ' fresh' : ''));
+    const head = el('div', 'step-head');
+    head.append(el('span', 'step-n', String(s.n)), el('h3', null, s.title));
+    const tags = el('span', 'step-tags');
+    if (s.sensor) tags.append(el('span', 'chip ' + (s.sensor === 'radar' ? 'score radar' : 'score'), s.sensor === 'radar' ? 'Radar · Sentinel-1' : 'Optical · Sentinel-2'));
+    if (s.replay) tags.append(el('span', 'chip amber', 'Replay of stored data'));
+    tags.append(el('span', 'step-time mono', '+' + s.at_s.toFixed(1) + ' s'));
+    head.append(tags);
+    li.append(head);
+    const body = el('div', 'step-body');
+    if (s.came_in) { const p = el('p', 'step-in'); p.append(el('b', null, 'Came in: '), document.createTextNode(s.came_in)); body.append(p); }
+    if (s.happened.length) { const ul = el('ul', 'step-what'); s.happened.forEach(t => ul.append(el('li', null, t))); body.append(ul); }
+    if (s.formulas.length) { const pre = el('pre', 'step-formula mono'); pre.textContent = s.formulas.join('\n'); body.append(pre); }
+    if (s.svg) { const box = el('div', 'step-svg'); box.innerHTML = s.svg; body.append(box); }   // built server-side from numbers only
+    if (s.pictures.length) {
+      const grid = el('div', 'step-pics');
+      s.pictures.forEach(p => { const f = el('figure'); const img = el('img'); img.src = p.src; img.alt = p.caption; img.loading = 'lazy';
+        f.append(img, el('figcaption', null, p.caption)); grid.append(f); });
+      body.append(grid);
+    }
+    if (s.table && s.table.rows.length) {
+      const wrap = el('div', 'step-table'); const t = el('table'); const tr = el('tr');
+      s.table.head.forEach(h => tr.append(el('th', null, h))); t.append(tr);
+      s.table.rows.forEach(r => { const row = el('tr'); r.forEach(c => row.append(el('td', 'mono', c))); t.append(row); });
+      wrap.append(t); body.append(wrap);
+    }
+    const res = el('p', 'step-result'); res.append(el('b', null, 'Result: '), document.createTextNode(s.result)); body.append(res);
+    li.append(body);
+    return li;
+  }
+
+  function render(steps) {
+    for (let i = shown; i < steps.length; i++) list.append(card(steps[i], shown > 0 || i > 0));
+    if (steps.length > shown && !presenting && shown > 0) list.lastElementChild.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    shown = steps.length;
+    presentBtn.hidden = shown === 0;
+  }
+
+  function show(i) {
+    const items = list.children; if (!items.length) return;
+    current = Math.max(0, Math.min(i, items.length - 1));
+    Array.from(items).forEach((c, k) => c.classList.toggle('dim', k !== current));
+    items[current].scrollIntoView({behavior: 'smooth', block: 'start'});
+    document.getElementById('present-pos').textContent = 'Step ' + (current + 1) + ' of ' + items.length;
+  }
+  function present(on) {
+    presenting = on; bar.hidden = !on; document.body.classList.toggle('presenting', on);
+    if (on) show(0); else Array.from(list.children).forEach(c => c.classList.remove('dim'));
+  }
+  presentBtn.addEventListener('click', () => present(true));
+  document.getElementById('exit').addEventListener('click', () => present(false));
+  document.getElementById('prev').addEventListener('click', () => show(current - 1));
+  document.getElementById('next').addEventListener('click', () => show(current + 1));
+  document.addEventListener('keydown', e => {
+    if (!presenting) return;
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+    else if (e.key === 'Escape') present(false);
+  });
+
+  const initial = JSON.parse(document.getElementById('initial-state').textContent);
+  render(initial.steps);
+  if (initial.status === 'running') {
+    const poll = async () => {
+      try {
+        const r = await fetch('/live/state.json', {cache: 'no-store'});
+        const st = await r.json();
+        render(st.steps || []);
+        if (st.status !== 'running') { location.reload(); return; }
+      } catch (e) { /* a missed poll is retried */ }
+      setTimeout(poll, 1000);
+    };
+    setTimeout(poll, 1000);
+  }
+})();
+</script>
 {% endblock %}

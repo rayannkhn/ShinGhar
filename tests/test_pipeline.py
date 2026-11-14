@@ -530,3 +530,27 @@ def test_no_lake_evidence_needs_the_lake_flag_and_the_season(tmp_path):
     assert pipeline.no_lake_evidence(tmp_path / "w.tif", lake, date(2026, 11, 1)) is None
     write_window(tmp_path / "w5.tif", lake, centre_is_water=False, bands=5)                 # no SCL band
     assert pipeline.no_lake_evidence(tmp_path / "w5.tif", lake, date(2026, 7, 1)) is None
+
+
+# --- the optional step observer (web app's live check) ------------------------------------------------
+def test_step_observer_sees_each_step_in_order_and_cannot_change_or_break_the_run(repo, tmp_path):
+    scenes = {"KRB": [scene("KRB", "2026-10-21", 2.0), scene("KRB", "2026-10-26", 98.86)]}
+    seen = []
+
+    def observer(kind, data):
+        seen.append((kind, data.get("sensor"), (data.get("scene") or {}).get("scene_id")))
+        raise RuntimeError("display broke")           # must be logged, never fail the run
+
+    result = run(repo, FakeClient(scenes), lakes=[1], on_step=observer)
+    assert result.errors is None and result.scenes_recorded == 2 and result.measurements == 1
+    clear, cloudy = (s.scene_id for s in scenes["KRB"])
+    assert [k for k, *_ in seen] == ["searched", "cloud_checked", "downloaded", "measured", "scored", "saved",
+                                     "cloud_checked", "saved"]
+    assert seen[1][2] == clear and seen[6][2] == cloudy
+
+    # the same run without an observer stores exactly the same rows
+    other = (tmp_path / "other"); other.mkdir()
+    db_path = other / "sailab_glof.db"; conn = db.connect(db_path); db.seed_lakes(conn); conn.close()
+    run((other, db_path), FakeClient(scenes), lakes=[1])
+    q = "SELECT s.acquired_at, m.status, m.extent_ha FROM scene s LEFT JOIN measurement m ON m.scene_id = s.id ORDER BY 1"
+    assert rows(repo[1], q) == rows(db_path, q)

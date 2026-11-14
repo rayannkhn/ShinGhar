@@ -50,16 +50,21 @@ class FakeEarthEngine:
 
 
 def runner_with(fake):
-    return lambda db_path, data_dir, since: pipeline.run_pipeline_once(db_path, data_dir, since, client=fake)
+    return lambda db_path, data_dir, since, **kw: pipeline.run_pipeline_once(db_path, data_dir, since, client=fake, **kw)
+
+
+def fake_esa(scene_id, sensor):
+    return {"products": [{"id": "x", "name": f"S2B_MSIL2A_{scene_id.split('_')[0]}_N0511_R048_T43SCA_X.SAFE",
+                          "start": None, "online": True}], "seconds": 0.1}
 
 
 def make(source_db, tmp_path, runner):
     return TestClient(create_app(source_db=source_db, work_dir=tmp_path / "work", today=lambda: TODAY,
-                                 repo=tmp_path / "repo", live_runner=runner))
+                                 repo=tmp_path / "repo", live_runner=runner, esa_lookup=fake_esa))
 
 
-def check_now(client):
-    r = client.post("/live/check", follow_redirects=False)
+def check_now(client, lake="KRB"):
+    r = client.post("/live/check", data={"lake": lake}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/live"
     client.app.state.live.wait(30)
     return client.get("/live").text
@@ -78,7 +83,7 @@ def test_new_scene_is_measured_and_written_to_the_working_copy_only(source_db, t
     client = make(source_db, tmp_path, runner_with(FakeEarthEngine({"KRB": [NEW_SCENE]})))
     html = check_now(client)
 
-    assert "1 new scene recorded." in html and "1 downloaded and measured" in html
+    assert "1 new scene recorded for Karambar Lake." in html and "1 downloaded and measured" in html
     assert "ok 0.25" in html                                              # the pipeline's own log line
     assert sha(source_db) == before                                        # published file untouched
     copy = sqlite3.connect(client.app.state.provenance["working_copy"])
@@ -95,7 +100,7 @@ def test_new_scene_is_measured_and_written_to_the_working_copy_only(source_db, t
 def test_no_new_scene_says_so(source_db, tmp_path):
     client = make(source_db, tmp_path, runner_with(FakeEarthEngine({})))
     html = check_now(client)
-    assert "No new scene for either lake" in html
+    assert "No new image for Karambar" in html
     assert client.app.state.live.snapshot()["status"] == "no_new_scene"
     copy = sqlite3.connect(client.app.state.provenance["working_copy"])
     assert copy.execute("SELECT COUNT(*) FROM run_log").fetchone()[0] == 3     # the check itself is logged
@@ -112,12 +117,12 @@ def test_a_failure_shows_the_real_error_and_is_recorded(source_db, tmp_path):
     errors = copy.execute("SELECT errors FROM run_log ORDER BY id DESC LIMIT 1").fetchone()[0]
     assert "memory capacity exceeded" in errors
     # neither the success banner nor the no-new-scene banner may appear for a failed check
-    assert "new scene recorded." not in html and "new scenes recorded." not in html
-    assert "No new scene for either lake" not in html
+    assert "new scene recorded for" not in html and "new scenes recorded for" not in html
+    assert "No new image for" not in html
 
 
 def test_a_crash_outside_the_pipeline_is_shown_too(source_db, tmp_path):
-    def broken(*_):
+    def broken(*_, **__):
         raise OSError("disk full")
     html = check_now(make(source_db, tmp_path, broken))
     assert "The check could not complete." in html and "OSError: disk full" in html
@@ -127,16 +132,16 @@ def test_a_crash_outside_the_pipeline_is_shown_too(source_db, tmp_path):
 def test_only_one_check_runs_at_a_time_and_the_page_refreshes_meanwhile(source_db, tmp_path):
     release = threading.Event()
 
-    def slow(db_path, data_dir, since):
+    def slow(db_path, data_dir, since, **kw):
         release.wait(10)
-        return pipeline.run_pipeline_once(db_path, data_dir, since, client=FakeEarthEngine({}))
+        return pipeline.run_pipeline_once(db_path, data_dir, since, client=FakeEarthEngine({}), **kw)
 
     client = make(source_db, tmp_path, slow)
     live = client.app.state.live
-    assert live.start() is True
-    assert live.start() is False                                           # second click while running: ignored
+    assert live.start("KRB") is True
+    assert live.start("KRB") is False                                           # second click while running: ignored
     page = client.get("/live").text
-    assert '<meta http-equiv="refresh" content="3">' in page and "Checking both lakes" in page
+    assert '<meta http-equiv="refresh" content="3">' in page and "Checking Karambar" in page
     release.set(); live.wait(10)
     assert live.snapshot()["status"] == "no_new_scene"
     assert len(live.history) == 1
@@ -184,3 +189,91 @@ def test_failed_page_leads_with_the_plain_line_and_keeps_the_exact_error(source_
     html = check_now(client)
     assert "usage limit" in html and "It stopped after" in html
     assert "Technical details: the exact error" in html and "Too many concurrent aggregations." in html
+
+
+# --- the step-by-step walkthrough --------------------------------------------------------------------
+def steps_of(client):
+    return client.get("/live/state.json").json()["steps"]
+
+
+def test_a_new_scene_shows_every_step_with_its_real_result(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({"KRB": [NEW_SCENE]})))
+    check_now(client)
+    steps = steps_of(client)
+    keys = [s["key"] for s in steps if not s["replay"]]
+    # search -> ESA -> cloud -> download -> detect -> grow -> area -> score -> saved, in that order
+    assert keys == ["search_optical", "esa", "cloud", "download", "detect", "grow", "area", "score", "saved"]
+    by = {s["key"]: s for s in steps if not s["replay"]}
+    assert "1 scene listed by Earth Engine" in by["search_optical"]["result"]
+    assert "S2B_MSIL2A_20261107T054600" in by["esa"]["result"]
+    assert "2.0 %" in by["cloud"]["formulas"][0] and by["cloud"]["result"].startswith("Clear enough")
+    assert any("sha256" in f for f in by["download"]["formulas"])
+    assert "(300 − 50) ÷ (300 + 50) = 0.714" in by["detect"]["formulas"][1]
+    assert by["area"]["formulas"] == ["25 px × 100 m² = 2,500 m² = 0.25 ha"] and by["area"]["result"] == "Lake area: 0.25 ha"
+    assert by["score"]["result"].startswith("Insufficient history")
+    assert by["saved"]["result"].startswith("Saved: scene #")
+    for s in steps:                                   # every picture a step names is served
+        for p in s["pictures"]:
+            r = client.get(p["src"])
+            assert r.status_code == 200 and r.headers["content-type"] in ("image/png", "image/gif")
+    # the optical scene was measured live, so only radar is replayed (and this test lake has no radar)
+    replays = [s for s in steps if s["replay"]]
+    assert [s["sensor"] for s in replays] == ["radar"] and replays[0]["result"] == "Nothing to replay"
+
+
+def test_no_new_scene_replays_the_latest_stored_scene_and_writes_nothing(source_db, tmp_path):
+    stored = tmp_path / "repo" / "data" / "scenes" / "KRB"
+    copy_lake = dict(sqlite3.connect(source_db).execute(
+        "SELECT centre_lon, centre_lat FROM lake WHERE code = 'KRB'").fetchone() and
+        zip(("centre_lon", "centre_lat"), sqlite3.connect(source_db).execute(
+            "SELECT centre_lon, centre_lat FROM lake WHERE code = 'KRB'").fetchone()))
+    latest = sqlite3.connect(source_db).execute(
+        "SELECT s.file_path FROM scene s JOIN measurement m ON m.scene_id = s.id WHERE m.status = 'ok' "
+        "ORDER BY s.acquired_at DESC LIMIT 1").fetchone()[0]
+    write_window(tmp_path / "repo" / latest, copy_lake)
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({})))
+    check_now(client)
+    copy = sqlite3.connect(client.app.state.provenance["working_copy"])
+    assert copy.execute("SELECT COUNT(*) FROM scene").fetchone()[0] == 5          # nothing written
+    steps = steps_of(client)
+    optical = [s for s in steps if s["replay"] and s["sensor"] == "optical"]
+    assert optical[0]["title"].startswith("Replay: the latest stored optical scene")
+    assert [s["key"] for s in optical] == ["replay", "esa", "cloud", "download", "detect", "check", "grow", "area",
+                                           "score", "saved"]
+    # the stored file here is a 0.25 ha test window, not the stored 250 ha: the page says they differ
+    assert "Recomputation differs" in [s["title"] for s in optical]
+    assert optical[-1]["title"] == "Nothing saved: this was a replay"
+    assert all(s["replay"] for s in steps if s["key"] not in ("search_optical", "search_radar"))
+
+
+def test_unknown_lake_is_refused(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({})))
+    assert client.post("/live/check", data={"lake": "XYZ"}).status_code == 400
+    assert client.app.state.live.snapshot()["status"] == "idle"
+
+
+def test_step_pictures_cannot_reach_outside_their_folder(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({})))
+    assert client.get("/live/steps/..%2F..%2F/live_checks.json").status_code == 404
+    assert client.get("/live/steps/x/../../working.db").status_code == 404
+
+
+def test_esa_not_answering_is_shown_and_the_check_carries_on(source_db, tmp_path):
+    client = TestClient(create_app(source_db=source_db, work_dir=tmp_path / "work", today=lambda: TODAY,
+                                   repo=tmp_path / "repo", live_runner=runner_with(FakeEarthEngine({"KRB": [NEW_SCENE]})),
+                                   esa_lookup=lambda sid, sensor: {"error": "ConnectionError: timed out", "seconds": 10.0}))
+    check_now(client)
+    steps = steps_of(client)
+    esa = next(s for s in steps if s["key"] == "esa")
+    assert esa["tone"] == "warn" and "did not answer (ConnectionError: timed out)" in esa["result"]
+    assert any(s["key"] == "area" and not s["replay"] for s in steps)
+
+
+def test_esa_filters_match_the_real_product_names_found_on_2026_11_13():
+    from webapp.walkthrough import esa_filter, esa_lookup
+    f = esa_filter("20260921T054639_20260921T055822_T43SCA", "optical")
+    assert "contains(Name,'MSIL2A_20260921T054639')" in f and "contains(Name,'_T43SCA_')" in f
+    assert "ContentDate/Start gt 2026-09-21T05:44:39.000Z" in f and "ContentDate/Start lt 2026-09-21T05:48:39.000Z" in f
+    f = esa_filter("S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D", "radar")
+    assert "startswith(Name,'S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D')" in f
+    assert "error" in esa_lookup("not-a-scene-id", "optical")          # never raises
