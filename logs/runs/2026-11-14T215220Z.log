@@ -1,0 +1,31 @@
+2026-11-14 21:52:20,981 INFO run_once: mode: scheduled/normal, data dir: /home/runner/work/sailab-glof-live/sailab-glof-live/data/scenes
+2026-11-14 21:52:21,137 INFO sailab.pipeline: run 16 started
+2026-11-14 21:52:21,853 INFO sailab.pipeline: signed in to Earth Engine as sailab-glof-bot@kaarigar-507118.iam.gserviceaccount.com
+2026-11-14 21:52:22,813 INFO sailab.pipeline: KRB: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:22,814 INFO sailab.pipeline: KRB 20261110T055049_20261110T055844_T43SCA: already recorded, skipped
+2026-11-14 21:52:23,022 INFO sailab.pipeline: KRB: 1 radar scenes listed after 2026-11-09
+2026-11-14 21:52:23,243 INFO sailab.pipeline: KRB S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:24,014 INFO sailab.pipeline: ATS: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:24,014 INFO sailab.pipeline: ATS 20261110T055049_20261110T055844_T43SCA: already recorded, skipped
+2026-11-14 21:52:24,169 INFO sailab.pipeline: ATS: 1 radar scenes listed after 2026-11-09
+2026-11-14 21:52:24,229 INFO sailab.pipeline: ATS S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:25,120 INFO sailab.pipeline: SHP: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:25,121 INFO sailab.pipeline: SHP 20261110T055049_20261110T055844_T43SDA: already recorded, skipped
+2026-11-14 21:52:25,326 INFO sailab.pipeline: SHP: 2 radar scenes listed after 2026-11-09
+2026-11-14 21:52:25,385 INFO sailab.pipeline: SHP S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:25,386 INFO sailab.pipeline: SHP S1D_IW_GRDH_1SDV_20261110T010606_20261110T010631_005398_00A4C0_FF67: already recorded, skipped
+2026-11-14 21:52:26,047 INFO sailab.pipeline: DKT: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:26,048 INFO sailab.pipeline: DKT 20261110T055049_20261110T055844_T43SCA: already recorded, skipped
+2026-11-14 21:52:26,242 INFO sailab.pipeline: DKT: 1 radar scenes listed after 2026-11-09
+2026-11-14 21:52:26,269 INFO sailab.pipeline: DKT S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:27,064 INFO sailab.pipeline: BRT: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:27,064 INFO sailab.pipeline: BRT 20261110T055049_20261110T055844_T43SDA: already recorded, skipped
+2026-11-14 21:52:27,269 INFO sailab.pipeline: BRT: 1 radar scenes listed after 2026-11-09
+2026-11-14 21:52:27,297 INFO sailab.pipeline: BRT S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:27,915 INFO sailab.pipeline: PSU: 1 scenes listed after 2026-11-09
+2026-11-14 21:52:27,915 INFO sailab.pipeline: PSU 20261110T055049_20261110T055844_T43SDA: already recorded, skipped
+2026-11-14 21:52:28,088 INFO sailab.pipeline: PSU: 1 radar scenes listed after 2026-11-09
+2026-11-14 21:52:28,116 INFO sailab.pipeline: PSU S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-14 21:52:28,118 INFO sailab.pipeline: run 16 finished: RunResult(run_id=16, lakes_processed=6, scenes_recorded=0, scenes_downloaded=0, measurements=0, risk_scores=0, errors=None, notes=[])
+2026-11-14 21:52:28,118 INFO run_once: summary: run_id=16 lakes=6 scenes_recorded=0 downloaded=0 measurements=0 risk_scores=0
+2026-11-14 21:52:28,118 INFO run_once: run OK
