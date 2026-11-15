@@ -138,6 +138,21 @@ def build(conn: sqlite3.Connection, repo_root: Path, explain: Any = None) -> dic
         "SELECT lake_id, source, MAX(acquired_at) AS d FROM scene WHERE downloaded_at <= ? GROUP BY lake_id, source",
         (finished,))}
 
+    def stored_outcome(lake_id: int, source: str) -> str:
+        """What the newest stored image of this lake and sensor gave, e.g. 'too cloudy (71%)'."""
+        r = conn.execute(
+            """SELECT s.file_path, s.cloud_fraction, m.status, m.extent_ha FROM scene s
+               LEFT JOIN measurement m ON m.scene_id = s.id
+               WHERE s.lake_id = ? AND s.source = ? AND s.downloaded_at <= ?
+               ORDER BY s.acquired_at DESC, s.id DESC LIMIT 1""", (lake_id, source, finished)).fetchone()
+        if r is None:
+            return "none stored"
+        if r["file_path"].startswith("not_downloaded/"):
+            return "too cloudy" + (f", {r['cloud_fraction']:.0f}% cloud" if r["cloud_fraction"] is not None else "")
+        return {"ok": f"measured {r['extent_ha']:.2f} ha" if r["extent_ha"] is not None else "measured",
+                "no_lake_detected": "no lake found",
+                "insufficient_observation": "not measured"}.get(r["status"], r["status"] or "not measured")
+
     lakes = []
     for lake in conn.execute("SELECT id, code, name FROM lake ORDER BY id"):
         items = [_scene_line(r, log["reasons"]) for r in added if r["lake_id"] == lake["id"]]
@@ -149,9 +164,11 @@ def build(conn: sqlite3.Connection, repo_root: Path, explain: Any = None) -> dic
                 parts = []
                 for sensor, key in (("optical", "sentinel-2"), ("radar", "sentinel-1")):
                     n, since = log["listed"].get((lake["code"], sensor), (0, None))
-                    stored = _d(newest.get((lake["id"], key)))
+                    day = newest.get((lake["id"], key))
+                    stored = f"{_d(day)}: {stored_outcome(lake['id'], key)}" if day else "none stored"
                     parts.append(f"{sensor}: Earth Engine listed {n} after {_d(since)}, already stored (newest {stored})"
-                                 if n else f"{sensor}: Earth Engine had no image after {_d(since)} (newest stored {stored})")
+                                 if n else f"{sensor}: Earth Engine had no image after {_d(since)} "
+                                 + (f"(newest stored {stored})" if day else "(none stored yet)"))
                 text = "nothing new · " + " · ".join(parts)
             else:
                 text = "not checked in this run" if log["listed"] else "nothing new"

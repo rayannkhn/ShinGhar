@@ -53,6 +53,9 @@ def test_nothing_new_says_what_earth_engine_listed(source_db, tmp_path):
     assert n["summary"].startswith("Earth Engine was checked for every lake.")
     krb = next(l for l in n["lakes"] if l["code"] == "KRB")["items"][0]["text"]
     assert krb.startswith("nothing new · optical: Earth Engine listed 1 after 20 Oct, already stored")
+    # what the newest stored image showed (conftest: KRB's newest optical scene, 21 Oct, was too cloudy, 99%)
+    assert "already stored (newest 21 Oct: too cloudy, 99% cloud)" in krb
+    assert krb.endswith("radar: Earth Engine had no image after 20 Oct (none stored yet)")
     assert "radar: Earth Engine had no image after 20 Oct" in krb
     ats = next(l for l in n["lakes"] if l["code"] == "ATS")["items"][0]["text"]
     assert ats == "not checked in this run"                    # ATS has no line in this log
