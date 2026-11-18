@@ -1,0 +1,59 @@
+2026-11-18 23:45:55,650 INFO run_once: mode: scheduled/normal, data dir: /home/runner/work/sailab-glof-live/sailab-glof-live/data/scenes
+2026-11-18 23:45:55,809 INFO sailab.pipeline: run 23 started
+2026-11-18 23:45:56,382 INFO sailab.pipeline: signed in to Earth Engine as sailab-glof-bot@kaarigar-507118.iam.gserviceaccount.com
+2026-11-18 23:45:58,396 INFO sailab.pipeline: KRB: 2 scenes listed after 2026-11-14
+2026-11-18 23:45:58,397 INFO sailab.pipeline: KRB 20261115T055101_20261115T055104_T43SCA: already recorded, skipped
+2026-11-18 23:45:59,923 INFO sailab.pipeline: KRB 20261117T055241_20261117T055242_T43SCA: downloaded data/scenes/KRB/20261117T055241_20261117T055242_T43SCA.tif sha256=8a50763ffa4283ac31a290ba62f9947d743a6ffa43c31457ae06379cd9bbb127
+2026-11-18 23:46:00,277 INFO sailab.pipeline: KRB 20261117T055241_20261117T055242_T43SCA: insufficient_observation None (lake region (21000 px) borders 316 no-data pixels; it may be cut off)
+2026-11-18 23:46:00,690 INFO sailab.pipeline: KRB: 1 radar scenes listed after 2026-11-09
+2026-11-18 23:46:00,874 INFO sailab.pipeline: KRB S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-18 23:46:01,949 INFO sailab.pipeline: ATS: 2 scenes listed after 2026-11-14
+2026-11-18 23:46:01,950 INFO sailab.pipeline: ATS 20261115T055101_20261115T055104_T43SCA: already recorded, skipped
+2026-11-18 23:46:02,856 INFO sailab.pipeline: ATS 20261117T055241_20261117T055242_T43SCA: downloaded data/scenes/ATS/20261117T055241_20261117T055242_T43SCA.tif sha256=ea8da39563a045d20660eca4317a31314c4ae37da66a4fdb1dccc07ddc97cf9d
+2026-11-18 23:46:02,986 INFO sailab.pipeline: ATS 20261117T055241_20261117T055242_T43SCA: insufficient_observation None (check D: lake region (10414 px) borders 20 cloud/shadow pixels)
+2026-11-18 23:46:03,153 INFO sailab.pipeline: ATS: 1 radar scenes listed after 2026-11-09
+2026-11-18 23:46:03,220 INFO sailab.pipeline: ATS S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D: already recorded, skipped
+2026-11-18 23:46:04,187 INFO sailab.pipeline: SHP: 2 scenes listed after 2026-11-14
+2026-11-18 23:46:04,188 INFO sailab.pipeline: SHP 20261115T055101_20261115T055104_T43SDA: already recorded, skipped
+2026-11-18 23:46:05,406 INFO sailab.pipeline: SHP 20261117T055241_20261117T055242_T43SDA: downloaded data/scenes/SHP/20261117T055241_20261117T055242_T43SDA.tif sha256=03054b81465399fc4ef48a4e2d3e30b6c8096a2815b2db157ae834bd4f64efdb
+2026-11-18 23:46:05,510 INFO sailab.pipeline: SHP 20261117T055241_20261117T055242_T43SDA: insufficient_observation None (centre pixel Pixel(row=150, col=150) is not water (NDWI <= 0.2))
+2026-11-18 23:46:05,689 INFO sailab.pipeline: SHP: 1 radar scenes listed after 2026-11-15
+2026-11-18 23:46:05,754 INFO sailab.pipeline: SHP S1D_IW_GRDH_1SDV_20261116T125648_20261116T125713_005493_00A7F5_4173: already recorded, skipped
+2026-11-18 23:46:06,616 INFO sailab.pipeline: DKT: 2 scenes listed after 2026-11-14
+2026-11-18 23:46:06,617 INFO sailab.pipeline: DKT 20261115T055101_20261115T055104_T43SCA: already recorded, skipped
+2026-11-18 23:46:07,766 INFO sailab.pipeline: DKT 20261117T055241_20261117T055242_T43SCA: downloaded data/scenes/DKT/20261117T055241_20261117T055242_T43SCA.tif sha256=3d04022ba6330eecbc155924e44a95952ea365d3357120e2a23f74309d4aa5a3
+2026-11-18 23:46:07,815 INFO sailab.pipeline: DKT 20261117T055241_20261117T055242_T43SCA: insufficient_observation None (check C: lake region (1828 px) borders 704 snow/ice pixels)
+2026-11-18 23:46:08,137 INFO sailab.pipeline: DKT: 1 radar scenes listed after 2026-11-14
+2026-11-18 23:46:08,168 INFO sailab.pipeline: DKT S1D_IW_GRDH_1SDV_20261115T011408_20261115T011433_005471_00A73D_6ABE: already recorded, skipped
+2026-11-18 23:46:09,116 INFO sailab.pipeline: BRT: 2 scenes listed after 2026-11-14
+2026-11-18 23:46:09,117 INFO sailab.pipeline: BRT 20261115T055101_20261115T055104_T43SDA: already recorded, skipped
+2026-11-18 23:46:10,659 INFO sailab.pipeline: BRT 20261117T055241_20261117T055242_T43SDA: downloaded data/scenes/BRT/20261117T055241_20261117T055242_T43SDA.tif sha256=ffc58c8e545acefa0163f9ea0205eb5d45bb54efc7a8e4ffb0bc5225117f5085
+2026-11-18 23:46:10,704 INFO sailab.pipeline: BRT 20261117T055241_20261117T055242_T43SDA: ok 11.31 (1131 water pixels connected to the centre)
+2026-11-18 23:46:10,705 INFO sailab.pipeline: BRT 20261117T055241_20261117T055242_T43SDA: optical risk ok baseline=10.768181818181818 score=0.17843389928688627
+2026-11-18 23:46:10,997 INFO sailab.pipeline: BRT: 2 radar scenes listed after 2026-11-15
+2026-11-18 23:46:11,027 INFO sailab.pipeline: BRT S1D_IW_GRDH_1SDV_20261116T125648_20261116T125713_005493_00A7F5_4173: already recorded, skipped
+2026-11-18 23:46:12,893 INFO sailab.pipeline: BRT S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: downloaded data/scenes/BRT/S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA.tif sha256=7dbd1bf2cefe813af645cb910d770a6bacee9d1d0f2b0ea294e2039fbccffe42
+2026-11-18 23:46:12,926 INFO sailab.pipeline: BRT S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: radar ok 12.52 (1252 px below -12.96 dB connected to the centre)
+2026-11-18 23:46:12,926 INFO sailab.pipeline: BRT S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: radar not risk-scored (SCORE_RADAR is off: snowmelt errors, see pipeline.py)
+2026-11-18 23:46:13,806 INFO sailab.pipeline: PSU: 2 scenes listed after 2026-11-14
+2026-11-18 23:46:13,807 INFO sailab.pipeline: PSU 20261115T055101_20261115T055104_T43SDA: already recorded, skipped
+2026-11-18 23:46:14,533 INFO sailab.pipeline: PSU 20261117T055241_20261117T055242_T43SDA: downloaded data/scenes/PSU/20261117T055241_20261117T055242_T43SDA.tif sha256=d254b63ae7ad5a5ed4dc7e23917e8220eb72f775fa9f2f1b9d4d00f20622d234
+2026-11-18 23:46:14,573 INFO sailab.pipeline: PSU 20261117T055241_20261117T055242_T43SDA: insufficient_observation None (centre pixel Pixel(row=100, col=99) is not water (NDWI <= 0.2))
+2026-11-18 23:46:14,770 INFO sailab.pipeline: PSU: 2 radar scenes listed after 2026-11-15
+2026-11-18 23:46:14,800 INFO sailab.pipeline: PSU S1D_IW_GRDH_1SDV_20261116T125648_20261116T125713_005493_00A7F5_4173: already recorded, skipped
+2026-11-18 23:46:15,575 INFO sailab.pipeline: PSU S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: downloaded data/scenes/PSU/S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA.tif sha256=ffdb69b6730ec0dabe3c517ea5173a74dd8a67dffda0d3538bb74bead72655c4
+2026-11-18 23:46:15,627 INFO sailab.pipeline: PSU S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: radar ok 11.24 (1124 px below -10.05 dB connected to the centre)
+2026-11-18 23:46:15,627 INFO sailab.pipeline: PSU S1D_IW_GRDH_1SDV_20261117T005737_20261117T005802_005500_00A83B_5EAA: radar not risk-scored (SCORE_RADAR is off: snowmelt errors, see pipeline.py)
+2026-11-18 23:46:16,775 INFO sailab.pipeline: TRL: 2 scenes listed after 2026-11-11
+2026-11-18 23:46:16,776 INFO sailab.pipeline: TRL 20261112T045029_20261112T045411_T45RVL: already recorded, skipped
+2026-11-18 23:46:18,019 INFO sailab.pipeline: TRL 20261117T045051_20261117T050022_T45RVL: downloaded data/scenes/TRL/20261117T045051_20261117T050022_T45RVL.tif sha256=e6b9c28c245f139949121404b7e1a4432c751e13e5be745741e5ecb3e577fa90
+2026-11-18 23:46:18,370 INFO sailab.pipeline: TRL 20261117T045051_20261117T050022_T45RVL: insufficient_observation None (check D: lake region (16442 px) borders 275 cloud/shadow pixels)
+2026-11-18 23:46:18,473 INFO sailab.pipeline: TRL: 1 radar scenes listed after 2026-11-14
+2026-11-18 23:46:18,652 INFO sailab.pipeline: TRL S1D_IW_GRDH_1SDV_20261115T121313_20261115T121338_005478_00A77C_57CD: already recorded, skipped
+2026-11-18 23:46:19,240 INFO sailab.pipeline: THU: 1 scenes listed after 2026-11-14
+2026-11-18 23:46:19,241 INFO sailab.pipeline: THU 20261115T050049_20261115T050113_T45RTM: already recorded, skipped
+2026-11-18 23:46:19,576 INFO sailab.pipeline: THU: 1 radar scenes listed after 2026-11-15
+2026-11-18 23:46:19,643 INFO sailab.pipeline: THU S1D_IW_GRDH_1SDV_20261116T001844_20261116T001909_005485_00A7B8_7630: already recorded, skipped
+2026-11-18 23:46:19,644 INFO sailab.pipeline: run 23 finished: RunResult(run_id=23, lakes_processed=8, scenes_recorded=9, scenes_downloaded=9, measurements=9, risk_scores=1, errors=None, notes=[])
+2026-11-18 23:46:19,644 INFO run_once: summary: run_id=23 lakes=8 scenes_recorded=9 downloaded=9 measurements=9 risk_scores=1
+2026-11-18 23:46:19,644 INFO run_once: run OK
