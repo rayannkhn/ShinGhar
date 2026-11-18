@@ -277,3 +277,113 @@ def test_esa_filters_match_the_real_product_names_found_on_2026_11_13():
     f = esa_filter("S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D", "radar")
     assert "startswith(Name,'S1D_IW_GRDH_1SDV_20261110T010541_20261110T010606_005398_00A4C0_EE4D')" in f
     assert "error" in esa_lookup("not-a-scene-id", "optical")          # never raises
+
+
+# --- part 2 (2026-11-18): Copernicus links and offline mode -----------------------------------------------
+def test_copernicus_links_use_the_browsers_own_parameters():
+    from urllib.parse import parse_qs, urlparse
+    from webapp.walkthrough import copernicus_url
+    u = urlparse(copernicus_url(36.64219, 73.40701, "2026-09-21T05:58:58+00:00", "optical"))
+    q = {k: v[0] for k, v in parse_qs(u.query).items()}
+    assert u.netloc == "browser.dataspace.copernicus.eu"
+    assert q == {"zoom": "14", "lat": "36.64219", "lng": "73.40701", "fromTime": "2026-09-21T00:00:00.000Z",
+                 "toTime": "2026-09-21T23:59:59.999Z", "dateMode": "SINGLE", "datasetId": "S2_L2A_CDAS",
+                 "layerId": "1_TRUE_COLOR", "cloudCoverage": "100"}
+    r = {k: v[0] for k, v in parse_qs(urlparse(copernicus_url(36.6, 73.4, "2026-11-10T01:05:41+00:00", "radar")).query).items()}
+    assert r["datasetId"] == "S1_CDAS_IW_VVVH" and r["fromTime"].startswith("2026-11-10") and "layerId" not in r
+
+
+def test_new_image_steps_link_to_copernicus(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({"KRB": [NEW_SCENE]})))
+    check_now(client)
+    by = {s["key"]: s for s in steps_of(client) if not s["replay"]}
+    for key in ("esa", "download"):
+        assert by[key]["links"][0]["href"].startswith("https://browser.dataspace.copernicus.eu/?")
+        assert "fromTime=2026-11-07T00" in by[key]["links"][0]["href"]
+
+
+def _stored_window(source_db, tmp_path):
+    lake = dict(zip(("centre_lon", "centre_lat"), sqlite3.connect(source_db).execute(
+        "SELECT centre_lon, centre_lat FROM lake WHERE code = 'KRB'").fetchone()))
+    latest = sqlite3.connect(source_db).execute(
+        "SELECT s.file_path FROM scene s JOIN measurement m ON m.scene_id = s.id WHERE m.status = 'ok' "
+        "ORDER BY s.acquired_at DESC LIMIT 1").fetchone()[0]
+    write_window(tmp_path / "repo" / latest, lake)
+
+
+def test_offline_switch_uses_stored_data_and_writes_nothing(source_db, tmp_path):
+    _stored_window(source_db, tmp_path)
+    log = tmp_path / "repo" / "logs" / "runs" / "2026-11-08T230000Z.log"
+    log.parent.mkdir(parents=True)
+    log.write_text("2026-11-08 23:00:00,000 INFO run_once: mode: scheduled/normal, data dir: x\n"
+                   "2026-11-08 23:00:00,100 INFO sailab.pipeline: run 2 started\n"
+                   "2026-11-08 23:00:01,000 INFO sailab.pipeline: signed in to Earth Engine as bot@example.iam.gserviceaccount.com\n"
+                   "2026-11-08 23:00:02,000 INFO sailab.pipeline: KRB: 1 scenes listed after 2026-10-20\n"
+                   "2026-11-08 23:00:02,001 INFO sailab.pipeline: KRB 20261021T0546_1_T43SCA: already recorded, skipped\n"
+                   "2026-11-08 23:00:02,300 INFO sailab.pipeline: KRB: 0 radar scenes listed after 2026-10-20\n")
+    called = []
+    client = make(source_db, tmp_path, lambda *a, **k: called.append(1))       # the pipeline must not run
+    before = sqlite3.connect(client.app.state.provenance["working_copy"]).execute("SELECT COUNT(*) FROM run_log").fetchone()[0]
+    r = client.post("/live/check", data={"lake": "KRB", "offline": "1"}, follow_redirects=False)
+    assert r.status_code == 303
+    client.app.state.live.wait(30)
+    st = client.get("/live/state.json").json()
+    assert st["status"] == "offline" and called == []
+    keys = [s["key"] for s in st["steps"]]
+    assert keys[:4] == ["offline", "sign_in", "search_optical", "search_radar"]
+    assert all(s["offline"] for s in st["steps"])
+    assert "Signed in as bot@example.iam.gserviceaccount.com at 2026-11-08 23:00 UTC" == st["steps"][1]["result"]
+    assert st["steps"][2]["result"] == "1 optical scene listed after 2026-10-20 · 20261021T0546_1_T43SCA already stored"
+    assert any(s["key"] == "area" for s in st["steps"])                         # measuring still runs, from the file
+    copy = sqlite3.connect(client.app.state.provenance["working_copy"])
+    assert copy.execute("SELECT COUNT(*) FROM run_log").fetchone()[0] == before  # nothing written
+    assert "Offline: Karambar Lake from stored data." in client.get("/live").text
+
+
+def test_no_connection_switches_to_offline_by_itself(source_db, tmp_path):
+    _stored_window(source_db, tmp_path)
+    client = make(source_db, tmp_path, lambda *a, **k: (_ for _ in ()).throw(AssertionError("pipeline ran")))
+    client.app.state.live.reachable = lambda: "ConnectionError: Failed to establish a new connection"
+    check_now(client)
+    st = client.get("/live/state.json").json()
+    assert st["status"] == "offline" and "switched to offline mode by itself" in st["offline_reason"]
+    assert st["steps"][1]["title"] == "Sign in (not available offline)"         # no nightly log in this test repo
+    esa = next(s for s in st["steps"] if s["key"] == "esa")                      # nothing saved yet: said plainly
+    assert esa["result"] == "Not checked now (offline), and no saved ESA answer for this image yet."
+    assert any(s["key"] == "area" for s in st["steps"])                          # and the check still finishes
+
+
+def test_esa_answers_are_saved_and_used_offline(tmp_path):
+    from webapp.walkthrough import CachedESA
+    calls = []
+    esa = CachedESA(tmp_path / "esa.json", lambda sid, sensor: calls.append(sid) or fake_esa(sid, sensor))
+    online = esa("20261107T054600_X_T43SCA", "optical")
+    assert calls == ["20261107T054600_X_T43SCA"]
+    offline = esa("20261107T054600_X_T43SCA", "optical", offline=True)
+    assert calls == ["20261107T054600_X_T43SCA"] and offline["saved"] and offline["products"] == online["products"]
+    assert "no saved ESA answer" in esa("other", "optical", offline=True)["error"]
+
+
+# --- part 3 (2026-11-18): run-time method choice -------------------------------------------------------
+def test_chosen_method_adds_a_compare_step_and_changes_nothing_stored(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({"KRB": [NEW_SCENE]})))
+    r = client.post("/live/check", data={"lake": "KRB", "algo_optical": "all", "algo_radar": "edge_otsu"},
+                    follow_redirects=False)
+    assert r.status_code == 303
+    client.app.state.live.wait(30)
+    steps = steps_of(client)
+    cmp_ = next(s for s in steps if s["key"] == "compare" and not s["replay"])
+    assert [row[0] for row in cmp_["table"]["rows"]] == ["NDWI > 0.2 (pipeline, stored)", "MNDWI > 0", "NDWI, Otsu cutoff",
+                                                         "MNDWI, Otsu cutoff"]
+    assert cmp_["table"]["rows"][0][1] == "0.25 ha"
+    assert len(cmp_["pictures"]) == 3
+    keys = [s["key"] for s in steps if not s["replay"]]
+    assert keys.index("area") < keys.index("compare") < keys.index("score")
+    copy = sqlite3.connect(client.app.state.provenance["working_copy"])
+    assert copy.execute("SELECT extent_ha FROM measurement WHERE scene_id = (SELECT MAX(id) FROM scene)").fetchone()[0] == 0.25
+
+
+def test_unknown_method_is_refused(source_db, tmp_path):
+    client = make(source_db, tmp_path, runner_with(FakeEarthEngine({})))
+    assert client.post("/live/check", data={"lake": "KRB", "algo_optical": "otsu"}).status_code == 400     # radar method for optical
+    assert client.post("/live/check", data={"lake": "KRB", "algo_radar": "awei"}).status_code == 400

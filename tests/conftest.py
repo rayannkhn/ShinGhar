@@ -16,6 +16,15 @@ def _no_background_auto_reload(monkeypatch):
     monkeypatch.setenv("SAILAB_AUTO_RELOAD_SECONDS", "0")
 
 
+@pytest.fixture(autouse=True)
+def _no_network_from_the_web_app(monkeypatch):
+    """Tests never reach the internet: the live check's connection test says 'online' (a test that wants offline
+    passes its own), and no background ESA warm-up runs."""
+    import webapp.live
+    monkeypatch.setattr(webapp.live, "earth_engine_reachable", lambda timeout=4.0: None)
+    monkeypatch.setenv("SAILAB_WARM_ESA", "0")
+
+
 @pytest.fixture
 def source_db(tmp_path):
     path = tmp_path / "source.db"

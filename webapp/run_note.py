@@ -36,7 +36,7 @@ def nightly_logs(repo_root: Path) -> list[Path]:
 def parse_log(path: Path) -> dict[str, Any]:
     """What the run's own log says, keyed by lake code and scene id."""
     out: dict[str, Any] = {"run_id": None, "mode": None, "listed": {}, "already": {}, "reasons": {}, "cloud": {},
-                           "errors": []}
+                           "errors": [], "account": None, "started_utc": None, "file": path.name}
     for raw in path.read_text(errors="replace").splitlines():
         m = _LINE.match(raw)
         if not m:
@@ -46,6 +46,9 @@ def parse_log(path: Path) -> dict[str, Any]:
             out["errors"].append(msg)
         if (s := _STARTED.match(msg)) and out["run_id"] is None:
             out["run_id"] = int(s.group(1))
+            out["started_utc"] = raw[:16]
+        elif msg.startswith("signed in to Earth Engine as "):
+            out["account"] = msg.removeprefix("signed in to Earth Engine as ").strip()
         elif s := _MODE.match(msg):
             out["mode"] = s.group(1).rstrip(",")
         elif s := _LISTED.match(msg):
@@ -173,7 +176,13 @@ def build(conn: sqlite3.Connection, repo_root: Path, explain: Any = None) -> dic
             else:
                 text = "not checked in this run" if log["listed"] else "nothing new"
             items = [{"text": text, "tone": "muted", "scene_id": None}]
-        lakes.append({"code": lake["code"], "name": lake["name"], "items": items})
+        new_here = [i for i in items if i.get("sensor")]
+        if new_here:
+            short = f"{len(new_here)} new image{'s' if len(new_here) != 1 else ''}"
+            tone = "warn" if any(i["tone"] in ("warn", "error") for i in new_here) else "ok"
+        else:
+            short, tone = ("Not checked", "muted") if items[0]["text"].startswith("not checked") else ("Nothing new", "muted")
+        lakes.append({"code": lake["code"], "name": lake["name"], "items": items, "short": short, "short_tone": tone})
 
     new = len(added)
     measured = sum(1 for r in added if r["status"] == "ok")

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}SailAb GLOF{% endblock %} · SailAb GLOF</title>
   <link rel="icon" href="/static/logo_mark.png">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ css_version() }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -35,10 +35,11 @@
       <a href="/live" class="{{ 'active' if nav == 'live' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>
         Live check</a>
-      <div class="section">Lakes</div>
-      {% for l in nav_lakes %}
+      {% for country, group in nav_lakes | groupby("country") | sort(attribute="grouper", reverse=True) %}
+      <div class="section">{{ "Lakes" if country == "Pakistan" else country ~ " (test lakes)" }}</div>
+      {% for l in group %}
       <a href="/lakes/{{ l.code }}" class="sub {{ 'active' if nav == l.code }}"><span class="mono">{{ l.code }}</span>&nbsp;{{ l.name }}</a>
-      {% endfor %}
+      {% endfor %}{% endfor %}
       <div class="section">Design previews (not built)</div>
       <a href="/preview/confirm-advisory" class="sub preview-link {{ 'active' if nav == 'p-confirm' }}">Confirm advisory</a>
       <a href="/preview/delivery-status" class="sub preview-link {{ 'active' if nav == 'p-delivery' }}">Delivery status</a>

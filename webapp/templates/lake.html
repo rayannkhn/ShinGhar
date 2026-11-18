@@ -36,6 +36,40 @@
   </div>
 </section>
 
+{% set info = d.info %}
+<div class="grid two mt about-lake">
+  <section class="card">
+    <h2>What our data shows</h2>
+    <ul class="readings">
+      {% for r in info.readings %}<li class="{{ r.tone }}">{{ r.text }}</li>{% endfor %}
+    </ul>
+    <details class="more"><summary>How this is worked out</summary><p class="footnote">Written by the system from this lake's
+      stored measurements each time the page opens; nothing here is typed in by hand. The trend compares the median of the clear
+      optical photos in the first and last years that have at least two. The score wording follows the optical score
+      (within 1 spread: usual; 1–2: a little unusual; 2 or more: clearly unusual).</p></details>
+  </section>
+  <section class="card">
+    <h2>About this lake</h2>
+    {% set f = info.facts %}
+    <dl class="kv wide">
+      {% if f %}<dt>Where</dt><dd>{{ f.place }}</dd><dt>Type</dt><dd>{{ f.kind }}</dd>{% endif %}
+      <dt>Elevation</dt><dd>{% if info.elevation_m is not none %}{{ "{:,.0f}".format(info.elevation_m) }} m <span style="color:var(--muted);font-size:13px">(lake centre, from the stored Copernicus 30 m DEM)</span>{% else %}not available (no DEM file){% endif %}</dd>
+      <dt>Oldest stored image</dt><dd>{{ info.first_image | date if info.first_image else "none yet" }}</dd>
+    </dl>
+    {% set cite = info.sources | map(attribute=0) | list %}
+    {% if f and f.about %}<ul class="facts">{% for x in f.about %}<li>{{ x.text }}<sup>{% for k in x.sources %}<a href="#src-{{ k }}">{{ cite.index(k) + 1 }}</a>{{ "," if not loop.last }}{% endfor %}</sup></li>{% endfor %}</ul>{% endif %}
+    {% if f and f.history %}<h3 class="sub">Past events</h3>
+    <ul class="facts">{% for x in f.history %}<li>{{ x.text }}<sup>{% for k in x.sources %}<a href="#src-{{ k }}">{{ cite.index(k) + 1 }}</a>{{ "," if not loop.last }}{% endfor %}</sup></li>{% endfor %}</ul>{% endif %}
+    {% if f and f.gaps %}<p class="footnote" style="margin-top:8px">{{ f.gaps }}</p>{% endif %}
+    {% if info.sources %}
+    <details class="more"><summary>Sources ({{ info.sources | length }})</summary>
+      <ol class="sources">{% for k, label, url in info.sources %}<li id="src-{{ k }}"><a href="{{ url }}" target="_blank" rel="noopener">{{ label }} ↗</a></li>{% endfor %}</ol>
+      <p class="footnote">Searched 18 Nov 2026. Where sources disagree, the text says so.</p>
+    </details>
+    {% endif %}
+  </section>
+</div>
+
 <div class="grid two mt">
   <section class="card">
     <div class="card-head">
@@ -54,10 +88,10 @@
       {% if s.counts.no_lake_detected %}<span><svg width="10" height="10" style="vertical-align:middle;margin-right:5px"><path d="M1,1 L9,9 M1,9 L9,1" stroke="#b3261e" stroke-width="2"/></svg>No lake found (no area)</span>{% endif %}
     </div>
     {% if d.chart %}{{ d.chart | safe }}{% else %}<p>No scenes recorded for this lake yet.</p>{% endif %}
-    <p class="footnote">{{ d.chart_start | date }} to {{ d.chart_end | date }}: {{ d.ok_in_range }} usable optical and {{ d.radar_ok_in_range }} usable radar measurements.
+    <details class="more"><summary>How to read this chart</summary><p class="footnote">{{ d.chart_start | date }} to {{ d.chart_end | date }}: {{ d.ok_in_range }} usable optical and {{ d.radar_ok_in_range }} usable radar measurements.
       Points more than 45 days apart are not joined: a gap is a gap, not a trend. Optical and radar are never joined or averaged:
       they measure the lake slightly differently. The vertical scale follows the optical values; a radar value more than 25% away from the
-      optical median (a clear radar error, such as wet snow in spring) is drawn as a hollow triangle at the top or bottom edge, with its real value on hover.</p>
+      optical median (a clear radar error, such as wet snow in spring) is drawn as a hollow triangle at the top or bottom edge, with its real value on hover.</p></details>
   </section>
 
   <section class="card">
@@ -82,9 +116,10 @@
     <p class="footnote">Baseline = mean of the earlier optical values for this calendar month; score = (area − baseline) ÷ their
       standard deviation. A score needs 5 earlier values from 2 years. It is a statistical deviation, not a danger level or a probability.</p>
     <h3 style="font-size:15px;margin:18px 0 8px">Radar (Sentinel-1)</h3>
-    <p style="margin:0;font-size:14.5px">Radar is measured and shown, but <strong>not risk-scored</strong> in this build. In summer it agrees with
+    <p style="margin:0;font-size:14.5px">Radar is measured and shown, but <strong>not risk-scored</strong> in this build.</p>
+    <details class="more"><summary>Why radar is not scored</summary>    <p class="footnote">Radar is measured and shown, but <strong>not risk-scored</strong> in this build. In summer it agrees with
       near-same-day optical to within about 5–6% (Karambar +5.2%, Atro Sar −6.4%; 16 summer scenes, 2 lakes), but during snowmelt (April to June) wet snow looks like water on radar,
-      and those errors produced the largest false anomalies. Scoring stays off until a melt-season check has been tested.</p>
+      and those errors produced the largest false anomalies. Scoring stays off until a melt-season check has been tested.</p></details>
   </section>
 </div>
 
@@ -98,8 +133,9 @@
         (<span class="mono">{{ d.image.file_path }}</span>). Backfill images are kept only on the developer's laptop.</div></div>
     {% else %}
       <img class="scene-img" src="/lakes/{{ l.code }}/latest-image.png" alt="Sentinel-2 true colour, {{ d.image.acquired_at | date }}, with the measured lake outline">
-      <p class="footnote">Sentinel-2 true colour, {{ d.image.acquired_at | date }}. Yellow outline: the lake region, recomputed from the stored file with the
-        same measurement code; stored area {{ d.image.extent_ha | ha }}.</p>
+      <a class="btn ext" target="_blank" rel="noopener" href="{{ copernicus_url(l.centre_lat, l.centre_lon, d.image.acquired_at, 'optical') }}">View this image in Copernicus Browser ↗</a>
+      <details class="more"><summary>About this image</summary><p class="footnote">Sentinel-2 true colour, {{ d.image.acquired_at | date }}. Yellow outline: the lake region, recomputed from the stored file with the
+        same measurement code; stored area {{ d.image.extent_ha | ha }}.</p></details>
     {% endif %}
   </section>
   <section class="card">
@@ -112,8 +148,9 @@
         (<span class="mono">{{ ri.file_path }}</span>).</div></div>
     {% else %}
       <img class="scene-img" src="/lakes/{{ l.code }}/latest-radar.png" alt="Sentinel-1 VV backscatter, {{ ri.acquired_at | date }}, with the measured lake outline">
-      <p class="footnote">Sentinel-1 VV backscatter, {{ ri.acquired_at | date }} (dark = smooth surface such as water). Yellow outline: the lake
-        region, recomputed with the same radar code (slope mask, then Otsu over flat ground); stored area {{ ri.extent_ha | ha }}.</p>
+      <a class="btn ext" target="_blank" rel="noopener" href="{{ copernicus_url(l.centre_lat, l.centre_lon, ri.acquired_at, 'radar') }}">View this image in Copernicus Browser ↗</a>
+      <details class="more"><summary>About this image</summary><p class="footnote">Sentinel-1 VV backscatter, {{ ri.acquired_at | date }} (dark = smooth surface such as water). Yellow outline: the lake
+        region, recomputed with the same radar code (slope mask, then Otsu over flat ground); stored area {{ ri.extent_ha | ha }}.</p></details>
     {% endif %}
   </section>
 </div>
@@ -146,11 +183,11 @@
     {% if d.page > 1 %}<a href="?range={{ d.range_key }}&page={{ d.page - 1 }}">‹ Newer</a>{% endif %}
     {% if d.page < d.pages %}<a href="?range={{ d.range_key }}&page={{ d.page + 1 }}">Older ›</a>{% endif %}
   </div>
-  <p class="footnote" style="padding:0 20px 16px">"Refused by quality checks" (optical): centre not water, cloud or snow/ice touching the lake, or the lake cut off at the window edge.
+  <details class="more"><summary>What the quality labels mean</summary><p class="footnote" style="padding:0 20px 16px">"Refused by quality checks" (optical): centre not water, cloud or snow/ice touching the lake, or the lake cut off at the window edge.
     "Refused by radar checks": centre not darker than the radar threshold, or the region reaching the window edge.
     {% if l.detects_drainage %}"No lake found at the centre" (this lake only checks for it because its water is clear): a May-October optical scene with no
     cloud, snow/ice or missing data within 150 m of the centre and almost no water there; no area is stored.{% endif %}
     The exact reason for each scene is in that run's log file (logs/runs/), and on its scene page ("View image"), where the
-    measurement is recomputed from the stored file and drawn: true colour, NDWI and cloud/snow for optical; backscatter and the threshold map for radar.</p>
+    measurement is recomputed from the stored file and drawn: true colour, NDWI and cloud/snow for optical; backscatter and the threshold map for radar.</p></details>
 </section>
 {% endblock %}

@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS lake (
     boundary_radius_m REAL NOT NULL,
     growth_distance_limit_m REAL NOT NULL DEFAULT 2500,
     history_since TEXT,
-    detects_drainage INTEGER NOT NULL DEFAULT 0
+    detects_drainage INTEGER NOT NULL DEFAULT 0,
+    country TEXT NOT NULL DEFAULT 'Pakistan'
 );
 
 CREATE TABLE IF NOT EXISTS scene (
@@ -166,6 +167,38 @@ SEED_LAKES = (
         "history_since": None,
         "detects_drainage": 0,
     },
+    # Added 2026-11-18 at the supervisor's request (international test lakes), agreed with the project owner. Both were
+    # tested first with the pipeline's own download and measurement on real autumn 2024/2025 scenes, against four other
+    # Nepal candidates (Imja Tsho, Dig Tsho, Tam Pokhari, Lower Barun): logs/2026-11-18_nepal_lake_candidates/README.md.
+    # Both are among ICIMOD's highest-risk lakes in Nepal and have published areas to check our measurements against.
+    {
+        # Tsho Rolpa, Rolwaling valley, Dolakha: moraine-dammed, on the Trakarding glacier; lowered 3 m in 2000 to cut
+        # its outburst risk. Published 1.55 km2 (1999) and about 1.6 km2 (ICIMOD); measured 165.41 and 165.25 ha
+        # (Oct 2024). Centre: JRC Global Surface Water centroid (max extent 162.0 ha, water 97% of the time, 4,546 m).
+        "code": "TRL",
+        "name": "Tsho Rolpa",
+        "centre_lon": 86.47656,
+        "centre_lat": 27.86090,
+        "boundary_radius_m": 2500.0,
+        "growth_distance_limit_m": 2500.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 0,
+        "country": "Nepal",
+    },
+    {
+        # Thulagi (Dona) lake, below Manaslu, Gorkha/Lamjung: moraine-dammed, rated potentially dangerous (ICIMOD).
+        # Published 0.94 km2 (ICIMOD, 2009) and 0.89 km2 (Oct 2017 survey; Remote Sensing 10(5) 798, 2018); measured
+        # 96.9-97.7 ha on 6 of 8 clear autumn days 2024-2025. Centre: JRC centroid (max 102.8 ha, 93.7%, 3,988 m).
+        "code": "THU",
+        "name": "Thulagi lake",
+        "centre_lon": 84.48544,
+        "centre_lat": 28.48859,
+        "boundary_radius_m": 1500.0,
+        "growth_distance_limit_m": 1500.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 0,
+        "country": "Nepal",
+    },
 )
 
 
@@ -186,6 +219,8 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
         conn.execute("ALTER TABLE lake ADD COLUMN history_since TEXT")
     if "detects_drainage" not in columns:
         conn.execute("ALTER TABLE lake ADD COLUMN detects_drainage INTEGER NOT NULL DEFAULT 0")
+    if "country" not in columns:                   # added 2026-11-18 with the Nepal test lakes
+        conn.execute("ALTER TABLE lake ADD COLUMN country TEXT NOT NULL DEFAULT 'Pakistan'")
     conn.commit()
     return conn
 
@@ -195,7 +230,7 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
 # ---------------------------------------------------------------------------
 def insert_lake(conn: sqlite3.Connection, code: str, name: str, centre_lon: float, centre_lat: float,
                 boundary_radius_m: float, growth_distance_limit_m: float = 2500.0,
-                history_since: str | None = None, detects_drainage: int = 0) -> int:
+                history_since: str | None = None, detects_drainage: int = 0, country: str = "Pakistan") -> int:
     if not (-180.0 <= centre_lon <= 180.0) or not (-90.0 <= centre_lat <= 90.0):
         raise ValueError(f"lake {code}: coordinates out of range (lon={centre_lon}, lat={centre_lat})")
     if history_since is not None:
@@ -204,8 +239,9 @@ def insert_lake(conn: sqlite3.Connection, code: str, name: str, centre_lon: floa
         raise ValueError(f"lake {code}: detects_drainage must be 0 or 1, got {detects_drainage!r}")
     cursor = conn.execute(
         "INSERT INTO lake (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m, "
-        "history_since, detects_drainage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m, history_since, detects_drainage),
+        "history_since, detects_drainage, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (code, name, centre_lon, centre_lat, boundary_radius_m, growth_distance_limit_m, history_since, detects_drainage,
+         country),
     )
     conn.commit()
     return cursor.lastrowid

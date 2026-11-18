@@ -1,0 +1,77 @@
+
+KRB Karambar Lake, optical: 20 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                  20        0     255.14                  +0.0%
+  MNDWI > 0                           3       17     244.84                  -4.7%
+  NDWI, Otsu cutoff                  19        1     257.23                  +0.7%
+  MNDWI, Otsu cutoff                 14        6     243.68                  -3.4%
+
+KRB Karambar Lake, radar: 54 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  Slope mask + Otsu (ours)           54        0     263.12                  +0.0%
+  Edge Otsu                          53        1     259.78                  -1.2%
+  Bmax Otsu                          38       16     255.86                  -2.0%
+
+ATS Atro Sar, optical: 25 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                  25        0     106.12                  +0.0%
+  MNDWI > 0                          25        0     111.53                  +5.1%
+  NDWI, Otsu cutoff                  25        0     105.23                  -0.8%
+  MNDWI, Otsu cutoff                 25        0     105.97                  -0.1%
+
+ATS Atro Sar, radar: 52 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  Slope mask + Otsu (ours)           52        0      98.94                  +0.0%
+  Edge Otsu                          49        3      95.80                  -3.3%
+  Bmax Otsu                          48        4      95.19                  -3.0%
+
+SHP Shishper glacier lake, optical: 6 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                   6        0       8.80                  +0.0%
+  MNDWI > 0                           2        4      31.79                +133.9%
+  NDWI, Otsu cutoff                   2        4      20.07                 +10.9%
+  MNDWI, Otsu cutoff                  2        4      46.81                +268.2%
+SHP radar: no stored usable image files
+
+DKT Darkut glacial lake, optical: 86 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                  86        0      16.07                  +0.0%
+  MNDWI > 0                          36       50      21.89                 +33.6%
+  NDWI, Otsu cutoff                  59       27      16.53                  +3.0%
+  MNDWI, Otsu cutoff                 83        3      16.56                  +2.8%
+
+DKT Darkut glacial lake, radar: 87 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  Slope mask + Otsu (ours)           87        0      14.67                  +0.0%
+  Edge Otsu                          87        0      14.44                  -1.3%
+  Bmax Otsu                          31       56      14.43                  -2.0%
+
+BRT Borith Lake, optical: 81 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                  81        0      11.13                  +0.0%
+  MNDWI > 0                          70       11      10.86                  -6.1%
+  NDWI, Otsu cutoff                  77        4      12.74                  +3.2%
+  MNDWI, Otsu cutoff                 77        4      14.57                 +33.0%
+
+BRT Borith Lake, radar: 87 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  Slope mask + Otsu (ours)           87        0      11.24                  +0.0%
+  Edge Otsu                          87        0      10.97                  -2.4%
+  Bmax Otsu                           0       87        nan                      —
+
+PSU Passu glacier lake, optical: 3 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  NDWI > 0.2 (ours)                   3        0       0.68                  +0.0%
+  MNDWI > 0                           1        2      21.33               +3036.8%
+  NDWI, Otsu cutoff                   1        2     300.94              +44155.9%
+  MNDWI, Otsu cutoff                  1        2     186.91              +27386.8%
+
+PSU Passu glacier lake, radar: 75 stored usable images
+  method                       measured  refused  median ha  median diff vs stored
+  Slope mask + Otsu (ours)           75        0      11.19                  +0.0%
+  Edge Otsu                          73        2      10.90                  -2.8%
+  Bmax Otsu                           0       75        nan                      —
+
+Baseline entries differing from the stored value: 0 (expected 0)
+Took 513 s
+exit 0

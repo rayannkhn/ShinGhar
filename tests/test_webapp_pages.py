@@ -49,12 +49,13 @@ def write_lake_window(path, lon, lat, rows=30, cols=30):
 
 # --- dashboard --------------------------------------------------------------------------------
 def test_dashboard_shows_the_real_counts(client):
-    text = visible_text(client.get("/").text)
-    assert "Lakes monitored 6 " in text
+    html = client.get("/").text
+    text = visible_text(html)
+    assert "Lakes monitored 8 " in text
     assert "Scenes recorded 5 5 optical, 0 radar" in text
     assert "40% 2 of 5 optical scenes" in text                       # too cloudy: 2 of 5 OPTICAL scenes
-    assert ("Usable measurements 2 2 of 3 measurement attempts passed every check (optical 2 of 3, radar 0 of 0). "
-            "Not a scene count: the 2 too-cloudy optical scenes were never measured.") in text
+    assert "Usable measurements 2 2 of 3 measurement attempts passed every check (optical 2 of 3, radar 0 of 0)." in text
+    assert 'title="Not a scene count: the 2 too-cloudy optical scenes were never measured."' in html   # behind the ⓘ tip
     assert "Days since a usable measurement 120 Karambar Lake, optical, 12 Jul 2026" in text
     assert "Optical: 250.00 ha on 12 Jul 2026, 120 days ago" in text
     assert "Radar: No usable measurement yet" in text                # no radar rows: said in words
@@ -63,8 +64,8 @@ def test_dashboard_shows_the_real_counts(client):
 
 def test_dashboard_banners_come_from_the_data(client):
     text = visible_text(client.get("/").text)
-    assert ("for 6 of 6 lakes (Karambar Lake, Atro Sar, Shishper glacier lake, Darkut glacial lake, Borith Lake, "
-            "Passu glacier lake)") in text                               # no lake has a usable image in 7 days
+    assert ("for 8 of 8 lakes (Karambar Lake, Atro Sar, Shishper glacier lake, Darkut glacial lake, Borith Lake, "
+            "Passu glacier lake, Tsho Rolpa, Thulagi lake)") in text                               # no lake has a usable image in 7 days
     assert "The latest pipeline run (run 2) recorded an error." in text
     assert "EarthEngineError: quota" in text
 
@@ -213,11 +214,16 @@ def test_score_formatting_uses_a_real_minus_sign():
 @pytest.mark.parametrize("url", ["/", "/lakes/KRB", "/lakes/ATS", "/live", "/preview/confirm-advisory",
                                  "/preview/delivery-status", "/preview/risk-threshold", "/static/style.css"])
 def test_pages_load_nothing_from_the_internet(client, url):
-    """Only the live check needs a network connection; every page, style and image is served locally."""
+    """Only the live check needs a network connection; every page, style and image is served locally.
+    Loads are src=, CSS url(...) and <link href>. A plain <a href> to an outside page (a cited source, Copernicus
+    Browser) loads nothing until clicked, so it is allowed, but it must open in a new tab."""
     body = client.get(url).text
-    refs = re.findall(r"""(?:src|href|url)\s*[=(]\s*["']?([^"' )>]+)""", body)
+    refs = re.findall(r"""(?:src|url)\s*[=(]\s*["']?([^"' )>]+)""", body)
+    refs += re.findall(r"""<link\b[^>]*\bhref\s*=\s*["']?([^"' >]+)""", body)
     external = [r for r in refs if re.match(r"(https?:)?//", r)]
     assert external == [], external
+    for tag in re.findall(r"""<a\b[^>]*\bhref\s*=\s*["']?(?:https?:)?//[^>]*>""", body):
+        assert 'target="_blank"' in tag and "noopener" in tag, tag
 
 
 # --- with radar rows (added 2026-11-09) -------------------------------------------------------------
@@ -304,3 +310,40 @@ def test_the_structure_check_runs_on_real_pages(radar_client):
 def test_observation_log_is_inside_the_main_layout(radar_client):
     html = radar_client.get("/lakes/KRB").text
     assert html.index("<h2>Observation log</h2>") < html.index("</main>")
+
+
+# --- part 1 of the supervisor's fixes (2026-11-18): flowchart, one step per screen, less text -----------------
+def test_dashboard_has_the_flowchart_of_every_step(client):
+    html = client.get("/").text
+    assert 'class="flowchart"' in html and "How a check works" in html
+    from webapp.flowchart import STEPS
+    assert [n for n, *_ in STEPS] == list(range(1, 11))
+    for _, title, _ in STEPS:                                   # every step is drawn, in order
+        assert f'class="fc-title">{title}</text>' in html
+    assert html.index(">Sign in</text>") < html.index(">Detect water</text>") < html.index(">Save</text>")
+    assert "no new image → replay newest stored one" in html and "radar: measured, not scored" in html
+
+
+def test_live_page_shows_one_step_at_a_time_with_previous_and_next(client):
+    html = client.get("/live").text
+    for marker in ('id="stepper"', 'id="stage"', 'id="prev"', 'id="next"', "ArrowRight", "ArrowLeft"):
+        assert marker in html, marker
+
+
+def test_long_explanations_sit_behind_a_toggle_not_on_the_page(client):
+    lake = client.get("/lakes/KRB").text
+    assert '<details class="more"><summary>How to read this chart</summary>' in lake
+    assert '<details class="more"><summary>Why radar is not scored</summary>' in lake
+    assert lake.count('<details class="more">') >= 3     # chart, radar, quality labels (no image files in the test database)
+
+
+# --- part 4 (2026-11-18): Nepal test lakes ---------------------------------------------------------------
+def test_nepal_lakes_are_grouped_apart_everywhere(client):
+    dash = client.get("/").text
+    assert '<h3 class="map-country">Nepal (test lakes)</h3>' in dash and '<h3 class="map-country">Pakistan</h3>' in dash
+    assert dash.count('class="map-country"') == 2                    # one map per country, not one stretched map
+    assert '<div class="section">Nepal (test lakes)</div>' in dash   # sidebar
+    assert dash.index('<div class="section">Lakes</div>') < dash.index('<div class="section">Nepal (test lakes)</div>')
+    live = client.get("/live").text
+    assert '<optgroup label="Nepal (test lakes)">' in live and '<optgroup label="Pakistan">' in live
+    assert live.index('value="THU"') > live.index('<optgroup label="Nepal (test lakes)">')

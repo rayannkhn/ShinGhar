@@ -8,6 +8,8 @@
 <section class="card">
   <div class="card-head">
     <h1 style="margin:0"><span class="mono">{{ s.lake.code }}</span> {{ s.lake.name }}: {{ "Sentinel-1 radar" if radar else "Sentinel-2 optical" }}, {{ s.acquired_at | utc_time }}</h1>
+    <a class="btn ext" target="_blank" rel="noopener"
+       href="{{ copernicus_url(s.lake.centre_lat, s.lake.centre_lon, s.acquired_at, 'radar' if radar else 'optical') }}">View this image in Copernicus Browser ↗</a>
     <span class="pager" style="padding:0">
       {% if s.newer_id %}<a href="/scenes/{{ s.newer_id }}">‹ Newer scene</a>{% endif %}
       {% if s.older_id %}<a href="/scenes/{{ s.older_id }}">Older scene ›</a>{% endif %}
@@ -56,9 +58,46 @@
     {% if a.stats.cloud_px_in_window is defined %}<dt>Cloud / snow in window</dt><dd>{{ "{:,}".format(a.stats.cloud_px_in_window) }} cloud or shadow pixels, {{ "{:,}".format(a.stats.snow_px_in_window) }} snow/ice pixels (Sentinel-2 scene classification)</dd>{% endif %}
     {% endif %}
   </dl>
-  <p class="footnote">Computed when this page was opened, by the pipeline's own unchanged measurement function
+  <details class="more"><summary>How this was computed</summary><p class="footnote">Computed when this page was opened, by the pipeline's own unchanged measurement function
     ({{ "sailab.radar.measure_radar_scene" if radar else "sailab.pipeline.measure_scene" }}) on the file above. It is not read from the database;
-    the line above says whether it agrees with what the run stored.</p>
+    the line above says whether it agrees with what the run stored.</p></details>
+</section>
+
+<section class="card mt">
+  <div class="card-head"><h2 style="margin:0">Compare water-detection methods</h2>
+    <form method="get" class="live-form">
+      <label class="algo-pick">Method
+        <select name="algo" onchange="this.form.submit()">
+          <option value="" {% if not d.algo %}selected{% endif %}>Choose a method…</option>
+          {% for x in d.algo_choices if not x.baseline %}<option value="{{ x.key }}" {% if d.algo == x.key %}selected{% endif %}>{{ x.label }} ({{ x.source }})</option>{% endfor %}
+          <option value="all" {% if d.algo == 'all' %}selected{% endif %}>All methods, side by side</option>
+          {% for name, s_, why in d.unavailable %}<option disabled>{{ name }}: not available ({{ why }})</option>{% endfor %}
+        </select></label>
+      <noscript><button class="btn" type="submit">Show</button></noscript>
+    </form></div>
+  {% if d.compared %}
+  <table>
+    <tr><th>Method</th><th class="num">Threshold</th><th class="num">Area</th><th class="num">Difference</th><th>Notes</th></tr>
+    <tr><td>{{ "NDWI > 0.2" if not radar else "Slope mask + Otsu" }} (pipeline, stored)</td><td class="num mono">{% if radar and a.threshold_db is not none %}{{ "%.2f dB" | format(a.threshold_db) }}{% elif not radar %}0.200{% endif %}</td>
+      <td class="num mono">{{ s.extent_ha | ha }}</td><td class="num">—</td><td></td></tr>
+    {% for c in d.compared %}{% set r = c.r %}
+    <tr><td>{{ r.label if r else c.key }}</td>
+      <td class="num mono">{% if r and r.threshold is not none %}{{ ("%.2f dB" if radar else "%.3f") | format(r.threshold) }}{% else %}—{% endif %}</td>
+      <td class="num mono">{% if r and r.status == 'ok' %}{{ r.extent_ha | ha }}{% else %}refused{% endif %}</td>
+      <td class="num mono">{% if r and r.status == 'ok' and s.extent_ha %}{{ "%+.2f ha (%+.1f%%)" | format(r.extent_ha - s.extent_ha, (r.extent_ha - s.extent_ha) / s.extent_ha * 100) }}{% else %}—{% endif %}</td>
+      <td style="font-size:13px">{% if c.error %}{{ c.error }}{% else %}{{ (r.notes + ([r.reason] if r.status != 'ok' else [])) | join("; ") }}{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="grid three mt">
+    {% for c in d.compared if c.r %}
+    <figure style="margin:0"><img class="scene-img" src="/scenes/{{ s.scene_id }}/algo/{{ c.key }}.png" alt="{{ c.r.label }} water map">
+      <figcaption class="footnote" style="font-style:normal">{{ c.r.label }}: blue = water, yellow = lake grown from the centre</figcaption></figure>
+    {% endfor %}
+  </div>
+  <details class="more"><summary>What changes between methods</summary><p class="footnote">Only the water test changes. Growing the lake from the centre,
+    the distance limit, the area formula and the quality checks are the pipeline's own. Display only: the stored record and the risk
+    score always use the pipeline's method.</p></details>
+  {% else %}<p style="color:var(--muted);margin:6px 0 0">Re-measure this image with another published method and see the difference.</p>{% endif %}
 </section>
 
 <div class="grid {{ 'even' if radar else 'three' }} mt">

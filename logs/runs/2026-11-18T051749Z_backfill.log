@@ -1,0 +1,32 @@
+2026-11-18 05:17:49,488 INFO run_once: mode: BACKFILL (started by hand), data dir: /home/rayannn/Documents/SAILAB_FYP1_FINAL/data/backfill
+2026-11-18 05:17:49,494 INFO run_once: lakes: THU
+2026-11-18 05:17:50,268 INFO sailab.pipeline: run 21 started
+2026-11-18 05:17:54,117 INFO sailab.pipeline: signed in to Earth Engine as sailab-glof-bot@kaarigar-507118.iam.gserviceaccount.com
+2026-11-18 05:17:54,118 WARNING sailab.pipeline: resuming after lake 7 (previous run did not finish)
+2026-11-18 05:17:54,120 ERROR sailab.pipeline: run 21 failed: ValueError: 7 is not in list
+Traceback (most recent call last):
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/pipeline.py", line 376, in run_pipeline_once
+    run.run()
+    ~~~~~~~^^
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 44, in run
+    resume_from = self._index_after_last_completed()
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 55, in _index_after_last_completed
+    return self.lakes.index(self.log.last_completed_lake_id) + 1
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: 7 is not in list
+
+2026-11-18 05:17:54,125 INFO sailab.pipeline: run 21 finished: RunResult(run_id=21, lakes_processed=0, scenes_recorded=0, scenes_downloaded=0, measurements=0, risk_scores=0, errors='ValueError: 7 is not in list\nTraceback (most recent call last):\n  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/pipeline.py", line 376, in run_pipeline_once\n    run.run()\n    ~~~~~~~^^\n  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 44, in run\n    resume_from = self._index_after_last_completed()\n  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 55, in _index_after_last_completed\n    return self.lakes.index(self.log.last_completed_lake_id) + 1\n           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: 7 is not in list\n', notes=['resuming after lake 7 (previous run did not finish)'])
+2026-11-18 05:17:54,125 INFO run_once: summary: run_id=21 lakes=0 scenes_recorded=0 downloaded=0 measurements=0 risk_scores=0
+2026-11-18 05:17:54,125 ERROR run_once: run FAILED, recorded in run_log 21:
+ValueError: 7 is not in list
+Traceback (most recent call last):
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/pipeline.py", line 376, in run_pipeline_once
+    run.run()
+    ~~~~~~~^^
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 44, in run
+    resume_from = self._index_after_last_completed()
+  File "/home/rayannn/Documents/SAILAB_FYP1_FINAL/sailab/acquisition.py", line 55, in _index_after_last_completed
+    return self.lakes.index(self.log.last_completed_lake_id) + 1
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: 7 is not in list
+

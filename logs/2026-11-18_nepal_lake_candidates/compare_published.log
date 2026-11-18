@@ -1,0 +1,30 @@
+
+TRL Tsho Rolpa: published 155-160 ha
+  sentinel-2: 239 images stored, 38 measured, 201 refused by the checks
+    median 165.1 ha, range 162.2-167.2; vs published: +3.2% to +6.5%
+    2019:   1 images, median  162.2 ha
+    2020:   2 images, median  162.6 ha
+    2021:   4 images, median  163.2 ha
+    2022:  10 images, median  165.4 ha
+    2023:   7 images, median  164.9 ha
+    2024:   8 images, median  165.8 ha
+    2025:   2 images, median  166.4 ha
+    2026:   4 images, median  165.2 ha
+  sentinel-1: 721 images stored, 707 measured, 14 refused by the checks
+    pass ~00 UTC: 242 images, median  144.7 ha, 233 of 242 (96%) within 20% of the published low figure or above
+    pass ~12 UTC: 465 images, median  114.3 ha, 0 of 465 (0%) within 20% of the published low figure or above
+
+THU Thulagi lake: published 89-94 ha
+  sentinel-2: 221 images stored, 74 measured, 147 refused by the checks
+    median 96.7 ha, range 93.8-98.7; vs published: +2.9% to +8.7%
+    2019:   3 images, median   94.3 ha
+    2020:   8 images, median   95.3 ha
+    2021:   4 images, median   95.0 ha
+    2022:  15 images, median   96.8 ha
+    2023:   9 images, median   97.0 ha
+    2024:  12 images, median   96.9 ha
+    2025:  16 images, median   96.6 ha
+    2026:   7 images, median   96.9 ha
+  sentinel-1: 714 images stored, 479 measured, 235 refused by the checks
+    pass ~00 UTC: 241 images, median   67.6 ha, 0 of 241 (0%) within 20% of the published low figure or above
+    pass ~12 UTC: 238 images, median   76.3 ha, 226 of 238 (95%) within 20% of the published low figure or above

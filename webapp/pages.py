@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from sailab import queries
-from webapp import charts
+from webapp import charts, lake_info
 
 STALE_AFTER_DAYS = 7          # the reference design's "data gap": no usable observation in 7 days
 PKT = timezone(timedelta(hours=5))
@@ -55,7 +55,9 @@ def dashboard(conn, today: date) -> dict[str, Any]:
         "stale_lakes": [l for l in lakes if l["data_gap"]],
         "latest_run": queries.latest_run(conn),
         "runs": queries.run_log(conn, 6),
-        "map_svg": charts.location_map([{**l, "link": f"/lakes/{l['code']}"} for l in lakes]) if lakes else None,
+        # One map per country: lakes 1,000 km apart on one grid would be dots in an empty frame.
+        "maps": [(country, charts.location_map([{**l, "link": f"/lakes/{l['code']}"} for l in lakes if l.get("country", "Pakistan") == country]))
+                 for country in dict.fromkeys(l.get("country", "Pakistan") for l in lakes)],
     }
 
 
@@ -90,6 +92,8 @@ def lake_detail(conn, lake: dict, today: date, range_key: str, page: int, repo: 
     return {"lake": card, "chart": chart, "range_key": range_key, "chart_start": start, "chart_end": end,
             "sensors": sensors, "score": sensors["optical"]["score"], "score_inputs": sensors["optical"]["score_inputs"],
             "image": sensors["optical"]["image"], "log_rows": rows,
+            "info": lake_info.build(lake, history, card["summary"]["latest_risk_score"], card["summary"]["latest_judged"],
+                                    repo / "data" / "dem"),
             "page": page, "pages": pages, "scene_count": len(history),
             "ok_in_range": sum(1 for r in history if r["measurement_status"] == "ok" and r["sensor"] == "optical"
                                and start <= _d(r["acquired_at"]) <= end),

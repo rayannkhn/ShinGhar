@@ -27,8 +27,9 @@ from fastapi.templating import Jinja2Templates
 
 from sailab import queries
 from webapp import images, pages, scene_view
-from webapp import run_note
-from webapp.live import LiveChecker, explain_error
+from webapp import algorithms, flowchart, run_note
+from webapp.walkthrough import copernicus_url
+from webapp.live import LiveChecker, explain_error, warm_esa_cache
 
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_SOURCE_DB = REPO / "sailab_glof.db"
@@ -96,6 +97,9 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
 
     fresh_copy()
     working_copy = Path(app.state.provenance["working_copy"])     # same path after every reload
+    if os.environ.get("SAILAB_WARM_ESA", "1") != "0":
+        # Save ESA's answer for each lake's newest images now, while online, for offline checks later.
+        threading.Thread(target=lambda: warm_esa_cache(app.state.live), name="esa-warm-up", daemon=True).start()
     reload_lock = threading.Lock()      # a reload and the start of a live check never overlap
 
     def source_is_newer() -> bool:
@@ -166,7 +170,10 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
     templates.env.filters.update({"date": pages.fmt_date, "utc_time": pages.fmt_utc_time, "pkt": pages.fmt_pkt,
                                   "ha": pages.fmt_ha, "score": pages.fmt_score,
                                   "month": lambda iso: datetime.fromisoformat(iso).strftime("%B")})
-    templates.env.globals.update({"quality": pages.scene_quality, "stale_days": pages.STALE_AFTER_DAYS})
+    templates.env.globals.update({"quality": pages.scene_quality, "stale_days": pages.STALE_AFTER_DAYS,
+                                  # changes whenever style.css changes, so browsers never keep an old copy
+                                  "copernicus_url": copernicus_url,
+                                  "css_version": lambda: int((Path(__file__).parent / "static" / "style.css").stat().st_mtime)})
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
     def render(request: Request, name: str, nav: str, d: dict[str, Any]) -> HTMLResponse:
@@ -184,6 +191,7 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
         with read_only() as conn:
             d = pages.dashboard(conn, today())
             d["run_note"] = run_note.build(conn, repo_root, explain_error)
+            d["flowchart"] = flowchart.svg()
         return render(request, "dashboard.html", "dashboard", d)
 
     @app.get("/lakes/{code}", response_class=HTMLResponse)
@@ -228,14 +236,16 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
     @app.get("/live", response_class=HTMLResponse)
     def live_page(request: Request) -> HTMLResponse:
         live = app.state.live
-        return render(request, "live.html", "live", {"state": live.snapshot(), "history": list(reversed(live.history))})
+        return render(request, "live.html", "live", {"state": live.snapshot(), "history": list(reversed(live.history)),
+                                                    "algos": {"optical": algorithms.OPTICAL, "radar": algorithms.RADAR},
+                                                    "unavailable": algorithms.UNAVAILABLE})
 
     @app.get("/live/state.json")
     def live_state() -> JSONResponse:
         """What the Live check page polls while a check runs: status and the step cards so far."""
         st = app.state.live.snapshot()
         return JSONResponse({k: st.get(k) for k in ("status", "started_at", "finished_at", "seconds", "lake_code",
-                                                     "lake_name", "steps", "explanation", "errors")})
+                                                     "lake_name", "steps", "explanation", "errors", "offline_reason")})
 
     @app.get("/live/steps/{folder}/{name}")
     def live_step_file(folder: str, name: str) -> FileResponse:
@@ -249,9 +259,17 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
     async def live_check(request: Request) -> RedirectResponse:
         fields = parse_qs((await request.body()).decode("utf-8", "replace"))
         code = (fields.get("lake") or [request.query_params.get("lake", "")])[0].strip().upper()
+        offline = (fields.get("offline") or [""])[0] == "1"
+        algos = {}
+        for sensor in ("optical", "radar"):
+            key = (fields.get(f"algo_{sensor}") or [""])[0]
+            if key and key != "all" and (key not in algorithms.BY_KEY or algorithms.BY_KEY[key].sensor != sensor):
+                raise HTTPException(status_code=400, detail=f"unknown {sensor} method {key!r}")
+            if key:
+                algos[sensor] = key
         with reload_lock:
             try:
-                app.state.live.start(code)       # does nothing if a check is already running
+                app.state.live.start(code, offline=offline, algos=algos)       # does nothing if a check is already running
             except ValueError:
                 raise HTTPException(status_code=400, detail=f"unknown lake {code!r}")
         return RedirectResponse("/live", status_code=303)
@@ -361,16 +379,56 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
                 analyses[key] = (None, f"error: {type(exc).__name__}: {exc}")
         return analyses[key]
 
+    def algo_for(rec: dict[str, Any], key: str) -> Any:
+        """One algorithm's result on this scene's file (display only; cached like the analysis)."""
+        tif = scene_file(rec["file_path"])
+        ck = ("algo", key, str(tif), tif.stat().st_mtime_ns)
+        if ck not in analyses:
+            try:
+                analyses[ck] = algorithms.run(key, tif, rec["lake"], repo_root / "data" / "dem" / f"{rec['lake']['code']}_dem.tif")
+            except Exception as exc:
+                analyses[ck] = exc
+        return analyses[ck]
+
     @app.get("/scenes/{scene_id}", response_class=HTMLResponse)
-    def scene_page(request: Request, scene_id: int) -> HTMLResponse:
+    def scene_page(request: Request, scene_id: int, algo: str = "") -> HTMLResponse:
         with read_only() as conn:
             rec = scene_or_404(conn, scene_id)
         a, why_not = analysis_for(rec)
+        sensor = "radar" if rec["source"] == "sentinel-1" else "optical"
+        compared = []
+        if a is not None and algo:
+            keys = [x.key for x in algorithms.choices(sensor) if not x.baseline] if algo == "all" else [algo]
+            for key in keys:
+                if key not in algorithms.BY_KEY or algorithms.BY_KEY[key].sensor != sensor:
+                    raise HTTPException(status_code=400, detail=f"unknown {sensor} method {key!r}")
+                r = algo_for(rec, key)
+                compared.append({"key": key, "error": f"{type(r).__name__}: {r}"} if isinstance(r, Exception) else
+                                {"key": key, "r": r})
         d = {"s": rec, "a": a, "why_not": why_not, "cloud_limit": scene_view.CLOUD_LIMIT_PERCENT,
              "pictures": scene_view.PICTURES.get(rec["source"], ()),
              "agreement": scene_view.compare(rec["measurement_status"], rec["extent_ha"], a) if a else None,
-             "from_live_check": scene_file(rec["file_path"]) is not None and not (repo_root / rec["file_path"]).is_file()}
+             "from_live_check": scene_file(rec["file_path"]) is not None and not (repo_root / rec["file_path"]).is_file(),
+             "algo": algo, "compared": compared, "algo_choices": algorithms.choices(sensor),
+             "unavailable": [u for u in algorithms.UNAVAILABLE if u[1] in (sensor, "both")]}
         return render(request, "scene.html", rec["lake"]["code"], d)
+
+    @app.get("/scenes/{scene_id}/algo/{key}.png")
+    def scene_algo_picture(scene_id: int, key: str) -> FileResponse:
+        with read_only() as conn:
+            rec = scene_or_404(conn, scene_id)
+        a, why_not = analysis_for(rec)
+        sensor = "radar" if rec["source"] == "sentinel-1" else "optical"
+        if a is None or key not in algorithms.BY_KEY or algorithms.BY_KEY[key].sensor != sensor:
+            raise HTTPException(status_code=404, detail="no such picture")
+        r = algo_for(rec, key)
+        if isinstance(r, Exception) or r.picture is None:
+            raise HTTPException(status_code=404, detail="picture not available")
+        tif = scene_file(rec["file_path"])
+        png = work_dir / "images" / "scenes" / f"{rec['lake']['code']}_{tif.stem}_{tif.stat().st_mtime_ns}_algo_{key}.png"
+        if not png.is_file():
+            scene_view.save_png(r.picture, png)
+        return FileResponse(png, media_type="image/png")
 
     @app.get("/scenes/{scene_id}/{kind}.png")
     def scene_picture(scene_id: int, kind: str) -> FileResponse:

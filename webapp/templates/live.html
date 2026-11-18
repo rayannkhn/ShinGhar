@@ -4,54 +4,72 @@
 {% block head %}{% if d.state.status == 'running' %}<noscript><meta http-equiv="refresh" content="3"></noscript>{% endif %}{% endblock %}
 {% block main %}
 {% set st = d.state %}{% set r = st.result %}
-<div class="page-head"><h1>Live check</h1></div>
-
-<section class="card">
-  <h2>Run the pipeline now, step by step</h2>
-  <p style="margin-top:0">Runs the real pipeline once for the chosen lake, the same code as the nightly run: it signs in to
-    Google Earth Engine, searches for Sentinel-2 (optical) and Sentinel-1 (radar) images newer than the last stored ones,
-    checks each image against ESA's own Copernicus catalogue, checks the cloud over the lake, downloads, measures the water,
-    calculates the area and the risk score, and saves the result. Each step appears below the moment it finishes, with what
-    it received, what it did and what it produced.</p>
-  <p style="color:var(--muted);font-size:14px">Results go to this laptop's working copy of the database only, never to the published
-    record. New images arrive only every few days, so a check often finds none: the newest stored image is then replayed through
-    the same steps, every card clearly marked <span class="chip amber">Replay</span>, and nothing is written.</p>
-  <form method="post" action="/live/check" class="live-form">
-    <label for="lake">Lake</label>
-    <select id="lake" name="lake" {% if st.status == 'running' %}disabled{% endif %}>
-      {% for l in nav_lakes %}<option value="{{ l.code }}" {% if l.code == (st.lake_code or 'DKT') %}selected{% endif %}>{{ l.name }} ({{ l.code }})</option>{% endfor %}
-    </select>
-    <button type="submit" class="btn primary" {% if st.status == 'running' %}disabled title="A check is already running"{% endif %}>
-      {% if st.status == 'running' %}Checking…{% else %}Run live check{% endif %}</button>
-  </form>
+<section class="card live-head">
+  <div class="live-head-row">
+    <h1 style="margin:0">Live check</h1>
+    <form method="post" action="/live/check" class="live-form">
+      <label for="lake">Lake</label>
+      <select id="lake" name="lake" {% if st.status == 'running' %}disabled{% endif %}>
+        {% for country, group in nav_lakes | groupby("country") | sort(attribute="grouper", reverse=True) %}<optgroup label="{{ country }}{{ ' (test lakes)' if country != 'Pakistan' }}">
+        {% for l in group %}<option value="{{ l.code }}" {% if l.code == (st.lake_code or 'DKT') %}selected{% endif %}>{{ l.name }} ({{ l.code }})</option>{% endfor %}</optgroup>{% endfor %}
+      </select>
+      {% for sensor, label in (("optical", "Optical method"), ("radar", "Radar method")) %}
+      <label class="algo-pick">{{ label }}
+        <select name="algo_{{ sensor }}" {% if st.status == 'running' %}disabled{% endif %}>
+          {% for a in d.algos[sensor] %}<option value="{{ a.key }}" {% if (st.algos or {}).get(sensor, a.key if a.baseline else '') == a.key %}selected{% endif %}>{{ a.label }}</option>{% endfor %}
+          <option value="all" {% if (st.algos or {}).get(sensor) == 'all' %}selected{% endif %}>All methods, side by side</option>
+          {% for name, s, why in d.unavailable if s in (sensor, 'both') %}<option disabled title="{{ why }}">{{ name }}: not available ({{ why }})</option>{% endfor %}
+        </select></label>
+      {% endfor %}
+      <label class="switch" title="Use only what is stored on this laptop: the last nightly run's log and the stored images. Switches on by itself when Earth Engine cannot be reached.">
+        <input type="checkbox" name="offline" value="1" {% if st.offline_requested %}checked{% endif %} {% if st.status == 'running' %}disabled{% endif %}> Offline mode</label>
+      <button type="submit" class="btn primary" {% if st.status == 'running' %}disabled title="A check is already running"{% endif %}>
+        {% if st.status == 'running' %}Checking…{% else %}Run live check{% endif %}</button>
+    </form>
+  </div>
+  <p class="live-sub">Runs the real pipeline once for one lake and shows every step as it happens.
+    <span class="tip" tabindex="0" title="The same code as the nightly run: sign in to Google Earth Engine, search Sentinel-2 and Sentinel-1, verify the image in ESA's Copernicus catalogue, cloud check, download, detect water, grow the lake, area, risk score, save. Results go to this laptop's working copy of the database only, never to the published record. When there is no new image, the newest stored one is replayed through the same steps, marked Replay, and nothing is written.">ⓘ</span></p>
 </section>
 
 <section class="card mt" id="result">
-  <div class="card-head"><h2 style="margin:0">Result</h2>
-    <button type="button" class="btn" id="present" {% if not st.steps %}hidden{% endif %}>Step through ▸</button></div>
   {% if st.status == 'idle' %}
-    <p style="color:var(--muted)">No live check has run since the app started.</p>
+    <p style="color:var(--muted);margin:0">No live check has run since the app started.</p>
   {% elif st.status == 'running' %}
-    <div class="banner info" id="running-banner">{{ icon_info() }}<div><strong>Checking {{ st.lake_name }}…</strong> Started {{ st.started_at | utc_time }}.
-      Steps appear below as they finish. A check usually takes 10 to 90 seconds.</div></div>
+    <div class="banner info slim" id="running-banner">{{ icon_info() }}<div><strong>Checking {{ st.lake_name }}…</strong> Started {{ st.started_at | utc_time }}. Steps appear as they finish.</div></div>
   {% elif st.status == 'failed' %}
     <div class="banner error">{{ icon_error() }}<div><strong>The check could not complete.</strong> {{ st.explanation }}
       <br><span style="font-size:14px">It stopped after {{ st.seconds }} seconds. Nothing was filled in or assumed: no new data was recorded,
-      and the failure itself is recorded in the run log{% if r and r.run_id %} (run {{ r.run_id }}){% endif %}. The pages keep showing the last stored data.</span></div></div>
-    <details><summary style="cursor:pointer;font-size:14px">Technical details: the exact error</summary>
+      and the failure itself is recorded in the run log{% if r and r.run_id %} (run {{ r.run_id }}){% endif %}.</span></div></div>
+    <details class="more"><summary>Technical details: the exact error</summary>
     <pre class="mono log-box">{{ st.errors }}</pre>
     </details>
+  {% elif st.status == 'offline' %}
+    <div class="banner warn slim">{{ icon_warn() }}<div><strong>Offline: {{ st.lake_name }} from stored data.</strong>
+      {% if st.offline_log %}Sign-in and search are from the last nightly run (run {{ st.offline_log.run_id }}, {{ st.offline_log.started_utc }} UTC);{% endif %}
+      measuring uses the images stored on this laptop. Nothing was fetched or written.
+      <span class="tip" tabindex="0" title="{{ st.offline_reason }}">ⓘ</span></div></div>
   {% elif st.status == 'no_new_scene' %}
-    <div class="banner info">{{ icon_info() }}<div><strong>No new image for {{ st.lake_name }}</strong> since the newest one already stored.
-      Earth Engine answered normally; Sentinel-2 passes about every 5 days and Sentinel-1 about every 6 to 12, and new images take some hours to appear.
-      The steps below replay the newest stored images.</div></div>
+    <div class="banner info slim">{{ icon_info() }}<div><strong>No new image for {{ st.lake_name }}</strong> since the newest one stored: the steps replay the newest stored images.
+      <span class="tip" tabindex="0" title="Earth Engine answered normally. Sentinel-2 passes about every 5 days and Sentinel-1 about every 6 to 12, and new images take some hours to appear.">ⓘ</span></div></div>
   {% else %}
-    <div class="banner {{ 'info' if r.measurements else 'warn' }}">{{ icon_info() if r.measurements else icon_warn() }}<div>
+    <div class="banner {{ 'info' if r.measurements else 'warn' }} slim">{{ icon_info() if r.measurements else icon_warn() }}<div>
       <strong>{{ r.scenes_recorded }} new scene{{ "s" if r.scenes_recorded != 1 }} recorded for {{ st.lake_name }}.</strong>
       {{ r.scenes_recorded - r.scenes_downloaded }} too cloudy over the lake (recorded, not downloaded);
       {{ r.scenes_downloaded }} downloaded and measured; {{ r.risk_scores }} risk score{{ "s" if r.risk_scores != 1 }} written.</div></div>
   {% endif %}
+
+  <nav class="stepper" id="stepper" aria-label="Steps" hidden></nav>
+  <div class="stage" id="stage" aria-live="polite"></div>
+  <div class="stage-nav" id="stage-nav" hidden>
+    <button type="button" class="btn big" id="prev">◂ Previous</button>
+    <span id="pos" class="mono"></span>
+    <button type="button" class="btn primary big" id="next">Next ▸</button>
+  </div>
+  <p class="stage-hint" id="stage-hint" hidden>Arrow keys ← → also move between steps. <a href="#" id="show-all">Show all steps on one page</a></p>
+  <ol class="steps" id="all-steps" hidden></ol>
+
   {% if r %}
+  <details class="more"><summary>Run details</summary>
   <dl class="kv" style="max-width:520px;margin-top:6px">
     <dt>Run</dt><dd>{{ r.run_id }}</dd>
     <dt>Lake</dt><dd>{{ st.lake_name }} ({{ st.lake_code }})</dd>
@@ -60,117 +78,133 @@
     <dt>New scenes recorded</dt><dd>{{ r.scenes_recorded }}</dd>
     <dt>Downloaded and measured</dt><dd>{{ r.scenes_downloaded }}</dd>
     <dt>Risk scores written</dt><dd>{{ r.risk_scores }}</dd>
-  </dl>
+  </dl></details>
   {% endif %}
-
-  <ol class="steps" id="steps" aria-live="polite"></ol>
-
   {% if st.log %}
-  <details class="mt"><summary style="cursor:pointer;font-weight:600">Raw evidence: the pipeline's own log</summary>
+  <details class="more"><summary>Raw evidence: the pipeline's own log</summary>
   <pre class="mono log-box" style="max-height:420px;overflow:auto">{% for line in st.log %}{{ line }}
 {% endfor %}</pre></details>
   {% endif %}
 </section>
 
-<div class="present-bar" id="present-bar" hidden>
-  <button type="button" class="btn" id="prev">◂ Previous</button>
-  <span id="present-pos" class="mono"></span>
-  <button type="button" class="btn primary" id="next">Next ▸</button>
-  <button type="button" class="btn" id="exit">Show all</button>
-</div>
-
 {% if d.history %}
 <section class="card table-card mt">
-  <h2>Live checks since the app started</h2>
+  <details class="more" style="margin:0"><summary>Live checks since the app started ({{ d.history | length }})</summary>
   <table>
     <tr><th>Run</th><th>Lake</th><th>Started</th><th>Finished</th><th>Outcome</th></tr>
     {% for h in d.history %}
     <tr><td class="mono">{{ h.run_id or "—" }}</td><td>{{ h.lake_code or "—" }}</td><td>{{ h.started_at | utc_time }}</td><td>{{ h.finished_at | utc_time }}</td>
-      <td>{% if h.status == 'failed' %}<span class="chip error">Failed</span>{% elif h.status == 'no_new_scene' %}<span class="chip muted">No new scene</span>{% else %}<span class="chip ok">New scenes recorded</span>{% endif %}</td></tr>
+      <td>{% if h.status == 'failed' %}<span class="chip error">Failed</span>{% elif h.status == 'offline' %}<span class="chip amber">Offline (stored data)</span>{% elif h.status == 'no_new_scene' %}<span class="chip muted">No new scene</span>{% else %}<span class="chip ok">New scenes recorded</span>{% endif %}</td></tr>
     {% endfor %}
-  </table>
+  </table></details>
 </section>
 {% endif %}
 
 <script id="initial-state" type="application/json">{{ {"status": st.status, "steps": st.steps or []} | tojson }}</script>
 <script>
 (function () {
-  const list = document.getElementById('steps');
-  const presentBtn = document.getElementById('present');
-  const bar = document.getElementById('present-bar');
-  let shown = 0, presenting = false, current = 0;
+  const stepper = document.getElementById('stepper'), stage = document.getElementById('stage');
+  const nav = document.getElementById('stage-nav'), hint = document.getElementById('stage-hint');
+  const all = document.getElementById('all-steps');
+  let steps = [], current = 0, follow = true;
 
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-  const TONE = {ok: 'ok', info: 'info', warn: 'warn', stop: 'stop'};
+  const SHORT = {sign_in: 'Sign in', offline: 'Offline', search_optical: 'Search optical', search_radar: 'Search radar', esa: 'Verify at ESA',
+                 cloud: 'Cloud', download: 'Image', detect: 'Water', grow: 'Grow', area: 'Area', score: 'Score',
+                 saved: 'Saved', replay: 'Replay', check: 'Check', compare: 'Compare'};
 
-  function card(s, fresh) {
-    const li = el('li', 'step tone-' + (TONE[s.tone] || 'ok') + (s.replay ? ' replay' : '') + (fresh ? ' fresh' : ''));
+  function card(s, big) {
+    const box = el('article', 'step tone-' + (s.tone || 'ok') + (s.replay ? ' replay' : '') + (big ? ' big' : ''));
     const head = el('div', 'step-head');
     head.append(el('span', 'step-n', String(s.n)), el('h3', null, s.title));
     const tags = el('span', 'step-tags');
     if (s.sensor) tags.append(el('span', 'chip ' + (s.sensor === 'radar' ? 'score radar' : 'score'), s.sensor === 'radar' ? 'Radar · Sentinel-1' : 'Optical · Sentinel-2'));
-    if (s.replay) tags.append(el('span', 'chip amber', 'Replay of stored data'));
+    if (s.offline) tags.append(el('span', 'chip amber', 'Offline: stored data'));
+    else if (s.replay) tags.append(el('span', 'chip amber', 'Replay of stored data'));
     tags.append(el('span', 'step-time mono', '+' + s.at_s.toFixed(1) + ' s'));
     head.append(tags);
-    li.append(head);
-    const body = el('div', 'step-body');
-    if (s.came_in) { const p = el('p', 'step-in'); p.append(el('b', null, 'Came in: '), document.createTextNode(s.came_in)); body.append(p); }
-    if (s.happened.length) { const ul = el('ul', 'step-what'); s.happened.forEach(t => ul.append(el('li', null, t))); body.append(ul); }
-    if (s.formulas.length) { const pre = el('pre', 'step-formula mono'); pre.textContent = s.formulas.join('\n'); body.append(pre); }
-    if (s.svg) { const box = el('div', 'step-svg'); box.innerHTML = s.svg; body.append(box); }   // built server-side from numbers only
-    if (s.pictures.length) {
-      const grid = el('div', 'step-pics');
-      s.pictures.forEach(p => { const f = el('figure'); const img = el('img'); img.src = p.src; img.alt = p.caption; img.loading = 'lazy';
-        f.append(img, el('figcaption', null, p.caption)); grid.append(f); });
-      body.append(grid);
-    }
+    box.append(head);
+
+    const visual = el('div', 'step-visual'), tableHome = el('div', null);
+    if (s.svg) { const v = el('div', 'step-svg'); v.innerHTML = s.svg; visual.append(v); visual.classList.add('has-svg'); }   // built server-side from numbers only
+    s.pictures.forEach(p => { const f = el('figure'); const img = el('img'); img.src = p.src; img.alt = p.caption;
+      f.append(img, el('figcaption', null, p.caption)); visual.append(f); });
     if (s.table && s.table.rows.length) {
       const wrap = el('div', 'step-table'); const t = el('table'); const tr = el('tr');
       s.table.head.forEach(h => tr.append(el('th', null, h))); t.append(tr);
       s.table.rows.forEach(r => { const row = el('tr'); r.forEach(c => row.append(el('td', 'mono', c))); t.append(row); });
-      wrap.append(t); body.append(wrap);
+      wrap.append(t); (s.key === 'compare' ? tableHome : visual).append(wrap);   // compare: the table is the result
     }
-    const res = el('p', 'step-result'); res.append(el('b', null, 'Result: '), document.createTextNode(s.result)); body.append(res);
-    li.append(body);
-    return li;
-  }
-
-  function render(steps) {
-    for (let i = shown; i < steps.length; i++) list.append(card(steps[i], shown > 0 || i > 0));
-    if (steps.length > shown && !presenting && shown > 0) list.lastElementChild.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-    shown = steps.length;
-    presentBtn.hidden = shown === 0;
+    const text = el('div', 'step-text');
+    const res = el('p', 'step-result'); res.textContent = s.result; text.append(res, tableHome);
+    if (s.formulas.length) { const pre = el('pre', 'step-formula mono'); pre.textContent = s.formulas.join('\n'); text.append(pre); }
+    (s.links || []).forEach(l => { const a = el('a', 'btn ext', l.label + ' ↗'); a.href = l.href; a.target = '_blank'; a.rel = 'noopener'; text.append(a); });
+    if (s.came_in) { const p = el('p', 'step-in'); p.append(el('b', null, 'Came in: '), document.createTextNode(s.came_in)); text.append(p); }
+    if (s.happened.length) {
+      const d = el('details', 'more'); d.append(el('summary', null, 'How this step works'));
+      const ul = el('ul', 'step-what'); s.happened.forEach(t => ul.append(el('li', null, t))); d.append(ul); text.append(d);
+    }
+    const body = el('div', 'step-body' + (visual.childNodes.length ? ' two' : ''));
+    if (visual.childNodes.length) body.append(visual);
+    body.append(text);
+    box.append(body);
+    return box;
   }
 
   function show(i) {
-    const items = list.children; if (!items.length) return;
-    current = Math.max(0, Math.min(i, items.length - 1));
-    Array.from(items).forEach((c, k) => c.classList.toggle('dim', k !== current));
-    items[current].scrollIntoView({behavior: 'smooth', block: 'start'});
-    document.getElementById('present-pos').textContent = 'Step ' + (current + 1) + ' of ' + items.length;
+    if (!steps.length) return;
+    current = Math.max(0, Math.min(i, steps.length - 1));
+    stage.replaceChildren(card(steps[current], true));
+    Array.from(stepper.children).forEach((b, k) => { b.classList.toggle('on', k === current); });
+    const on = stepper.children[current]; if (on) on.scrollIntoView({block: 'nearest', inline: 'center'});
+    updateNav();
   }
-  function present(on) {
-    presenting = on; bar.hidden = !on; document.body.classList.toggle('presenting', on);
-    if (on) show(0); else Array.from(list.children).forEach(c => c.classList.remove('dim'));
+
+  function render(newSteps) {
+    const before = steps.length;
+    steps = newSteps;
+    for (let i = before; i < steps.length; i++) {
+      const s = steps[i];
+      const b = el('button', 'pill' + (s.replay ? ' replay' : '') + ' tone-' + (s.tone || 'ok'));
+      b.type = 'button'; b.title = s.title;
+      b.append(el('span', 'pill-n', String(s.n)), document.createTextNode(' ' + (SHORT[s.key] || s.key)));
+      b.addEventListener('click', () => { follow = false; show(i); });
+      stepper.append(b);
+      const li = el('li', null); li.append(card(s, false)); all.append(li);
+    }
+    const any = steps.length > 0;
+    stepper.hidden = nav.hidden = hint.hidden = !any;
+    if (steps.length === before) return;                 // nothing new: leave the screen as it is
+    if (follow || before === 0) show(follow ? steps.length - 1 : 0);
+    else updateNav();                                     // presenter is reading an earlier step: only update the counter
   }
-  presentBtn.addEventListener('click', () => present(true));
-  document.getElementById('exit').addEventListener('click', () => present(false));
-  document.getElementById('prev').addEventListener('click', () => show(current - 1));
-  document.getElementById('next').addEventListener('click', () => show(current + 1));
+
+  function updateNav() {
+    document.getElementById('pos').textContent = 'Step ' + (current + 1) + ' of ' + steps.length;
+    document.getElementById('prev').disabled = current === 0;
+    document.getElementById('next').disabled = current === steps.length - 1;
+  }
+
+  document.getElementById('prev').addEventListener('click', () => { follow = false; show(current - 1); });
+  document.getElementById('next').addEventListener('click', () => { follow = false; show(current + 1); });
+  document.getElementById('show-all').addEventListener('click', e => {
+    e.preventDefault(); const on = all.hidden; all.hidden = !on;
+    stage.hidden = nav.hidden = on; e.target.textContent = on ? 'Show one step at a time' : 'Show all steps on one page';
+  });
   document.addEventListener('keydown', e => {
-    if (!presenting) return;
-    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
-    else if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
-    else if (e.key === 'Escape') present(false);
+    if (!steps.length || ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); follow = false; show(current + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); follow = false; show(current - 1); }
   });
 
   const initial = JSON.parse(document.getElementById('initial-state').textContent);
+  follow = initial.status === 'running';
   render(initial.steps);
+  if (initial.status !== 'running' && initial.steps.length) show(0);   // finished: start at step 1
   if (initial.status === 'running') {
     const poll = async () => {
       try {
-        const r = await fetch('/live/state.json', {cache: 'no-store'});
-        const st = await r.json();
+        const st = await (await fetch('/live/state.json', {cache: 'no-store'})).json();
         render(st.steps || []);
         if (st.status !== 'running') { location.reload(); return; }
       } catch (e) { /* a missed poll is retried */ }

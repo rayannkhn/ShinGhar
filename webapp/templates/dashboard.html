@@ -12,31 +12,39 @@
 {% set n = d.run_note %}
 {% if n %}
 <section class="card run-note tone-{{ n.tone }}">
-  <div class="card-head" style="margin-bottom:4px">
+  <div class="card-head" style="margin-bottom:6px">
     <h2 style="margin:0">{{ "Last night's run" if n.scheduled else "Latest pipeline run" }}: run {{ n.run_id }}, {{ n.started_at | pkt }}</h2>
     <span class="chip {{ {'ok': 'ok', 'info': 'blue', 'error': 'error'}[n.tone] }}">{{ n.headline }}</span>
   </div>
-  <p class="run-note-meta">The pipeline itself took {{ n.seconds }} s (the GitHub Actions job around it also sets up, runs the tests and saves the results, so it takes longer){% if provenance.copied_at %} · loaded into this GUI {{ provenance.copied_at | pkt }}{% endif %}
-    · from the run's own log (<span class="mono">{{ n.log_file }}</span>) and the database rows it wrote</p>
   {% if n.error_line %}
   <div class="banner error" style="margin:8px 0">{{ icon_error() }}<div>{% if n.error_plain %}<strong>{{ n.error_plain }}</strong><br>{% endif %}
-    <span class="mono" style="font-size:13px">{{ n.error_line }}</span><br>
-    <span style="font-size:14px">Nothing was filled in: lakes the run had not reached keep their earlier data, and the next run carries on.</span></div></div>
+    <span class="mono" style="font-size:13px">{{ n.error_line }}</span></div></div>
   {% endif %}
-  {% if n.summary %}<p style="margin:6px 0 8px">{{ n.summary }}</p>{% endif %}
-  <ul class="run-note-lakes">
+  <div class="run-note-grid">
     {% for l in n.lakes %}
-    <li><a href="/lakes/{{ l.code }}"><strong>{{ l.name }}</strong></a>
-      <ul>{% for i in l["items"] %}<li class="tone-{{ i.tone }}">{% if i.scene_id %}<a href="/scenes/{{ i.scene_id }}">{{ i.text }}</a>{% else %}{{ i.text }}{% endif %}</li>{% endfor %}</ul></li>
+    <a class="run-note-lake" href="/lakes/{{ l.code }}"><span class="mono">{{ l.code }}</span> {{ l.name }}
+      <span class="chip {{ {'ok': 'ok', 'warn': 'amber', 'muted': 'muted'}[l.short_tone] }}">{{ l.short }}</span></a>
     {% endfor %}
-  </ul>
+  </div>
+  <details class="more"><summary>What the run did, lake by lake</summary>
+    {% if n.summary %}<p style="margin:6px 0 8px">{{ n.summary }}</p>{% endif %}
+    <ul class="run-note-lakes">
+      {% for l in n.lakes %}
+      <li><a href="/lakes/{{ l.code }}"><strong>{{ l.name }}</strong></a>
+        <ul>{% for i in l["items"] %}<li class="tone-{{ i.tone }}">{% if i.scene_id %}<a href="/scenes/{{ i.scene_id }}">{{ i.text }}</a>{% else %}{{ i.text }}{% endif %}</li>{% endfor %}</ul></li>
+      {% endfor %}
+    </ul>
+    <p class="run-note-meta">The pipeline itself took {{ n.seconds }} s (the GitHub Actions job around it also sets up, runs the tests and saves the results, so it takes longer){% if provenance.copied_at %} · loaded into this GUI {{ provenance.copied_at | pkt }}{% endif %}
+      · from the run's own log (<span class="mono">{{ n.log_file }}</span>) and the database rows it wrote</p>
+  </details>
 </section>
 {% endif %}
 
 {% if d.stale_lakes %}
 <div class="banner warn">{{ icon_warn() }}
   <div>No usable measurement, optical or radar, in the last {{ stale_days }} days for {{ d.stale_lakes | length }} of {{ d.lakes | length }} lakes
-  ({% for l in d.stale_lakes %}{{ l.name }}{{ ", " if not loop.last }}{% endfor %}). Cloud, snow and ice block optical measurement for long stretches, especially from October to May.</div>
+  ({% for l in d.stale_lakes %}{{ l.name }}{{ ", " if not loop.last }}{% endfor %}).
+  <span class="tip" tabindex="0" title="Cloud, snow and ice block optical measurement for long stretches, especially from October to May.">ⓘ</span></div>
 </div>
 {% endif %}
 {% if d.latest_run and d.latest_run.errors %}
@@ -60,24 +68,19 @@
     <div class="value">{{ d.totals.optical_ok + d.totals.radar_ok }}</div>
     <div class="note">{{ d.totals.optical_ok + d.totals.radar_ok }} of {{ d.totals.optical_measurements + d.totals.radar_measurements }} measurement attempts passed every check
       (optical {{ d.totals.optical_ok }} of {{ d.totals.optical_measurements }}, radar {{ d.totals.radar_ok }} of {{ d.totals.radar_measurements }}).
-      Not a scene count: the {{ d.totals.too_cloudy }} too-cloudy optical scenes were never measured.</div></div>
+      <span class="tip" tabindex="0" title="Not a scene count: the {{ d.totals.too_cloudy }} too-cloudy optical scenes were never measured.">ⓘ</span></div></div>
   <div class="card kpi"><div class="label">Days since a usable measurement</div>
     <div class="value">{% if d.freshest %}{{ d.freshest.days_since_any_ok }}{% else %}—{% endif %}</div>
     <div class="note">{% if d.freshest %}{% set fs = d.freshest.summary %}{{ d.freshest.name }},
       {% if fs.radar.days_since_last_ok is not none and (fs.days_since_last_ok is none or fs.radar.days_since_last_ok < fs.days_since_last_ok) %}radar, {{ fs.radar.latest_ok_measurement.acquired_at | date }}{% else %}optical, {{ fs.latest_ok_measurement.acquired_at | date }}{% endif %}{% else %}none yet{% endif %}</div></div>
 </div>
 
-<div class="grid two">
-  <section class="card">
-    <div class="card-head"><h2>Monitored lakes</h2></div>
-    {% if d.map_svg %}{{ d.map_svg | safe }}{% endif %}
-    <div class="legend" style="margin-top:10px">
-      <span><i style="background:#1e4e8c"></i>Usable measurement in the last {{ stale_days }} days</span>
-      <span><i style="background:#fff;border:2px dashed #5b6470"></i>Data gap: none in {{ stale_days }} days</span>
-    </div>
-    <p class="footnote">Real lake centres on a latitude/longitude grid. No basemap: it would need an internet connection.</p>
-  </section>
+<section class="card mb">
+  <div class="card-head"><h2 style="margin:0">How a check works</h2><a class="btn" href="/live">Run a live check ▸</a></div>
+  {{ d.flowchart | safe }}
+</section>
 
+<div class="grid lakes-map">
   <section class="card">
     <h2>Lakes</h2>
     {% for l in d.lakes %}
@@ -93,10 +96,20 @@
       <span>›</span>
     </a>
     {% endfor %}
-    <p class="footnote">Lakes are listed in database order, not ranked: deviation scores are not danger levels.
+    <details class="more"><summary>How to read this list</summary><p class="footnote">Lakes are listed in database order, not ranked: deviation scores are not danger levels.
       Only optical measurements are risk-scored; radar is measured and shown but not scored (snowmelt errors).
-      The lines show each lake's last usable extents (up to 15): optical above, radar below.</p>
+      The lines show each lake's last usable extents (up to 15): optical above, radar below.</p></details>
   </section>
+  <section class="card">
+    <div class="card-head"><h2>Monitored lakes</h2></div>
+    {% for country, svg in d.maps %}{% if d.maps | length > 1 %}<h3 class="map-country">{{ country }}{{ " (test lakes)" if country != "Pakistan" }}</h3>{% endif %}{{ svg | safe }}{% endfor %}
+    <div class="legend" style="margin-top:10px">
+      <span><i style="background:#1e4e8c"></i>Usable measurement in the last {{ stale_days }} days</span>
+      <span><i style="background:#fff;border:2px dashed #5b6470"></i>Data gap: none in {{ stale_days }} days</span>
+    </div>
+    <details class="more"><summary>About this map</summary><p class="footnote">Real lake centres on a latitude/longitude grid. No basemap: it would need an internet connection.</p></details>
+  </section>
+
 </div>
 
 <section class="card table-card mt">

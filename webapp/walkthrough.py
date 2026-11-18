@@ -76,6 +76,62 @@ def esa_lookup(scene_id: str, sensor: str) -> dict[str, Any]:
                          for p in products], "seconds": time.monotonic() - started}
 
 
+COPERNICUS_BROWSER = "https://browser.dataspace.copernicus.eu/"
+
+
+def copernicus_url(lat: float, lon: float, acquired_at: str, sensor: str) -> str:
+    """ESA's Copernicus Browser at the lake, on the image's UTC date. Optical opens in true colour; for radar the
+    browser lists its layers (they load only after its log-in screen), so the viewer picks VV there.
+    Parameter names are the ones the browser itself writes into its address bar (checked 2026-11-18)."""
+    from urllib.parse import urlencode
+
+    day = acquired_at[:10]
+    params = {"zoom": 14, "lat": f"{lat:.5f}", "lng": f"{lon:.5f}",
+              "fromTime": f"{day}T00:00:00.000Z", "toTime": f"{day}T23:59:59.999Z", "dateMode": "SINGLE"}
+    if sensor == "optical":
+        params.update(datasetId="S2_L2A_CDAS", layerId="1_TRUE_COLOR", cloudCoverage=100)
+    else:
+        params.update(datasetId="S1_CDAS_IW_VVVH", panel="layers")
+    return COPERNICUS_BROWSER + "?" + urlencode(params)
+
+
+class CachedESA:
+    """esa_lookup with a memory: every answer ESA gives is saved, so an offline check can still show it, marked as
+    saved. Offline, nothing is asked: the saved answer is used, or the card says there is none."""
+
+    def __init__(self, cache_file: Path, lookup: Callable[[str, str], dict] = None) -> None:
+        self.cache_file, self.lookup = cache_file, lookup or esa_lookup
+        self._lock = threading.Lock()
+
+    def _load(self) -> dict:
+        import json
+        try:
+            return json.loads(self.cache_file.read_text())
+        except (FileNotFoundError, ValueError):
+            return {}
+
+    def saved(self, scene_id: str) -> dict | None:
+        return self._load().get(scene_id)
+
+    def __call__(self, scene_id: str, sensor: str, offline: bool = False) -> dict:
+        import json
+        from datetime import datetime, timezone
+        if offline:
+            hit = self.saved(scene_id)
+            return dict(hit, saved=True) if hit else {"error": "offline, and no saved ESA answer for this image", "seconds": 0.0}
+        found = self.lookup(scene_id, sensor)
+        if found.get("products"):
+            with self._lock:
+                cache = self._load()
+                cache[scene_id] = {"products": found["products"], "seconds": found.get("seconds", 0.0),
+                                   "asked_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+                self.cache_file.parent.mkdir(parents=True, exist_ok=True)
+                tmp = self.cache_file.with_suffix(".tmp")
+                tmp.write_text(json.dumps(cache, indent=1))
+                tmp.replace(self.cache_file)
+        return found
+
+
 def satellite_of(name: str | None, sensor: str) -> str:
     if name and len(name) >= 3 and name[:2] in ("S1", "S2"):
         return f"Sentinel-{name[1]}{name[2]}"
@@ -186,6 +242,8 @@ class Walkthrough:
         self._analysis: dict[str, Any] = {}       # scene_id -> SceneAnalysis (computed once, at download)
         self._esa_done: set[str] = set()
         self.measured = {"optical": False, "radar": False}   # did this run itself measure a scene of the sensor?
+        self.offline = False                                   # True: nothing is fetched; every card says so
+        self.algos: dict[str, str] = {}                        # viewer's chosen method per sensor (display only)
 
     # -- access ---------------------------------------------------------------------------
     def steps(self) -> list[dict[str, Any]]:
@@ -195,13 +253,14 @@ class Walkthrough:
     def _add(self, key: str, title: str, *, sensor: str | None = None, scene: str | None = None, came_in: str = "",
              happened: list[str] | None = None, formulas: list[str] | None = None, result: str = "",
              tone: str = "ok", pictures: list[dict] | None = None, svg: str | None = None,
-             table: dict | None = None, replay: bool = False) -> None:
+             table: dict | None = None, replay: bool = False, links: list[dict] | None = None) -> None:
         now = time.monotonic()
         with self._lock:
             self._steps.append({"n": len(self._steps) + 1, "key": key, "title": title, "sensor": sensor,
                                 "scene": scene, "came_in": came_in, "happened": happened or [],
                                 "formulas": formulas or [], "result": result, "tone": tone,
                                 "pictures": pictures or [], "svg": svg, "table": table, "replay": replay,
+                                "offline": self.offline, "links": links or [],
                                 "at_s": round(now - self._started, 1), "took_s": round(now - self._last, 1)})
             self._last = now
 
@@ -268,10 +327,15 @@ class Walkthrough:
         if (sid, replay) in self._esa_done:
             return
         self._esa_done.add((sid, replay))
-        found = self.esa(sid, sensor)
+        try:
+            found = self.esa(sid, sensor, offline=True) if self.offline else self.esa(sid, sensor)
+        except TypeError:                          # a lookup without a saved-answers store
+            found = {"error": "offline, and no saved ESA answer for this image", "seconds": 0.0}
         coll = S2_COLLECTION if sensor == "optical" else S1_COLLECTION
         products = found.get("products") or []
-        if "error" in found:
+        if "error" in found and self.offline:
+            tone, result, name = "info", "Not checked now (offline), and no saved ESA answer for this image yet.", None
+        elif "error" in found:
             tone, result = "warn", f"ESA's catalogue did not answer ({found['error']}). The check carries on with Earth Engine's copy."
             name = None
         elif not products:
@@ -280,16 +344,20 @@ class Walkthrough:
             p = products[0]
             name = p["name"]
             tone, result = "ok", f"Found in ESA's catalogue: {name}"
+            if found.get("saved"):
+                result = f"Found in ESA's catalogue (saved answer from {found.get('asked_at', '?')[:16].replace('T', ' ')} UTC): {name}"
         chain = (f"{satellite_of(name, sensor)} (ESA) → Copernicus product {name or '(not confirmed)'} → "
                  f"Earth Engine asset {coll}/{sid} → our download")
         self._add("esa", "Where the image comes from: ESA Copernicus → Earth Engine", sensor=sensor, scene=sid,
                   came_in=f"Earth Engine scene id {sid}",
                   happened=["Sentinel satellites belong to the EU's Copernicus programme, run by ESA. Earth Engine keeps a "
                             "copy of each Copernicus product; the pipeline downloads from that copy.",
-                            "To show it is the same image, ESA's own catalogue (Copernicus Data Space) was asked live for "
-                            f"this scene ({found.get('seconds', 0):.1f} s, no account needed).",
+                            ("Offline: ESA's catalogue could not be asked now; this is the answer it gave when last asked."
+                             if self.offline else
+                             "To show it is the same image, ESA's own catalogue (Copernicus Data Space) was asked live for "
+                             f"this scene ({found.get('seconds', 0):.1f} s, no account needed)."),
                             f"Chain: {chain}"],
-                  result=result, tone=tone, replay=replay)
+                  result=result, tone=tone, replay=replay, links=[{"href": copernicus_url(self.lake["centre_lat"], self.lake["centre_lon"], scene["acquired_at"], sensor), "label": "View this image in Copernicus Browser"}])
 
     def _on_cloud_checked(self, d: dict) -> None:
         scene = d["scene"]
@@ -345,7 +413,7 @@ class Walkthrough:
                             f"around the lake was {'downloaded from Earth Engine' if not replay else 'read from the stored file'}, never the whole tile: {bands}.",
                             "The SHA-256 fingerprint lets anyone re-download the scene and confirm it is the same file."],
                   formulas=[f"file  {stored_path}", f"size  {size / 1024:,.0f} KB", f"sha256  {sha}"],
-                  pictures=[pic], result="Image ready for measurement")
+                  pictures=[pic], result="Image ready for measurement", links=[{"href": copernicus_url(self.lake["centre_lat"], self.lake["centre_lon"], scene["acquired_at"], sensor), "label": "View this image in Copernicus Browser"}])
 
     def _on_measured(self, d: dict) -> None:
         self.measured[d["sensor"]] = True
@@ -418,6 +486,45 @@ class Walkthrough:
                       result=("No area is stored for this scene (nothing is filled in), so there is no score."
                               if status != "no_lake_detected" else
                               "A clear summer image with no water at the centre: recorded as 'no lake found', with no area."))
+        self._compare_card(scene, sensor, path, status, extent_ha, a, replay)
+
+    def _compare_card(self, scene: dict, sensor: str, path: Path, status: str, extent_ha: float | None, a: Any,
+                      replay: bool) -> None:
+        """The viewer's chosen algorithm(s) on the same image, next to the pipeline's result. Display only."""
+        from webapp import algorithms as A
+        choice = self.algos.get(sensor)
+        if not choice or choice == ("ndwi" if sensor == "optical" else "otsu"):
+            return
+        keys = [x.key for x in A.choices(sensor) if not x.baseline] if choice == "all" else [choice]
+        dem = self.repo_root / "data" / "dem" / f"{self.lake['code']}_dem.tif"
+        base = "NDWI > 0.2" if sensor == "optical" else "slope mask + Otsu"
+        ours = f"{extent_ha:.2f} ha" if status == "ok" and extent_ha is not None else "no area (" + status.replace("_", " ") + ")"
+        rows, pics, formulas = [[base + " (pipeline, stored)", ours, "—", "—"]], [], []
+        tag = f"{'r' if replay else 'n'}_{scene['scene_id']}"
+        for key in keys:
+            r = A.run(key, path, self.lake, dem)
+            area = f"{r.extent_ha:.2f} ha" if r.status == "ok" else "refused"
+            diff = pct = "—"
+            if r.status == "ok" and status == "ok" and extent_ha:
+                diff, pct = f"{r.extent_ha - extent_ha:+.2f} ha", f"{(r.extent_ha - extent_ha) / extent_ha * 100:+.1f}%"
+            rows.append([r.label, area, diff, pct])
+            thr = (f"{r.threshold:.3f}" if sensor == "optical" else f"{r.threshold:.2f} dB") if r.threshold is not None else "—"
+            formulas += [f"{r.label}: threshold {thr}"] + [f"   {n}" for n in r.notes] \
+                + ([f"   refused: {r.reason}"] if r.status != "ok" else [])
+            if r.picture is not None:
+                pics.append(self._picture(f"{tag}_algo_{key}", r.picture, f"{r.label}: blue = water, yellow = lake grown from the centre"))
+        first = rows[1]
+        result = (f"{first[0]}: {first[1]} against {ours} with {base}" + (f" ({first[2]}, {first[3]})" if first[2] != "—" else "")
+                  if len(keys) == 1 else f"{len(keys)} methods compared with {base}")
+        self._add("compare", f"Compare methods ({'optical' if sensor == 'optical' else 'radar'})", sensor=sensor,
+                  scene=scene["scene_id"], replay=replay, tone="info", pictures=pics, formulas=formulas,
+                  table={"head": ["Method", "Area", "Difference", "%"], "rows": rows},
+                  came_in="The same image file, and the method chosen in the dropdown.",
+                  happened=["Only the water test changes; growing the lake from the centre, the distance limit, the area "
+                            "formula and the quality checks are the pipeline's own, unchanged.",
+                            "Display only: the stored record and the risk score always use the pipeline's method, so the "
+                            "history never mixes methods."],
+                  result=result)
 
     def _on_scored(self, d: dict) -> None:
         self._score_card(d["scene"], d["sensor"], d["extent_ha"], d["status"], d["same_month"], d["years"],
@@ -475,6 +582,47 @@ class Walkthrough:
                   + ([f"Note: {d['note']}."] if d.get("note") else []),
                   result="Saved: " + ", ".join(parts))
 
+    # -- offline ----------------------------------------------------------------------------
+    def offline_intro(self, reason: str, log: dict | None) -> None:
+        """First card of an offline check: why, and where the steps' data comes from."""
+        self.offline = True
+        last = (f"the last nightly run (run {log['run_id']}, {log['started_utc']} UTC)" if log and log.get("run_id")
+                else "the stored record (no nightly run log was found on this laptop)")
+        self._add("offline", "Offline: showing stored data", tone="warn",
+                  came_in=reason,
+                  happened=["Sign-in and search cannot happen without the internet. Their cards below are taken from "
+                            "the last nightly run's own log file, which is stored on this laptop.",
+                            "Every image is also stored on this laptop, so detecting water, the area and the score are "
+                            "computed now, by the same code, from those files.",
+                            "Nothing is downloaded and nothing is written to the database."],
+                  result=f"Using {last} and the images stored on this laptop")
+
+    def offline_from_log(self, log: dict | None) -> None:
+        """Sign-in and search as the last nightly run did them, from its log (no network)."""
+        code = self.lake["code"]
+        if not log:
+            self._add("sign_in", "Sign in (not available offline)", tone="info", came_in="No nightly run log on this laptop.",
+                      result="No record of a sign-in to show")
+            return
+        when = log["started_utc"]
+        self._add("sign_in", "Sign in to Google Earth Engine (last nightly run)", tone="ok",
+                  came_in=f"Run {log['run_id']}'s log file ({log['file']}).",
+                  happened=[f"At {when} UTC the nightly run on GitHub Actions signed in with the service-account key."],
+                  result=f"Signed in as {log.get('account') or 'the service account'} at {when} UTC")
+        for sensor in ("optical", "radar"):
+            n, since = log["listed"].get((code, sensor), (None, None))
+            if n is None:
+                result = f"This lake was not searched for {sensor} images in that run"
+            else:
+                already = [sid for sid in log["already"].get(code, []) if sid.startswith("S1") == (sensor == "radar")]
+                result = (f"{n} {sensor} scene{'s' if n != 1 else ''} listed after {since}"
+                          + (f" · {', '.join(already)} already stored" if already else "")) if n else \
+                         f"No {sensor} scene after {since}: Earth Engine answered normally, with none."
+            self._add(f"search_{sensor}", f"Search for {'optical (Sentinel-2)' if sensor == 'optical' else 'radar (Sentinel-1)'} images (last nightly run)",
+                      sensor=sensor, tone="ok", came_in=f"Run {log['run_id']}'s log, lines for {code}.",
+                      happened=["Copied from what Earth Engine answered that night; it is not asked again now."],
+                      result=result)
+
     # -- replay -----------------------------------------------------------------------------
     def replay_failed(self, sensor: str, error: str) -> None:
         self._add("replay", f"The {sensor} replay could not finish", sensor=sensor, replay=True, tone="warn",
@@ -508,7 +656,8 @@ class Walkthrough:
         scene = {"scene_id": scene_id, "acquired_at": row["acquired_at"], "lake_cloud_percent": row["cloud_fraction"],
                  "tile_cloud_percent": None}
         self._add("replay", f"Replay: the latest stored {sensor} scene, {row['acquired_at'][:10]}", sensor=sensor,
-                  replay=True, tone="info", came_in="No new scene from this check to measure.",
+                  replay=True, tone="info",
+                  came_in="Offline: no new image can be fetched now." if self.offline else "No new scene from this check to measure.",
                   happened=["To show every step anyway, the newest stored scene with a usable measurement is walked through "
                             "the same code. Its image is the stored file; nothing below is new data and nothing is written."],
                   result=f"Replaying scene {scene_id}")

@@ -287,3 +287,14 @@ def test_scene_page_recomputes_no_lake_the_same_way(drained):
 def test_lakes_without_no_lake_results_show_no_banner(scenes):
     text = visible_text(scenes.get("/lakes/KRB").text)
     assert "No lake found" not in text and "no lake found" not in text
+
+
+def test_scene_page_compares_methods_on_request(scenes):
+    html = scenes.get("/scenes/6?algo=all").text
+    assert "Compare water-detection methods" in html
+    for label in ("MNDWI &gt; 0", "NDWI, Otsu cutoff", "MNDWI, Otsu cutoff"):
+        assert label in html, label
+    assert scenes.get("/scenes/6/algo/mndwi.png").headers["content-type"] == "image/png"
+    assert "Bmax Otsu" in scenes.get("/scenes/7?algo=bmax_otsu").text
+    assert scenes.get("/scenes/6?algo=bmax_otsu").status_code == 400          # a radar method on an optical scene
+    assert "not available (needs band B12" in scenes.get("/scenes/6").text     # unavailable methods are listed, with why
