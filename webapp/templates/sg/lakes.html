@@ -26,11 +26,11 @@
   <p class="small" style="margin:8px 0">{{ t.note }} Clear optical measurements: {{ g.optical_ok }} of {{ g.optical_scenes }} Sentinel-2 scenes; newest scene {{ (g.newest_scene or "none")[:10] }}.
     <a href="/lakes/{{ code }}">Every measurement (SailAb page)</a></p>
   {% if t.yearly %}
-  <table class="t" style="max-width:640px;margin-bottom:10px">
+  <div class="tw"><table class="t" style="max-width:640px;margin-bottom:10px">
     <tr><th>Summer</th>{% for y in t.yearly %}<th class="num">{{ y.year }}</th>{% endfor %}</tr>
     <tr><td>Median area</td>{% for y in t.yearly %}<td class="num">{{ y.median_ha }} ha</td>{% endfor %}</tr>
     <tr><td>Clear values</td>{% for y in t.yearly %}<td class="num">{{ y.n }}</td>{% endfor %}</tr>
-  </table>
+  </table></div>
   {% endif %}
   {% if d.charts[code] %}{{ d.charts[code] | safe }}{% else %}<p class="small">No measurements stored yet.</p>{% endif %}
 </section>

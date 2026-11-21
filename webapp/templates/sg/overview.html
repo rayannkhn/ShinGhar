@@ -79,7 +79,7 @@
   <a class="card layer" href="/shinghar/forest">
     <div class="kicker" style="color:var(--loss)">Forest layer</div>
     <h3 style="margin-top:6px">{{ d.patch_count }} vegetation-loss sites ranked for ranger visits</h3>
-    <p class="small">Our Sentinel-2 NDVI change {{ d.forest.before_year }}→{{ d.forest.after_year }}, checked against Hansen Global Forest Change.
+    <p class="small">Our Sentinel-2 NDVI change {{ d.forest.before_year }}→{{ d.forest.after_year }}, checked against Hansen Global Forest Change{% if d.forest.dynamic_world and d.forest.dynamic_world.built %} and Google Dynamic World (agrees on {{ d.forest.dynamic_world.patches_with_dw_majority }} of {{ d.patch_count }} sites){% endif %}.
       Top site: {{ "%.1f" | format(d.patches[0].area_ha) }} ha on a {{ "%.0f" | format(d.patches[0].mean_slope_deg) }}° slope near {{ d.patches[0].nearest_settlement }}.</p>
   </a>
   <a class="card layer" href="/shinghar/lakes">

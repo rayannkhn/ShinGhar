@@ -24,6 +24,10 @@ HANSEN_FOREST_MIN_COVER = 30    # Hansen treecover2000 >= 30 % counts as forest 
 WORLDCOVER_TREES = 10           # ESA WorldCover v200 class 10 = "Tree cover"
 MIN_PATCH_HA = 0.5              # smaller connected patches are not reported
 PIXEL_SIZE_M = 10.0
+# Dynamic World (third check): a forest pixel counts as DW loss when its summer-mean "trees" probability was at least
+# DW_TREES_MIN before and fell by more than DW_DROP_THRESHOLD.
+DW_TREES_MIN = 0.50
+DW_DROP_THRESHOLD = 0.20
 
 # Ranking for ranger visits: transparent weights, each component normalised to 0..1 within the valley.
 RANK_WEIGHTS = {"area": 0.40, "slope": 0.30, "near_settlement": 0.30}
@@ -79,6 +83,26 @@ def agreement(ours: np.ndarray, hansen: np.ndarray, valid: np.ndarray) -> dict:
             "iou": share(both, either)}
 
 
+def dw_loss(trees_before: np.ndarray, trees_after: np.ndarray, forest: np.ndarray,
+            trees_min: float = DW_TREES_MIN, drop_threshold: float = DW_DROP_THRESHOLD) -> np.ndarray:
+    """Dynamic World loss: forest pixels with "trees" probability >= trees_min before and a drop > drop_threshold.
+    NaN (no clear Dynamic World image) is never loss."""
+    b = np.asarray(trees_before, dtype="float64")
+    a = np.asarray(trees_after, dtype="float64")
+    with np.errstate(invalid="ignore"):
+        return np.asarray(forest, dtype=bool) & np.isfinite(b) & np.isfinite(a) & (b >= trees_min) & (b - a > drop_threshold)
+
+
+def patch_means(labels: np.ndarray, values: np.ndarray, ids: list[int]) -> dict[int, float | None]:
+    """Mean of values (ignoring NaN) inside each labelled patch; None when a patch has no finite value."""
+    v = np.asarray(values, dtype="float64")
+    ok = np.isfinite(v)
+    lab = np.where(ok, labels, 0)
+    n = np.bincount(lab.ravel(), minlength=max(ids, default=0) + 1)
+    s = np.bincount(lab.ravel(), weights=np.where(ok, v, 0).ravel(), minlength=max(ids, default=0) + 1)
+    return {i: (float(s[i] / n[i]) if i < len(n) and n[i] else None) for i in ids}
+
+
 @dataclass
 class Patch:
     patch_id: int
@@ -98,6 +122,9 @@ class Patch:
     dist_water_m: float | None = None
     rank_score: float | None = None
     rank: int | None = None
+    dw_trees_before: float | None = None     # Dynamic World mean "trees" probability in the patch, summer before
+    dw_trees_after: float | None = None      # ... summer after
+    dw_share: float | None = None            # share of the patch's pixels that Dynamic World also calls loss
 
     def as_dict(self) -> dict:
         return asdict(self)

@@ -85,7 +85,7 @@ def build(skip_forest=False, skip_voice=False) -> dict:
     # Forest layer
     if not skip_forest:
         log["forest"] = forest_build.build(stack, [{"name": v["name"], "lon": v["lon"], "lat": v["lat"]} for v in villages],
-                                           lake_pts, OUT)
+                                           lake_pts, OUT, dw_path=OUT / "dw_stack.tif")
     forest = json.loads((OUT / "forest_agreement.json").read_text())
     patches = json.loads((OUT / "forest_patches.geojson").read_text())["features"]
 
@@ -170,6 +170,7 @@ def build(skip_forest=False, skip_voice=False) -> dict:
         det["forest_loss_upslope"] = f"in {len(ups)} patch{'es' if len(ups) != 1 else ''}"
         if ups:
             raw["loss_slope"] = sum(p["area_ha"] * (p["mean_slope_deg"] or 0) for p in ups) / area
+            det["loss_slope"] = "upslope"
         else:
             na["loss_slope"] = "no vegetation loss upslope"
         res = R.fuse(v["name"], raw, det, not_applicable=na)
@@ -184,6 +185,32 @@ def build(skip_forest=False, skip_voice=False) -> dict:
                                                "path_max_height_above_m": PATH_MAX_HEIGHT_ABOVE_M,
                                                "risk_loss_sources": RISK_LOSS_SOURCES, "results": results},
                                               indent=1, ensure_ascii=False))
+
+    # Risk per forest site: could this loss site matter for people below it?
+    all_props = [f["properties"] for f in patches]
+    ax, ay = _utm(epsg, [p["lon"] for p in all_props], [p["lat"] for p in all_props]) if all_props else ([], [])
+    sites = []
+    for p, x, y in zip(all_props, ax, ay):
+        lower = [(float(np.hypot(vx_ - x, vy_ - y)), v["name"]) for v, vx_, vy_ in zip(villages, vx, vy)
+                 if p["mean_elev_m"] is not None and v["elev_m"] < p["mean_elev_m"]]
+        raw, det, na = {"site_area": p["area_ha"], "loss_slope": p["mean_slope_deg"]}, {}, {}
+        det["site_area"] = {"both": "our NDVI and Hansen", "ndvi_only": "our NDVI only",
+                            "hansen_only": "Hansen only"}[p["source"]]
+        det["loss_slope"] = "at this site"
+        if lower:
+            d, name = min(lower)
+            raw["village_below"] = d
+            det["village_below"] = name
+        else:
+            na["village_below"] = "no listed village is lower than this site"
+        raw["near_water"] = p["dist_water_m"]
+        res = R.fuse(f"site {p['rank']}", raw, det, weights=R.SITE_WEIGHTS, not_applicable=na)
+        sites.append({"patch_id": p["patch_id"], "rank": p["rank"], "lat": p["lat"], "lon": p["lon"],
+                      "score": res.score, "band": res.band, "coverage": res.coverage, "reasons": res.reasons,
+                      "components": [c.__dict__ for c in res.components]})
+    sites.sort(key=lambda r: -r["score"])
+    (OUT / "site_risk.json").write_text(json.dumps({"weights": R.SITE_WEIGHTS, "scales": {k: R.SCALES[k] for k in R.SITE_WEIGHTS},
+                                                    "bands": R.BANDS, "results": sites}, indent=1, ensure_ascii=False))
 
     # Alerts (watch + high only); keep review state where the text is unchanged
     store = A.AlertStore(OUT / "alerts.json")

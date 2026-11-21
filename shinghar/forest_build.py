@@ -22,7 +22,7 @@ WATER_OCCURRENCE_MIN = 50     # JRC occurrence >= 50 % = mapped surface water (l
 
 
 def _to_pixels(transform, x: float, y: float) -> tuple[float, float]:
-    col, row = ~transform * (x, y)
+    col, row = ~transform @ (x, y)
     return row, col
 
 
@@ -37,8 +37,9 @@ def _utm_to_lonlat(epsg: int, xs, ys):
 
 
 def build(stack_path: str | Path, settlements: list[dict], lakes: list[dict], out_dir: str | Path,
-          hansen_years: tuple[int, int] = (2020, 2025)) -> dict:
-    """settlements: [{"name", "lon", "lat"}]; lakes: [{"code", "name", "lon", "lat"}]. Returns the summary dict."""
+          hansen_years: tuple[int, int] = (2020, 2025), dw_path: str | Path | None = None) -> dict:
+    """settlements: [{"name", "lon", "lat"}]; lakes: [{"code", "name", "lon", "lat"}]. Returns the summary dict.
+    dw_path: optional Dynamic World stack on the same grid (forest_ee.fetch_dw); without it the summary says so."""
     from rasterio import features
 
     out_dir = Path(out_dir)
@@ -61,7 +62,7 @@ def build(stack_path: str | Path, settlements: list[dict], lakes: list[dict], ou
     water = np.nan_to_num(b["water_occurrence"], nan=0) >= WATER_OCCURRENCE_MIN
     water_dist = ndimage.distance_transform_edt(~water) * px if water.any() else None
     for p in patches:
-        x, y = tr * (p.centroid_col + 0.5, p.centroid_row + 0.5)
+        x, y = tr @ (p.centroid_col + 0.5, p.centroid_row + 0.5)
         p.nearest_settlement, d = F.nearest(s_pts, x, y)
         p.dist_settlement_m = None if d is None else round(d)
         if water_dist is not None:
@@ -73,6 +74,37 @@ def build(stack_path: str | Path, settlements: list[dict], lakes: list[dict], ou
         if p.mean_elev_m is not None:
             p.mean_elev_m = round(p.mean_elev_m)
     ranked = F.rank_patches(patches)
+
+    # Dynamic World: third, independent check (same 10 m grid)
+    dw_summary = {"built": False, "why": "no Dynamic World stack (run forest_ee.fetch_dw)"}
+    if dw_path is not None and Path(dw_path).exists():
+        from shinghar.forest_ee import read_dw
+        dw, dmeta = read_dw(dw_path)
+        if dmeta["transform"] != tr or dw["dw_trees_before"].shape != b["dem"].shape:
+            raise ValueError("Dynamic World stack is not on the forest stack's grid")
+        dwl = F.dw_loss(dw["dw_trees_before"], dw["dw_trees_after"], forest)
+        dw_valid = valid & forest & np.isfinite(dw["dw_trees_before"]) & np.isfinite(dw["dw_trees_after"])
+        ids = [p.patch_id for p in ranked]
+        mb = F.patch_means(labels, dw["dw_trees_before"], ids)
+        ma = F.patch_means(labels, dw["dw_trees_after"], ids)
+        sh = F.patch_means(labels, np.where(np.isfinite(dw["dw_trees_before"]), dwl.astype(float), np.nan), ids)
+        for p in ranked:
+            p.dw_trees_before = None if mb[p.patch_id] is None else round(mb[p.patch_id], 2)
+            p.dw_trees_after = None if ma[p.patch_id] is None else round(ma[p.patch_id], 2)
+            p.dw_share = None if sh[p.patch_id] is None else round(sh[p.patch_id], 2)
+        a_ours = F.agreement(ours, dwl, dw_valid)       # "hansen" keys here mean Dynamic World
+        a_han = F.agreement(hansen, dwl, dw_valid)
+        dw_summary = {
+            "built": True, "asset": dmeta.get("asset"), "images_before": dmeta.get("dw_images_before"),
+            "images_after": dmeta.get("dw_images_after"),
+            "settings": {"trees_min": F.DW_TREES_MIN, "drop_threshold": F.DW_DROP_THRESHOLD},
+            "dw_loss_ha": round(int((dwl & dw_valid).sum()) * px * px / 1e4, 2),
+            "ours_confirmed_by_dw": a_ours["ours_confirmed_by_hansen"], "dw_found_by_ours": a_ours["hansen_found_by_ours"],
+            "iou_ours_dw": a_ours["iou"],
+            "hansen_confirmed_by_dw": a_han["ours_confirmed_by_hansen"], "dw_found_by_hansen": a_han["hansen_found_by_ours"],
+            "patches_with_dw_majority": sum(1 for p in ranked if (p.dw_share or 0) >= 0.5),
+            "patches_with_any_dw": sum(1 for p in ranked if (p.dw_share or 0) > 0),
+        }
 
     # GeoJSON polygons (UTM -> lon/lat)
     # One feature per patch: a patch is 8-connected, so its outline can be several polygons (MultiPolygon).
@@ -113,6 +145,7 @@ def build(stack_path: str | Path, settlements: list[dict], lakes: list[dict], ou
         "agreement": agree,
         "patches": len(ranked),
         "patches_by_source": {s: sum(1 for p in ranked if p.source == s) for s in ("both", "ndvi_only", "hansen_only")},
+        "dynamic_world": dw_summary,
     }
     (out_dir / "forest_agreement.json").write_text(json.dumps(summary, indent=1))
     overview_png(b, forest, ours, hansen, tr, epsg, settlements, lakes, out_dir / "forest_overview.png")

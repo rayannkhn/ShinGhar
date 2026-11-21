@@ -69,7 +69,9 @@ def test_page_shows_cached_numbers_and_review_gate(source_db, tmp_path, monkeypa
     assert "1 / 0" in over                                  # villages high / watch
     vill = c.get("/shinghar/villages").text
     assert f"{res.score:.0f}" in vill and "fast-expansion flag" in vill    # reason from the numbers
-    assert "16.7 %" in c.get("/shinghar/forest").text       # share of our loss also in Hansen
+    forest = c.get("/shinghar/forest").text
+    assert "16.7 %" in forest                               # share of our loss also in Hansen
+    assert "Third check: Google Dynamic World" in forest and "No Dynamic World result" in forest   # honest "not built"
     assert "Not enough summer data" in c.get("/shinghar/lakes").text
     html = c.get("/shinghar/alerts").text
     assert '<span class="now">draft</span>' in html and "sent: no" in html

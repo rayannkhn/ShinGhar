@@ -37,3 +37,11 @@ def test_TC_ACQ_04_resume_after_a_crash():
     assert resumed == [4, 5, 6], "the second run must handle only the lakes after the last completed one"
     assert downloaded == [1, 2, 3, 4, 5, 6], "no lake should be downloaded twice"
     assert shared_log.download_count == 6
+
+
+def test_resume_with_a_lake_list_that_lacks_the_last_completed_lake_starts_at_its_beginning():
+    # Regression (run 26): state said lake 10 finished, the resumed run was started with --lakes for lake 11 only.
+    done = []
+    run = ResumableRun(lakes=[11], downloader=done.append, log=RunLog(last_completed_lake_id=10, download_count=2))
+    assert run.run() == [11] and done == [11]
+    assert run.log.last_completed_lake_id == 11 and run.log.download_count == 3

@@ -1,0 +1,2061 @@
+{
+ "weights": {
+  "site_area": 0.3,
+  "loss_slope": 0.3,
+  "village_below": 0.3,
+  "near_water": 0.1
+ },
+ "scales": {
+  "site_area": [
+   0.0,
+   10.0
+  ],
+  "loss_slope": [
+   15.0,
+   35.0
+  ],
+  "village_below": [
+   5000.0,
+   250.0
+  ],
+  "near_water": [
+   1000.0,
+   50.0
+  ]
+ },
+ "bands": [
+  [
+   60.0,
+   "high"
+  ],
+  [
+   30.0,
+   "watch"
+  ],
+  [
+   0.0,
+   "low"
+  ]
+ ],
+ "results": [
+  {
+   "patch_id": 1017,
+   "rank": 14,
+   "lat": 35.51382,
+   "lon": 72.56355,
+   "score": 59.5,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 37°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Shahu, is 2.1 km away. (+18 points)",
+    "Mapped surface water is 89 m away, so loose soil and debris can reach a stream. (+10 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.58,
+     "scaled": 0.057999999999999996,
+     "weight": 0.3,
+     "points": 1.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 37.3,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2125.43693404093,
+     "scaled": 0.6051711717808569,
+     "weight": 0.3,
+     "points": 18.2,
+     "detail": "Shahu",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 89,
+     "scaled": 0.9589473684210527,
+     "weight": 0.1,
+     "points": 9.6,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2326,
+   "rank": 3,
+   "lat": 35.42253,
+   "lon": 72.60501,
+   "score": 56.9,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 31°), where bare soil sheds water and can slide. (+24 points)",
+    "The nearest village below the site, Asharopatoi, is 2.2 km away. (+18 points)",
+    "Mapped surface water is 157 m away, so loose soil and debris can reach a stream. (+9 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 2.28,
+     "scaled": 0.22799999999999998,
+     "weight": 0.3,
+     "points": 6.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 30.7,
+     "scaled": 0.7849999999999999,
+     "weight": 0.3,
+     "points": 23.5,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2201.6679840580073,
+     "scaled": 0.5891225296719985,
+     "weight": 0.3,
+     "points": 17.7,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 157,
+     "scaled": 0.8873684210526316,
+     "weight": 0.1,
+     "points": 8.9,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2179,
+   "rank": 7,
+   "lat": 35.43961,
+   "lon": 72.58728,
+   "score": 55.9,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 36°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Pishmal, is 1.3 km away. (+23 points)",
+    "0.9 ha of vegetation lost in this patch (our NDVI only). (+3 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.94,
+     "scaled": 0.094,
+     "weight": 0.3,
+     "points": 2.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 36.4,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 1345.446172134221,
+     "scaled": 0.7693797532349008,
+     "weight": 0.3,
+     "points": 23.1,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1453,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2328,
+   "rank": 4,
+   "lat": 35.42234,
+   "lon": 72.61127,
+   "score": 54.3,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 44°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Asharopatoi, is 2.3 km away. (+17 points)",
+    "1.2 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.24,
+     "scaled": 0.124,
+     "weight": 0.3,
+     "points": 3.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 44.0,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2257.4102238307773,
+     "scaled": 0.5773873212987837,
+     "weight": 0.3,
+     "points": 17.3,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 690,
+     "scaled": 0.3263157894736842,
+     "weight": 0.1,
+     "points": 3.3,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2300,
+   "rank": 2,
+   "lat": 35.42544,
+   "lon": 72.62526,
+   "score": 50.6,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 38°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Asharopatoi, is 3.1 km away. (+12 points)",
+    "2.9 ha of vegetation lost in this patch (our NDVI only). (+9 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 2.94,
+     "scaled": 0.294,
+     "weight": 0.3,
+     "points": 8.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 38.5,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 3132.7638700879365,
+     "scaled": 0.3931023431393818,
+     "weight": 0.3,
+     "points": 11.8,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1790,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2301,
+   "rank": 19,
+   "lat": 35.42513,
+   "lon": 72.60475,
+   "score": 50.3,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 30°), where bare soil sheds water and can slide. (+23 points)",
+    "The nearest village below the site, Asharopatoi, is 2.5 km away. (+16 points)",
+    "Mapped surface water is 70 m away, so loose soil and debris can reach a stream. (+10 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.62,
+     "scaled": 0.062,
+     "weight": 0.3,
+     "points": 1.9,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 30.1,
+     "scaled": 0.7550000000000001,
+     "weight": 0.3,
+     "points": 22.7,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2490.1458289208967,
+     "scaled": 0.528390351806127,
+     "weight": 0.3,
+     "points": 15.9,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 70,
+     "scaled": 0.9789473684210527,
+     "weight": 0.1,
+     "points": 9.8,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1631,
+   "rank": 11,
+   "lat": 35.48027,
+   "lon": 72.55456,
+   "score": 48.4,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 35°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Boyun, is 2.6 km away. (+15 points)",
+    "1.2 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.2,
+     "scaled": 0.12,
+     "weight": 0.3,
+     "points": 3.6,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 34.9,
+     "scaled": 0.9949999999999999,
+     "weight": 0.3,
+     "points": 29.8,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2632.4556262134015,
+     "scaled": 0.49843039448138915,
+     "weight": 0.3,
+     "points": 15.0,
+     "detail": "Boyun",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 2675,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2320,
+   "rank": 9,
+   "lat": 35.42418,
+   "lon": 72.61839,
+   "score": 47.5,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 42°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Asharopatoi, is 2.7 km away. (+15 points)",
+    "1.0 ha of vegetation lost in this patch (our NDVI only). (+3 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.98,
+     "scaled": 0.098,
+     "weight": 0.3,
+     "points": 2.9,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 42.2,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2683.6510870232605,
+     "scaled": 0.48765240273194516,
+     "weight": 0.3,
+     "points": 14.6,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1247,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2198,
+   "rank": 10,
+   "lat": 35.43895,
+   "lon": 72.61583,
+   "score": 46.9,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 30°), where bare soil sheds water and can slide. (+22 points)",
+    "The nearest village below the site, Pishmal, is 1.9 km away. (+20 points)",
+    "1.3 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.32,
+     "scaled": 0.132,
+     "weight": 0.3,
+     "points": 4.0,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 30.0,
+     "scaled": 0.75,
+     "weight": 0.3,
+     "points": 22.5,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 1856.3336365883308,
+     "scaled": 0.6618244975603514,
+     "weight": 0.3,
+     "points": 19.9,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 950,
+     "scaled": 0.05263157894736842,
+     "weight": 0.1,
+     "points": 0.5,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1643,
+   "rank": 5,
+   "lat": 35.48029,
+   "lon": 72.59547,
+   "score": 46.5,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 32°), where bare soil sheds water and can slide. (+25 points)",
+    "Mapped surface water is 133 m away, so loose soil and debris can reach a stream. (+9 points)",
+    "The nearest village below the site, Pishmal, is 3.6 km away. (+9 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.26,
+     "scaled": 0.126,
+     "weight": 0.3,
+     "points": 3.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 31.7,
+     "scaled": 0.835,
+     "weight": 0.3,
+     "points": 25.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 3631.608289269827,
+     "scaled": 0.28808246541687854,
+     "weight": 0.3,
+     "points": 8.6,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 133,
+     "scaled": 0.9126315789473685,
+     "weight": 0.1,
+     "points": 9.1,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1502,
+   "rank": 16,
+   "lat": 35.49028,
+   "lon": 72.55779,
+   "score": 46.0,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 38°), where bare soil sheds water and can slide. (+30 points)",
+    "The nearest village below the site, Boyun, is 2.8 km away. (+14 points)",
+    "0.7 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.68,
+     "scaled": 0.068,
+     "weight": 0.3,
+     "points": 2.0,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 38.2,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2782.915268231683,
+     "scaled": 0.46675468037227724,
+     "weight": 0.3,
+     "points": 14.0,
+     "detail": "Boyun",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1968,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2318,
+   "rank": 17,
+   "lat": 35.42404,
+   "lon": 72.61647,
+   "score": 43.8,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 33°), where bare soil sheds water and can slide. (+27 points)",
+    "The nearest village below the site, Asharopatoi, is 2.6 km away. (+15 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.64,
+     "scaled": 0.064,
+     "weight": 0.3,
+     "points": 1.9,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 32.8,
+     "scaled": 0.8899999999999999,
+     "weight": 0.3,
+     "points": 26.7,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2594.0640175485078,
+     "scaled": 0.5065128384108405,
+     "weight": 0.3,
+     "points": 15.2,
+     "detail": "Asharopatoi",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1093,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 904,
+   "rank": 1,
+   "lat": 35.51612,
+   "lon": 72.5153,
+   "score": 43.1,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 37°), where bare soil sheds water and can slide. (+30 points)",
+    "4.3 ha of vegetation lost in this patch (our NDVI only). (+13 points)",
+    "The nearest village below the site, Kass, is 5.0 km away. (+0 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 4.35,
+     "scaled": 0.43499999999999994,
+     "weight": 0.3,
+     "points": 13.0,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 36.7,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4989.041222158054,
+     "scaled": 0.0023071111246202856,
+     "weight": 0.3,
+     "points": 0.1,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1151,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2439,
+   "rank": 8,
+   "lat": 35.39561,
+   "lon": 72.6077,
+   "score": 41.7,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 36°), where bare soil sheds water and can slide. (+30 points)",
+    "Mapped surface water is 10 m away, so loose soil and debris can reach a stream. (+10 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)",
+    "Does not apply: village below (no listed village is lower than this site)."
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.58,
+     "scaled": 0.057999999999999996,
+     "weight": 0.3,
+     "points": 1.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 36.2,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "no listed village is lower than this site",
+     "not_applicable": true
+    },
+    {
+     "name": "near_water",
+     "raw": 10,
+     "scaled": 1.0,
+     "weight": 0.1,
+     "points": 10.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1620,
+   "rank": 13,
+   "lat": 35.47866,
+   "lon": 72.4505,
+   "score": 41.2,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The nearest village below the site, Gall, is 1.6 km away. (+21 points)",
+    "The vegetation loss at this site is on steep ground (mean slope 23°), where bare soil sheds water and can slide. (+11 points)",
+    "Mapped surface water is 594 m away, so loose soil and debris can reach a stream. (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.41,
+     "scaled": 0.141,
+     "weight": 0.3,
+     "points": 4.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 22.6,
+     "scaled": 0.38000000000000006,
+     "weight": 0.3,
+     "points": 11.4,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 1630.633901461561,
+     "scaled": 0.7093402312712503,
+     "weight": 0.3,
+     "points": 21.3,
+     "detail": "Gall",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 594,
+     "scaled": 0.42736842105263156,
+     "weight": 0.1,
+     "points": 4.3,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1001,
+   "rank": 18,
+   "lat": 35.51559,
+   "lon": 72.62351,
+   "score": 38.5,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 28°), where bare soil sheds water and can slide. (+19 points)",
+    "Mapped surface water is 70 m away, so loose soil and debris can reach a stream. (+10 points)",
+    "The nearest village below the site, Shahu, is 3.8 km away. (+7 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.7,
+     "scaled": 0.06999999999999999,
+     "weight": 0.3,
+     "points": 2.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 27.9,
+     "scaled": 0.6449999999999999,
+     "weight": 0.3,
+     "points": 19.3,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 3848.659992896462,
+     "scaled": 0.2423873699165343,
+     "weight": 0.3,
+     "points": 7.3,
+     "detail": "Shahu",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 70,
+     "scaled": 0.9789473684210527,
+     "weight": 0.1,
+     "points": 9.8,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2257,
+   "rank": 20,
+   "lat": 35.43259,
+   "lon": 72.64017,
+   "score": 35.2,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 32°), where bare soil sheds water and can slide. (+26 points)",
+    "The nearest village below the site, Pishmal, is 4.1 km away. (+5 points)",
+    "1.4 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.36,
+     "scaled": 0.136,
+     "weight": 0.3,
+     "points": 4.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 32.1,
+     "scaled": 0.8550000000000001,
+     "weight": 0.3,
+     "points": 25.7,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4147.554647974285,
+     "scaled": 0.17946217937383468,
+     "weight": 0.3,
+     "points": 5.4,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 2993,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1194,
+   "rank": 15,
+   "lat": 35.50871,
+   "lon": 72.606,
+   "score": 34.9,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 32°), where bare soil sheds water and can slide. (+25 points)",
+    "Mapped surface water is 320 m away, so loose soil and debris can reach a stream. (+7 points)",
+    "0.8 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.81,
+     "scaled": 0.081,
+     "weight": 0.3,
+     "points": 2.4,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 31.9,
+     "scaled": 0.845,
+     "weight": 0.3,
+     "points": 25.3,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 6811.112676709031,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 320,
+     "scaled": 0.7157894736842105,
+     "weight": 0.1,
+     "points": 7.2,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1122,
+   "rank": 6,
+   "lat": 35.50977,
+   "lon": 72.58872,
+   "score": 33.6,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The nearest village below the site, Shahu, is 802 m away. (+26 points)",
+    "2.4 ha of vegetation lost in this patch (our NDVI and Hansen). (+7 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 2.37,
+     "scaled": 0.23700000000000002,
+     "weight": 0.3,
+     "points": 7.1,
+     "detail": "our NDVI and Hansen",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 13.4,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 802.0576452433619,
+     "scaled": 0.8837773378435029,
+     "weight": 0.3,
+     "points": 26.5,
+     "detail": "Shahu",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1103,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2269,
+   "rank": 26,
+   "lat": 35.43155,
+   "lon": 72.63772,
+   "score": 33.4,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 32°), where bare soil sheds water and can slide. (+25 points)",
+    "The nearest village below the site, Pishmal, is 4.0 km away. (+6 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.63,
+     "scaled": 0.063,
+     "weight": 0.3,
+     "points": 1.9,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 31.8,
+     "scaled": 0.8400000000000001,
+     "weight": 0.3,
+     "points": 25.2,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 3995.2231776317494,
+     "scaled": 0.21153196260384222,
+     "weight": 0.3,
+     "points": 6.3,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 2780,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1273,
+   "rank": 12,
+   "lat": 35.50383,
+   "lon": 72.60024,
+   "score": 32.7,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 31°), where bare soil sheds water and can slide. (+24 points)",
+    "Mapped surface water is 434 m away, so loose soil and debris can reach a stream. (+6 points)",
+    "0.7 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.74,
+     "scaled": 0.074,
+     "weight": 0.3,
+     "points": 2.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 31.3,
+     "scaled": 0.8150000000000001,
+     "weight": 0.3,
+     "points": 24.5,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 6236.594007967175,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 434,
+     "scaled": 0.5957894736842105,
+     "weight": 0.1,
+     "points": 6.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 804,
+   "rank": 21,
+   "lat": 35.52264,
+   "lon": 72.51822,
+   "score": 32.5,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 45°), where bare soil sheds water and can slide. (+30 points)",
+    "0.8 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.83,
+     "scaled": 0.08299999999999999,
+     "weight": 0.3,
+     "points": 2.5,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 45.1,
+     "scaled": 1.0,
+     "weight": 0.3,
+     "points": 30.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5633.381085137,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1437,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 766,
+   "rank": 24,
+   "lat": 35.52498,
+   "lon": 72.51802,
+   "score": 32.2,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 34°), where bare soil sheds water and can slide. (+28 points)",
+    "1.4 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.35,
+     "scaled": 0.135,
+     "weight": 0.3,
+     "points": 4.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 33.7,
+     "scaled": 0.9350000000000002,
+     "weight": 0.3,
+     "points": 28.1,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5786.08126207061,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1664,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 926,
+   "rank": 29,
+   "lat": 35.51579,
+   "lon": 72.53567,
+   "score": 31.1,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 25°), where bare soil sheds water and can slide. (+15 points)",
+    "Mapped surface water is 40 m away, so loose soil and debris can reach a stream. (+10 points)",
+    "1.1 ha of vegetation lost in this patch (our NDVI only). (+3 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.13,
+     "scaled": 0.11299999999999999,
+     "weight": 0.3,
+     "points": 3.4,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 24.9,
+     "scaled": 0.49499999999999994,
+     "weight": 0.3,
+     "points": 14.8,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4543.3536842696885,
+     "scaled": 0.09613606646953926,
+     "weight": 0.3,
+     "points": 2.9,
+     "detail": "Shahu",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 40,
+     "scaled": 1.0,
+     "weight": 0.1,
+     "points": 10.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 738,
+   "rank": 28,
+   "lat": 35.52651,
+   "lon": 72.51463,
+   "score": 30.7,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 34°), where bare soil sheds water and can slide. (+28 points)",
+    "0.7 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.72,
+     "scaled": 0.072,
+     "weight": 0.3,
+     "points": 2.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 34.0,
+     "scaled": 0.95,
+     "weight": 0.3,
+     "points": 28.5,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5674.760050624687,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1975,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 756,
+   "rank": 30,
+   "lat": 35.52595,
+   "lon": 72.51635,
+   "score": 30.7,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 34°), where bare soil sheds water and can slide. (+29 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.59,
+     "scaled": 0.059,
+     "weight": 0.3,
+     "points": 1.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 34.3,
+     "scaled": 0.9649999999999999,
+     "weight": 0.3,
+     "points": 28.9,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5745.088811168034,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1835,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1612,
+   "rank": 25,
+   "lat": 35.47996,
+   "lon": 72.45208,
+   "score": 28.4,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "The nearest village below the site, Gall, is 1.4 km away. (+22 points)",
+    "The vegetation loss at this site is on steep ground (mean slope 16°), where bare soil sheds water and can slide. (+2 points)",
+    "Mapped surface water is 798 m away, so loose soil and debris can reach a stream. (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.54,
+     "scaled": 0.054000000000000006,
+     "weight": 0.3,
+     "points": 1.6,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 16.5,
+     "scaled": 0.075,
+     "weight": 0.3,
+     "points": 2.2,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 1432.8594338098635,
+     "scaled": 0.7509769613031866,
+     "weight": 0.3,
+     "points": 22.5,
+     "detail": "Gall",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 798,
+     "scaled": 0.21263157894736842,
+     "weight": 0.1,
+     "points": 2.1,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2256,
+   "rank": 23,
+   "lat": 35.43266,
+   "lon": 72.64404,
+   "score": 27.3,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 28°), where bare soil sheds water and can slide. (+19 points)",
+    "1.6 ha of vegetation lost in this patch (our NDVI only). (+5 points)",
+    "The nearest village below the site, Pishmal, is 4.5 km away. (+3 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.58,
+     "scaled": 0.158,
+     "weight": 0.3,
+     "points": 4.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 27.8,
+     "scaled": 0.64,
+     "weight": 0.3,
+     "points": 19.2,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4468.5472380863375,
+     "scaled": 0.11188479198182368,
+     "weight": 0.3,
+     "points": 3.4,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 3343,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1026,
+   "rank": 22,
+   "lat": 35.51146,
+   "lon": 72.47577,
+   "score": 26.0,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "The nearest village below the site, Kass, is 2.4 km away. (+17 points)",
+    "The vegetation loss at this site is on steep ground (mean slope 19°), where bare soil sheds water and can slide. (+6 points)",
+    "1.0 ha of vegetation lost in this patch (our NDVI only). (+3 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.03,
+     "scaled": 0.10300000000000001,
+     "weight": 0.3,
+     "points": 3.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 19.1,
+     "scaled": 0.20500000000000007,
+     "weight": 0.3,
+     "points": 6.2,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 2355.3530564536777,
+     "scaled": 0.5567677775886994,
+     "weight": 0.3,
+     "points": 16.7,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1752,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 2278,
+   "rank": 31,
+   "lat": 35.43001,
+   "lon": 72.63591,
+   "score": 25.3,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "The vegetation loss at this site is on steep ground (mean slope 26°), where bare soil sheds water and can slide. (+17 points)",
+    "The nearest village below the site, Pishmal, is 3.9 km away. (+7 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.57,
+     "scaled": 0.056999999999999995,
+     "weight": 0.3,
+     "points": 1.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 26.2,
+     "scaled": 0.5599999999999999,
+     "weight": 0.3,
+     "points": 16.8,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 3931.172961441529,
+     "scaled": 0.22501621864388863,
+     "weight": 0.3,
+     "points": 6.8,
+     "detail": "Pishmal",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 2632,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1206,
+   "rank": 27,
+   "lat": 35.50519,
+   "lon": 72.47806,
+   "score": 22.6,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "The nearest village below the site, Kass, is 1.8 km away. (+20 points)",
+    "0.8 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.75,
+     "scaled": 0.075,
+     "weight": 0.3,
+     "points": 2.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 13.0,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 1762.0840576717476,
+     "scaled": 0.681666514174369,
+     "weight": 0.3,
+     "points": 20.4,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 1028,
+     "scaled": 0.0,
+     "weight": 0.1,
+     "points": 0.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 53,
+   "rank": 34,
+   "lat": 35.66076,
+   "lon": 72.39532,
+   "score": 14.9,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 45 m away, so loose soil and debris can reach a stream. (+10 points)",
+    "The vegetation loss at this site is on steep ground (mean slope 17°), where bare soil sheds water and can slide. (+3 points)",
+    "0.7 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.72,
+     "scaled": 0.072,
+     "weight": 0.3,
+     "points": 2.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 16.8,
+     "scaled": 0.09000000000000004,
+     "weight": 0.3,
+     "points": 2.7,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 9627.83734596811,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Bara Jabba",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 45,
+     "scaled": 1.0,
+     "weight": 0.1,
+     "points": 10.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1168,
+   "rank": 33,
+   "lat": 35.50702,
+   "lon": 72.51588,
+   "score": 13.4,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 190 m away, so loose soil and debris can reach a stream. (+8 points)",
+    "1.0 ha of vegetation lost in this patch (our NDVI only). (+3 points)",
+    "The vegetation loss at this site is on steep ground (mean slope 16°), where bare soil sheds water and can slide. (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.03,
+     "scaled": 0.10300000000000001,
+     "weight": 0.3,
+     "points": 3.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 16.2,
+     "scaled": 0.05999999999999996,
+     "weight": 0.3,
+     "points": 1.8,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 6153.057832775954,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Shahu",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 190,
+     "scaled": 0.8526315789473684,
+     "weight": 0.1,
+     "points": 8.5,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 58,
+   "rank": 38,
+   "lat": 35.65614,
+   "lon": 72.39442,
+   "score": 12.5,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 20 m away, so loose soil and debris can reach a stream. (+10 points)",
+    "0.8 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.84,
+     "scaled": 0.08399999999999999,
+     "weight": 0.3,
+     "points": 2.5,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 7.0,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 9152.471061414304,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Bara Jabba",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 20,
+     "scaled": 1.0,
+     "weight": 0.1,
+     "points": 10.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 65,
+   "rank": 35,
+   "lat": 35.65032,
+   "lon": 72.39089,
+   "score": 10.8,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 321 m away, so loose soil and debris can reach a stream. (+7 points)",
+    "1.2 ha of vegetation lost in this patch (our NDVI only). (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 1.22,
+     "scaled": 0.122,
+     "weight": 0.3,
+     "points": 3.7,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 9.6,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 8627.307322269113,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Bara Jabba",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 321,
+     "scaled": 0.7147368421052631,
+     "weight": 0.1,
+     "points": 7.1,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1129,
+   "rank": 36,
+   "lat": 35.50884,
+   "lon": 72.51844,
+   "score": 10.5,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 301 m away, so loose soil and debris can reach a stream. (+7 points)",
+    "0.7 ha of vegetation lost in this patch (our NDVI only). (+2 points)",
+    "The nearest village below the site, Kass, is 4.8 km away. (+1 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.7,
+     "scaled": 0.06999999999999999,
+     "weight": 0.3,
+     "points": 2.1,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 14.7,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4840.764285516796,
+     "scaled": 0.033523308312253475,
+     "weight": 0.3,
+     "points": 1.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 301,
+     "scaled": 0.7357894736842105,
+     "weight": 0.1,
+     "points": 7.4,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1035,
+   "rank": 32,
+   "lat": 35.51184,
+   "lon": 72.51936,
+   "score": 10.4,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "2.1 ha of vegetation lost in this patch (our NDVI only). (+6 points)",
+    "Mapped surface water is 601 m away, so loose soil and debris can reach a stream. (+4 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 2.08,
+     "scaled": 0.20800000000000002,
+     "weight": 0.3,
+     "points": 6.2,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 10.2,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5061.591277338743,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 601,
+     "scaled": 0.42,
+     "weight": 0.1,
+     "points": 4.2,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1081,
+   "rank": 39,
+   "lat": 35.51078,
+   "lon": 72.51974,
+   "score": 6.9,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 490 m away, so loose soil and debris can reach a stream. (+5 points)",
+    "0.5 ha of vegetation lost in this patch (our NDVI only). (+2 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.5,
+     "scaled": 0.05,
+     "weight": 0.3,
+     "points": 1.5,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 10.5,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 5039.354127929307,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 490,
+     "scaled": 0.5368421052631579,
+     "weight": 0.1,
+     "points": 5.4,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "patch_id": 1024,
+   "rank": 37,
+   "lat": 35.51271,
+   "lon": 72.5178,
+   "score": 4.8,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Mapped surface water is 728 m away, so loose soil and debris can reach a stream. (+3 points)",
+    "0.6 ha of vegetation lost in this patch (our NDVI only). (+2 points)",
+    "The nearest village below the site, Kass, is 5.0 km away. (+0 points)"
+   ],
+   "components": [
+    {
+     "name": "site_area",
+     "raw": 0.59,
+     "scaled": 0.059,
+     "weight": 0.3,
+     "points": 1.8,
+     "detail": "our NDVI only",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 13.5,
+     "scaled": 0.0,
+     "weight": 0.3,
+     "points": 0.0,
+     "detail": "at this site",
+     "not_applicable": false
+    },
+    {
+     "name": "village_below",
+     "raw": 4982.830898942167,
+     "scaled": 0.0036145475911228122,
+     "weight": 0.3,
+     "points": 0.1,
+     "detail": "Kass",
+     "not_applicable": false
+    },
+    {
+     "name": "near_water",
+     "raw": 728,
+     "scaled": 0.2863157894736842,
+     "weight": 0.1,
+     "points": 2.9,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  }
+ ]
+}

@@ -79,3 +79,18 @@ def test_rank_patches_weights_and_order():
     # p2: 40*1 + 30*1 + 30*1 = 100; p3: 40*0.5 + 0 + 30*0.5 = 35; p1: 0 + 0 + 0 = 0
     assert [(p.patch_id, p.rank_score, p.rank) for p in out] == [(2, 100.0, 1), (3, 35.0, 2), (1, 0.0, 3)]
     assert f.rank_patches([]) == []
+
+
+def test_dw_loss_needs_trees_before_a_big_drop_forest_and_data():
+    before = np.array([0.9, 0.9, 0.4, 0.9, np.nan, 0.9])
+    after = np.array([0.5, 0.75, 0.0, 0.5, 0.0, np.nan])
+    forest = np.array([True, True, True, False, True, True])
+    # drop 0.4 -> loss; drop 0.15 -> no; not trees before -> no; outside forest -> no; NaN either side -> no
+    assert f.dw_loss(before, after, forest).tolist() == [True, False, False, False, False, False]
+
+
+def test_patch_means_ignore_nan_and_say_none_for_empty_patches():
+    labels = np.array([[1, 1, 2], [0, 3, 3]])
+    values = np.array([[0.2, 0.4, np.nan], [9.0, 1.0, np.nan]])
+    m = f.patch_means(labels, values, [1, 2, 3])
+    assert m[1] == pytest.approx(0.3) and m[2] is None and m[3] == pytest.approx(1.0)

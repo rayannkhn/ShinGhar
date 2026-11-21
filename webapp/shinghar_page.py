@@ -26,9 +26,11 @@ from webapp import charts
 
 ALLOWED_FILES = {"forest_patches.geojson": "application/geo+json", "lake_paths.geojson": "application/geo+json",
                  "forest_overview.png": "image/png", "forest_patches.csv": "text/csv",
-                 "forest_visual_check.png": "image/png"}
+                 "forest_visual_check.png": "image/png", "site_risk.json": "application/json"}
 COMPONENT_LABELS = {"lake_growth": "Lake growth", "lake_anomaly": "Lake anomaly", "flood_path": "Near lake outflow path",
-                    "forest_loss_upslope": "Vegetation loss upslope (forest areas)", "loss_slope": "Slope of that loss"}
+                    "forest_loss_upslope": "Vegetation loss upslope (forest areas)", "loss_slope": "Slope of that loss",
+                    "site_area": "Size of the loss site", "village_below": "Village below the site",
+                    "near_water": "Near surface water"}
 
 
 def _load(path: Path) -> Any:
@@ -71,6 +73,8 @@ def page_data(data_dir: Path, conn, today: date, with_charts: bool = True) -> di
     d["glacier"] = _load(data_dir / "glacier.json") or {}
     d["visual_check"] = _load(data_dir / "forest_visual_check.json")
     d["risk"] = _load(data_dir / "risk.json")
+    d["site_risk"] = _load(data_dir / "site_risk.json")
+    d["site_by_patch"] = {s["patch_id"]: s for s in (d["site_risk"] or {}).get("results", [])}
     d["alerts"] = sorted(A.AlertStore(data_dir / "alerts.json").load().values(), key=lambda a: -a.score)
     d["settings"] = {"ndvi": F.NDVI_DROP_THRESHOLD, "min_patch": F.MIN_PATCH_HA, "rank_weights": F.RANK_WEIGHTS,
                      "fast": R.FAST_EXPANSION_PCT_PER_YR, "summer_months": G.SUMMER_MONTHS,
@@ -87,6 +91,7 @@ def page_data(data_dir: Path, conn, today: date, with_charts: bool = True) -> di
         "bands": {b: sum(1 for r in results if r["band"] == b) for b in ("high", "watch", "low")},
         "lakes_with_trend": sum(1 for t in trends if t["fast_expansion"] is not None),
         "lakes_fast": sum(1 for t in trends if t["fast_expansion"]),
+        "site_bands": {b: sum(1 for s in d["site_by_patch"].values() if s["band"] == b) for b in ("high", "watch", "low")},
         "alerts_total": len(d["alerts"]), "alerts_draft": sum(1 for a in d["alerts"] if a.state == "draft"),
     }
     d["alerts_open"] = d["summary"]["alerts_draft"]

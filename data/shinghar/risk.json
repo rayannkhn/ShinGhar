@@ -26,6 +26,18 @@
   "loss_slope": [
    15.0,
    35.0
+  ],
+  "site_area": [
+   0.0,
+   10.0
+  ],
+  "village_below": [
+   5000.0,
+   250.0
+  ],
+  "near_water": [
+   1000.0,
+   50.0
   ]
  },
  "bands": [
@@ -151,7 +163,7 @@
      "scaled": 1.0,
      "weight": 0.15,
      "points": 15.0,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -253,7 +265,7 @@
      "scaled": 1.0,
      "weight": 0.15,
      "points": 15.0,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -354,7 +366,7 @@
      "scaled": 1.0,
      "weight": 0.15,
      "points": 15.0,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -456,7 +468,7 @@
      "scaled": 0.8830973451327434,
      "weight": 0.15,
      "points": 13.2,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -559,7 +571,7 @@
      "scaled": 0.3432231404958678,
      "weight": 0.15,
      "points": 5.1,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -655,7 +667,7 @@
      "scaled": 0.1910053619302948,
      "weight": 0.15,
      "points": 2.9,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]
@@ -751,7 +763,7 @@
      "scaled": 0.1910053619302948,
      "weight": 0.15,
      "points": 2.9,
-     "detail": "",
+     "detail": "upslope",
      "not_applicable": false
     }
    ]

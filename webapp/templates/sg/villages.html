@@ -8,13 +8,13 @@
 
 <section class="card" style="margin-bottom:18px">
   <h2>How the score is made</h2>
-  <table class="t" style="max-width:900px">
+  <div class="tw"><table class="t" style="max-width:900px">
     <tr><th>Part</th><th>Weight</th><th>Scale: 0 at → 1 at</th></tr>
     {% for k, w in d.risk.weights.items() %}
     <tr><td>{{ d.component_labels[k] }}</td><td class="num">{{ "%.0f" | format(w * 100) }} %</td>
       <td class="num">{{ d.risk.scales[k][0] | int }} → {{ d.risk.scales[k][1] | int }} {{ d.units[k] }}</td></tr>
     {% endfor %}
-  </table>
+  </table></div>
   <p class="small">Bands: <span class="band high">high</span> ≥ {{ d.risk.bands[0][0] | int }},
     <span class="band watch">watch</span> ≥ {{ d.risk.bands[1][0] | int }}, otherwise <span class="band low">low</span>.
     "No data" adds 0 points and lowers the Data share (never guessed); "does not apply" (e.g. no monitored lake upstream) adds 0 points and counts as known.
@@ -30,7 +30,7 @@
     <div><span class="band {{ r.band }}">{{ r.band }}</span> <span class="num" style="font-size:24px;font-weight:700;margin-left:8px">{{ "%.0f" | format(r.score) }}</span><span class="small">/100 · data for {{ "%.0f" | format(r.coverage * 100) }} % of the weight</span></div>
   </div>
   <ul class="reasons">{% for t in r.reasons %}<li>{{ t }}</li>{% endfor %}</ul>
-  <table class="t">
+  <div class="tw"><table class="t">
     <tr><th>Part</th><th>Value</th><th>Weight</th><th>Points</th></tr>
     {% for c in r.components %}
     <tr><td>{{ d.component_labels[c.name] }}</td>
@@ -38,7 +38,7 @@
       <td class="num">{{ "%.0f" | format(c.weight * 100) }} %</td>
       <td class="num"><span class="bar" style="width:{{ (c.points * 3) | int }}px"></span>{{ "%.1f" | format(c.points) }}</td></tr>
     {% endfor %}
-  </table>
+  </table></div>
 </section>
 {% endfor %}
 </div>

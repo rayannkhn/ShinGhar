@@ -43,5 +43,23 @@
   "both": 1,
   "ndvi_only": 38,
   "hansen_only": 0
+ },
+ "dynamic_world": {
+  "built": true,
+  "asset": "GOOGLE/DYNAMICWORLD/V1",
+  "images_before": "64",
+  "images_after": "81",
+  "settings": {
+   "trees_min": 0.5,
+   "drop_threshold": 0.2
+  },
+  "dw_loss_ha": 105.45,
+  "ours_confirmed_by_dw": 0.20780848117127218,
+  "dw_found_by_ours": 0.29881460407776195,
+  "iou_ours_dw": 0.13969056168816776,
+  "hansen_confirmed_by_dw": 0.989247311827957,
+  "dw_found_by_hansen": 0.008724513987671883,
+  "patches_with_dw_majority": 15,
+  "patches_with_any_dw": 29
  }
 }

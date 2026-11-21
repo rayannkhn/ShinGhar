@@ -10,6 +10,9 @@ Bands (all stored as int16 in the GeoTIFF; scale factors below):
   built                    m2 per 100 m cell  JRC GHSL P2023A GHS_BUILT_S epoch 2020
   water_occurrence         %       JRC Global Surface Water v1.4 occurrence (0-100)
 Hansen and WorldCover are resampled to 10 m by nearest neighbour (no new values are created).
+
+A second, smaller stack (fetch_dw) holds Google Dynamic World V1 mean "trees" probability for the same summers, on the
+same grid, as an independent third check of the loss.
 """
 from __future__ import annotations
 
@@ -85,27 +88,21 @@ def tile_grid(bbox: tuple[float, float, float, float]) -> tuple[int, float, floa
     return epsg, float(x0), float(y1), w, h
 
 
-def fetch_stack(bbox, before_year: int, after_year: int, out_path: str | Path, workers: int = 6,
-                log=print) -> dict:
-    """Download the stack for bbox in TILE_M tiles, mosaic locally, write one GeoTIFF. Returns metadata."""
-    import ee
+def _download_tiles(img, bands, bbox, workers: int = 6):
+    """Download the bands of a server-side image over bbox on the fixed 10 m UTM grid (tile_grid), in TILE_M tiles.
+    Returns (int16 array [band, row, col], epsg, x0, y_top). Raises EarthEngineError if any tile fails 3 times."""
     import rasterio
     import requests
-    from rasterio.transform import from_origin
 
-    c.initialize()
-    region = ee.Geometry.Rectangle(list(bbox))
-    img, n_before, n_after = build_stack(ee, region, before_year, after_year)
-    counts = ee.Dictionary({"before": n_before, "after": n_after}).getInfo()
     epsg, x0, y_top, w, h = tile_grid(bbox)
-    stack = np.full((len(BANDS), h, w), -32768, dtype=np.int16)
+    stack = np.full((len(bands), h, w), -32768, dtype=np.int16)
     tpx = TILE_M // PIXEL_M
     jobs = [(r, col) for r in range(0, h, tpx) for col in range(0, w, tpx)]
 
     def one(job):
         r, col = job
         th, tw = min(tpx, h - r), min(tpx, w - col)
-        params = {"bands": list(BANDS), "crs": f"EPSG:{epsg}", "format": "GEO_TIFF",
+        params = {"bands": list(bands), "crs": f"EPSG:{epsg}", "format": "GEO_TIFF",
                   "crs_transform": [PIXEL_M, 0, x0 + col * PIXEL_M, 0, -PIXEL_M, y_top - r * PIXEL_M],
                   "dimensions": f"{tw}x{th}"}
         for attempt in range(3):
@@ -125,21 +122,93 @@ def fetch_stack(bbox, before_year: int, after_year: int, out_path: str | Path, w
         errors = [e for e in pool.map(one, jobs) if e]
     if errors:
         raise c.EarthEngineError(f"{len(errors)} of {len(jobs)} tiles failed; first: {errors[0]}")
+    return stack, epsg, x0, y_top
+
+
+def _write(out_path, stack, bands, epsg, x0, y_top, tags: dict) -> Path:
+    import rasterio
+    from rasterio.transform import from_origin
+
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    profile = {"driver": "GTiff", "dtype": "int16", "count": len(BANDS), "width": w, "height": h,
-               "crs": f"EPSG:{epsg}", "transform": from_origin(x0, y_top, PIXEL_M, PIXEL_M), "nodata": -32768,
-               "compress": "deflate", "tiled": True}
+    profile = {"driver": "GTiff", "dtype": "int16", "count": len(bands), "width": stack.shape[2],
+               "height": stack.shape[1], "crs": f"EPSG:{epsg}", "transform": from_origin(x0, y_top, PIXEL_M, PIXEL_M),
+               "nodata": -32768, "compress": "deflate", "tiled": True}
     with rasterio.open(out_path, "w", **profile) as dst:
         dst.write(stack)
-        for i, b in enumerate(BANDS, start=1):
+        for i, b in enumerate(bands, start=1):
             dst.set_band_description(i, b)
-        dst.update_tags(bbox=str(bbox), before_year=before_year, after_year=after_year,
-                        s2_images_before=counts["before"], s2_images_after=counts["after"], hansen=HANSEN_ASSET)
-    meta = {"bbox": list(bbox), "epsg": epsg, "width": w, "height": h, "tiles": len(jobs),
+        dst.update_tags(**tags)
+    return out_path
+
+
+def fetch_stack(bbox, before_year: int, after_year: int, out_path: str | Path, workers: int = 6,
+                log=print) -> dict:
+    """Download the stack for bbox in TILE_M tiles, mosaic locally, write one GeoTIFF. Returns metadata."""
+    import ee
+
+    c.initialize()
+    region = ee.Geometry.Rectangle(list(bbox))
+    img, n_before, n_after = build_stack(ee, region, before_year, after_year)
+    counts = ee.Dictionary({"before": n_before, "after": n_after}).getInfo()
+    stack, epsg, x0, y_top = _download_tiles(img, BANDS, bbox, workers)
+    _write(out_path, stack, BANDS, epsg, x0, y_top,
+           dict(bbox=str(bbox), before_year=before_year, after_year=after_year,
+                s2_images_before=counts["before"], s2_images_after=counts["after"], hansen=HANSEN_ASSET))
+    meta = {"bbox": list(bbox), "epsg": epsg, "width": stack.shape[2], "height": stack.shape[1],
             "s2_images_before": counts["before"], "s2_images_after": counts["after"]}
     log(f"stack written: {out_path} {meta}")
     return meta
+
+
+# --- Dynamic World (GOOGLE/DYNAMICWORLD/V1): a third, independent 10 m view of tree cover --------------------------
+DYNAMIC_WORLD = "GOOGLE/DYNAMICWORLD/V1"
+DW_BANDS = ("dw_trees_before", "dw_trees_after")   # mean "trees" probability, Jun-Sep, x10000
+
+
+def build_dw(ee, region, before_year: int, after_year: int, months=(6, 9)):
+    def summer(year):
+        col = (ee.ImageCollection(DYNAMIC_WORLD).filterBounds(region)
+               .filterDate(f"{year}-{months[0]:02d}-01", f"{year}-{months[1] + 1:02d}-01").select("trees"))
+        return col.mean(), col.size()
+
+    tb, nb = summer(before_year)
+    ta, na = summer(after_year)
+    img = ee.Image.cat([tb.multiply(10000).rename("dw_trees_before"),
+                        ta.multiply(10000).rename("dw_trees_after")]).toInt16().unmask(-32768)
+    return img, nb, na
+
+
+def fetch_dw(bbox, before_year: int, after_year: int, out_path: str | Path, workers: int = 6, log=print) -> dict:
+    """Download the Dynamic World summer 'trees' probability for both years on the SAME grid as fetch_stack."""
+    import ee
+
+    c.initialize()
+    region = ee.Geometry.Rectangle(list(bbox))
+    img, nb, na = build_dw(ee, region, before_year, after_year)
+    counts = ee.Dictionary({"before": nb, "after": na}).getInfo()
+    stack, epsg, x0, y_top = _download_tiles(img, DW_BANDS, bbox, workers)
+    _write(out_path, stack, DW_BANDS, epsg, x0, y_top,
+           dict(bbox=str(bbox), before_year=before_year, after_year=after_year, dw_images_before=counts["before"],
+                dw_images_after=counts["after"], asset=DYNAMIC_WORLD))
+    meta = {"epsg": epsg, "dw_images_before": counts["before"], "dw_images_after": counts["after"]}
+    log(f"dynamic world stack written: {out_path} {meta}")
+    return meta
+
+
+def read_dw(path: str | Path) -> tuple[dict[str, np.ndarray], dict]:
+    """Dynamic World stack as probabilities 0..1 (NaN = no clear image)."""
+    import rasterio
+
+    with rasterio.open(path) as src:
+        raw = src.read()
+        meta = {"transform": src.transform, "epsg": src.crs.to_epsg(), **src.tags()}
+    out = {}
+    for i, b in enumerate(DW_BANDS):
+        a = raw[i].astype("float64")
+        a[raw[i] == -32768] = np.nan
+        out[b] = a * 1e-4
+    return out, meta
 
 
 def read_stack(path: str | Path) -> tuple[dict[str, np.ndarray], dict]:

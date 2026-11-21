@@ -16,6 +16,27 @@
     <div class="note">of our loss also in Hansen; we find {% if a.hansen_found_by_ours is not none %}{{ "%.0f" | format(a.hansen_found_by_ours * 100) }} %{% else %}–{% endif %} of Hansen's</div></div>
 </div>
 
+{% set dw = f.dynamic_world %}
+<section class="card" style="margin-bottom:18px">
+  <h2>Third check: Google Dynamic World</h2>
+  {% if dw and dw.built %}
+  <p>Dynamic World V1 gives a 10 m "trees" probability for every Sentinel-2 image. Mean of summer {{ f.before_year }} ({{ dw.images_before }} images)
+    vs summer {{ f.after_year }} ({{ dw.images_after }} images); a forest pixel counts as Dynamic World loss when "trees" was ≥ {{ "%.0f" | format(dw.settings.trees_min * 100) }} %
+    before and fell by more than {{ "%.0f" | format(dw.settings.drop_threshold * 100) }} points.</p>
+  <div class="tw"><table class="t">
+    <tr><th>Dynamic World loss</th><th>Our NDVI loss also in DW</th><th>DW loss also in ours</th><th>Hansen loss also in DW</th><th>Sites where DW agrees</th></tr>
+    <tr><td class="num">{{ "%.1f" | format(dw.dw_loss_ha) }} ha</td>
+      <td class="num">{{ "%.1f %%" | format(dw.ours_confirmed_by_dw * 100) if dw.ours_confirmed_by_dw is not none else "–" }}</td>
+      <td class="num">{{ "%.1f %%" | format(dw.dw_found_by_ours * 100) if dw.dw_found_by_ours is not none else "–" }}</td>
+      <td class="num">{{ "%.1f %%" | format(dw.hansen_confirmed_by_dw * 100) if dw.hansen_confirmed_by_dw is not none else "–" }}</td>
+      <td class="num">{{ dw.patches_with_dw_majority }} of {{ d.patch_count }} (≥ half the site); {{ dw.patches_with_any_dw }} partly</td></tr>
+  </table></div>
+  <p class="small">Dynamic World is a machine-learning land-cover product; its probabilities are not calibrated tree cover. Agreement is counted only where all three could be judged.</p>
+  {% else %}
+  <p><strong>Not built.</strong> {{ dw.why if dw else "No Dynamic World result in the cached files." }}</p>
+  {% endif %}
+</section>
+
 <div class="grid g2" style="margin-bottom:18px">
   <section class="card">
     <h2>What the numbers mean</h2>
@@ -43,20 +64,30 @@
     <h2>Sites ranked for ranger visits ({{ d.patch_count }} sites ≥ {{ d.settings.min_patch }} ha)</h2>
     <span class="small">Download: <a href="/shinghar/files/forest_patches.csv">CSV</a> · <a href="/shinghar/files/forest_patches.geojson">GeoJSON</a></span>
   </div>
-  <table class="t">
-    <tr><th>Rank</th><th>Priority</th><th>Area</th><th>Found by</th><th>Hansen year</th><th>Slope</th><th>Nearest village</th><th>To water</th><th>Location (lat, lon)</th></tr>
+  <div class="tw"><table class="t">
+    <tr><th>Rank</th><th>Priority</th><th>Risk to people below</th><th>Area</th><th>Found by</th><th>DW trees</th><th>Hansen year</th><th>Slope</th><th>Nearest village</th><th>To water</th><th>Location (lat, lon)</th></tr>
     {% for p in d.patches %}
     <tr><td class="num">{{ p.rank }}</td><td class="num"><span class="bar" style="width:{{ (p.rank_score * 0.6) | int }}px;background:var(--loss)"></span>{{ "%.0f" | format(p.rank_score) }}</td>
+      {% set sr = d.site_by_patch.get(p.patch_id) %}
+      <td>{% if sr %}<details><summary><span class="band {{ sr.band }}">{{ sr.band }}</span> <span class="num">{{ "%.0f" | format(sr.score) }}</span></summary>
+        <ul class="small">{% for t in sr.reasons %}<li>{{ t }}</li>{% endfor %}</ul></details>{% else %}<span class="small">not built</span>{% endif %}</td>
       <td class="num">{{ "%.2f" | format(p.area_ha) }} ha</td>
       <td>{{ {"both": "NDVI + Hansen", "ndvi_only": "our NDVI", "hansen_only": "Hansen"}[p.source] }}</td>
+      <td class="num small">{% if p.dw_trees_before is defined and p.dw_trees_before is not none %}{{ "%.0f" | format(p.dw_trees_before * 100) }} → {{ "%.0f" | format(p.dw_trees_after * 100) }} %{% else %}–{% endif %}</td>
       <td class="num">{{ p.hansen_main_year or "–" }}</td>
       <td class="num">{{ "%.0f°" | format(p.mean_slope_deg) if p.mean_slope_deg is not none else "–" }}</td>
       <td>{{ p.nearest_settlement }} <span class="num small">{{ "%.1f" | format(p.dist_settlement_m / 1000) }} km</span></td>
       <td class="num small">{{ "%.1f km" | format(p.dist_water_m / 1000) if p.dist_water_m is not none else "–" }}</td>
       <td class="num small">{{ p.lat }}, {{ p.lon }}</td></tr>
     {% endfor %}
-  </table>
+  </table></div>
   <p class="small">Priority = {% for k, w in d.settings.rank_weights.items() %}{{ k.replace("_", " ") }} {{ "%.0f" | format(w * 100) }} %{{ ", " if not loop.last }}{% endfor %},
-    each scaled 0–1 within the valley (nearness is 1 at the village, 0 at 5 km or more). To water = distance to surface water mapped by JRC (≥ 50 % of the time).</p>
+    each scaled 0–1 within the valley (nearness is 1 at the village, 0 at 5 km or more). To water = distance to surface water mapped by JRC (≥ 50 % of the time).
+    DW trees = Dynamic World mean "trees" probability in the site, summer {{ f.before_year }} → {{ f.after_year }}.</p>
+  {% if d.site_risk %}
+  <p class="small"><strong>Risk to people below</strong> (per site, same method as the village score, bands low &lt; 30 ≤ watch &lt; 60 ≤ high):
+    {% for k, w in d.site_risk.weights.items() %}{{ d.component_labels[k] }} {{ "%.0f" | format(w * 100) }} % ({{ d.site_risk.scales[k][0] | int }} → {{ d.site_risk.scales[k][1] | int }} {{ d.units[k] }}){{ "; " if not loop.last }}{% endfor %}.
+    Priority is for planning ranger visits (relative within the valley); risk uses fixed scales, so it can be compared across valleys.</p>
+  {% endif %}
 </section>
 {% endblock %}

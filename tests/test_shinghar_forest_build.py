@@ -36,3 +36,29 @@ def test_one_feature_per_patch_and_area_counted_once(tmp_path):
     p = feats[0]["properties"]
     assert p["area_ha"] == 2.0 and p["source"] == "ndvi_only" and p["mean_slope_deg"] == 30.0
     assert s["ours_loss_ha"] == 2.0 and s["hansen_loss_ha"] == 0.0
+
+
+def test_dynamic_world_check_on_the_same_grid(tmp_path):
+    from shinghar.forest_ee import DW_BANDS, _write
+    stack = tmp_path / "stack.tif"
+    write_stack(stack)
+    n = 60
+    before = np.full((n, n), 8000, dtype=np.int16)            # trees 0.8 everywhere
+    after = before.copy()
+    after[10:20, 10:20] = 2000                                # DW sees loss only in the first block
+    dw = tmp_path / "dw.tif"
+    _write(dw, np.stack([before, after]), DW_BANDS, 32643, 600000, 3930000, {"asset": "GOOGLE/DYNAMICWORLD/V1",
+           "dw_images_before": 3, "dw_images_after": 4})
+    s = forest_build.build(stack, [{"name": "V", "lon": 73.9, "lat": 35.5}], [], tmp_path / "out", dw_path=dw)
+    w = s["dynamic_world"]
+    assert w["built"] and w["dw_loss_ha"] == 1.0
+    assert w["ours_confirmed_by_dw"] == 0.5 and w["dw_found_by_ours"] == 1.0
+    p = json.loads((tmp_path / "out" / "forest_patches.geojson").read_text())["features"][0]["properties"]
+    assert p["dw_share"] == 0.5 and p["dw_trees_before"] == 0.8 and p["dw_trees_after"] == 0.5
+
+
+def test_without_dynamic_world_the_summary_says_not_built(tmp_path):
+    stack = tmp_path / "stack.tif"
+    write_stack(stack)
+    s = forest_build.build(stack, [{"name": "V", "lon": 73.9, "lat": 35.5}], [], tmp_path / "out")
+    assert s["dynamic_world"]["built"] is False and "no Dynamic World stack" in s["dynamic_world"]["why"]

@@ -28,7 +28,20 @@ SCALES = {
     "forest_loss_upslope": (0.0, 20.0),    # ha
     "loss_slope": (15.0, 35.0),            # degrees
 }
-UNITS = {"lake_growth": "%/yr", "lake_anomaly": "z", "flood_path": "m", "forest_loss_upslope": "ha", "loss_slope": "°"}
+# Per forest site (the brief: "per settlement (and per forest site)"): how much a loss site could matter for people
+# below it. Same fuse(), same bands; its own components.
+SITE_WEIGHTS = {
+    "site_area": 0.30,           # size of the loss patch, ha
+    "loss_slope": 0.30,          # its mean slope
+    "village_below": 0.30,       # distance to the nearest listed village LOWER than the site
+    "near_water": 0.10,          # distance to mapped surface water (soil and debris can reach a stream)
+}
+SCALES.update({
+    "site_area": (0.0, 10.0),              # ha
+    "village_below": (5_000.0, 250.0),     # metres, reversed: 1 at <= 250 m, 0 at >= 5 km
+    "near_water": (1_000.0, 50.0),         # metres, reversed
+})
+UNITS = {"site_area": "ha", "village_below": "m", "near_water": "m","lake_growth": "%/yr", "lake_anomaly": "z", "flood_path": "m", "forest_loss_upslope": "ha", "loss_slope": "°"}
 FOREST_RADIUS_M = 3000.0
 BANDS = ((60.0, "high"), (30.0, "watch"), (0.0, "low"))   # score >= 60 high, >= 30 watch, else low
 FAST_EXPANSION_PCT_PER_YR = 5.0                            # the glacier-layer "fast expansion" flag
@@ -100,6 +113,8 @@ def fuse(target: str, raw: dict[str, float | None], details: dict[str, str] | No
 
 
 def _fmt(name: str, v: float) -> str:
+    if name in ("village_below", "near_water"):
+        return f"{v / 1000:.1f} km" if v >= 1000 else f"{v:.0f} m"
     if name == "flood_path":
         if v < 30:
             return "on or next to (under 30 m from)"
@@ -119,7 +134,10 @@ _TEMPLATES = {
     "flood_path": "Houses of the village are {value} the downhill path water would take out of {detail_plain}.",
     "forest_loss_upslope": "{value} of vegetation loss in forest areas {detail}within {r:.0f} km upslope of the village "
                            "(satellite, 2019-2025; cause not known).",
-    "loss_slope": "The vegetation loss upslope is on steep ground (mean slope {value}), where bare soil sheds water and can slide.",
+    "site_area": "{value} of vegetation lost in this patch{detail_paren}.",
+    "village_below": "The nearest village below the site, {detail_plain}, is {value} away.",
+    "near_water": "Mapped surface water is {value} away, so loose soil and debris can reach a stream.",
+    "loss_slope": "The vegetation loss {detail}is on steep ground (mean slope {value}), where bare soil sheds water and can slide.",
 }
 
 
@@ -134,6 +152,7 @@ def reasons(result: RiskResult, max_reasons: int = 3) -> list[str]:
             if c.name == "lake_growth" and c.raw is not None and c.raw > FAST_EXPANSION_PCT_PER_YR else ""
         detail = (c.detail + " ") if c.detail else ""
         out.append(_TEMPLATES[c.name].format(value=_fmt(c.name, c.raw), detail=detail, detail_plain=c.detail, flag=flag,
+                                             detail_paren=f" ({c.detail})" if c.detail else "",
                                              r=FOREST_RADIUS_M / 1000) + f" (+{c.points:.0f} points)")
     if not out:
         out.append("None of the measured factors adds to the score at the moment.")

@@ -78,6 +78,7 @@ h3 { font-size: 16px; }
 .meter .high { background: var(--high); } .meter .watch { background: #e0a90f; } .meter .low { background: var(--low); }
 
 /* tables */
+.tw { overflow-x: auto; max-width: 100%; }
 table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.t th, table.t td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 table.t th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
