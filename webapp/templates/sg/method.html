@@ -26,7 +26,8 @@
       <li><strong>Screening, not forecasting.</strong> Weights and thresholds are judgement calls, not calibrated on past events. No field validation.</li>
       <li><strong>Clouds and snow:</strong> lake areas need clear, snow-free days, so the record is mostly June–October.</li>
       <li><strong>Resolution:</strong> 10 m Sentinel-2, 30 m DEM and Hansen, 100 m GHSL. Sites under {{ d.settings.min_patch }} ha are not reported.</li>
-      <li><strong>Vegetation loss ≠ deforestation:</strong> the cause is not known. Only {% if d.forest.agreement.ours_confirmed_by_hansen is not none %}{{ "%.1f" | format(d.forest.agreement.ours_confirmed_by_hansen * 100) }} %{% else %}–{% endif %} of our loss is also in Hansen.</li>
+      <li><strong>Vegetation loss ≠ deforestation:</strong> the cause is not known. Pixel agreement with Hansen is low ({% if d.forest.agreement.ours_confirmed_by_hansen is not none %}{{ "%.1f" | format(d.forest.agreement.ours_confirmed_by_hansen * 100) }} %{% else %}–{% endif %} of our loss) because Hansen is 30 m and yearly and misses small clearings; per site, Dynamic World and a by-eye check confirm many sites (Forest page).</li>
+      <li><strong>Outflow-path part of the score</strong> falls with the distance along the path from the lake: full points within 5 km, none beyond 50 km (changed 2026-11-21 so that distant villages no longer score like near ones).</li>
       <li><strong>Downhill path is one line</strong>, not a flood model: no depth, volume or timing.</li>
       <li><strong>Lakes are unnamed</strong> in OpenStreetMap; village names and Urdu spellings need local checking.</li>
       <li><strong>Urdu/Pashto</strong> text and voices are machine-generated; the Pashto voice is an Afghan voice and may not match Swat speech.</li>

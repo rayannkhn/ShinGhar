@@ -1,0 +1,233 @@
+{% extends "sg/base.html" %}
+{% block title %}Story{% endblock %}
+{% block bodyclass %}story{% endblock %}
+{% block main %}
+{% set f = d.forest %}
+{% if not st or not st.images %}
+<section class="card"><h2>Not built</h2><p>The story images (<span class="num">data/shinghar/story/</span>) do not exist yet.
+  Run <span class="num">.venv/bin/python -m shinghar.story_images --fetch</span>. The Expert view tabs above work without them.</p></section>
+{% else %}
+{% set im = st.images %}
+
+<section class="st-sec st-intro" id="intro" data-step="0">
+  <div class="st-kicker">ShinGhar · {{ d.valley.valley }} valley, {{ d.valley.district }}</div>
+  <h1 class="st-title">Which mountain villages should be checked first,<br>and why?</h1>
+  <p class="st-lead">We combine satellite photos of glacial lakes and forest slopes into one list of places to check, with reasons anyone can read,
+    and a warning message in Urdu and Pashto that an expert must approve. It is a screening tool, not a forecast.</p>
+  <div class="st-tiles">
+    {% for t in st.tiles %}<div class="st-tile"><div class="v">{{ t.value }}</div><div class="t">{{ t.text }}</div></div>{% endfor %}
+  </div>
+  <button class="st-start" type="button" id="demo-start">▶ Start demo</button>
+</section>
+
+<section class="st-sec" id="place" data-step="1">
+  <div class="st-num">1 · The place</div>
+  <div class="st-two">
+    <figure class="st-map">
+      <img src="/shinghar/img/{{ im.valley.files.after }}" alt="True-colour satellite image of the {{ d.valley.valley }} valley, summer {{ im.source.after_year }}" width="{{ im.valley.width }}" height="{{ im.valley.height }}">
+      {% set W = im.valley.width %}{% set fs = (W / 52) | round(0) %}
+      <svg viewBox="0 0 {{ im.valley.width }} {{ im.valley.height }}" aria-hidden="true">
+        {% for s in im.valley.sites %}<circle cx="{{ s.xy[0] }}" cy="{{ s.xy[1] }}" r="{{ fs * 0.32 }}" class="o-site"/>{% endfor %}
+        {% for s in im.valley.sites if s.rank <= 3 %}<text x="{{ s.xy[0] + fs * 0.5 }}" y="{{ s.xy[1] + fs * 0.35 }}" font-size="{{ fs * 0.85 }}" class="o-sitelab">site {{ s.rank }}</text>{% endfor %}
+        {% for l in im.valley.lakes %}<circle cx="{{ l.xy[0] }}" cy="{{ l.xy[1] }}" r="{{ fs * 0.55 }}" class="o-lake"/>
+          <text x="{{ l.xy[0] + fs * 0.8 }}" y="{{ l.xy[1] + fs * 0.35 }}" font-size="{{ fs }}" class="o-lab">{{ l.name.split(" (")[0] }}</text>{% endfor %}
+        {% for v in im.valley.villages %}<circle cx="{{ v.xy[0] }}" cy="{{ v.xy[1] }}" r="{{ fs * 0.4 }}" class="o-vil"/>
+          {% if v.side == "right" %}<text x="{{ v.xy[0] + fs * 0.7 }}" y="{{ v.xy[1] + fs * 0.35 }}" font-size="{{ fs * 0.9 }}" class="o-lab">{{ v.name }}</text>
+          {% else %}<text x="{{ v.xy[0] - fs * 0.7 }}" y="{{ v.xy[1] + fs * 0.35 }}" font-size="{{ fs * 0.9 }}" text-anchor="end" class="o-lab">{{ v.name }}</text>{% endif %}{% endfor %}
+      </svg>
+      <figcaption>Sentinel-2 satellite, summer {{ im.source.after_year }} ({{ im.source.images_after }} photos combined, clouds and snow removed) · about {{ (im.valley.width * im.valley.scale_m_per_px / 1000) | round(0) | int }} km across</figcaption>
+    </figure>
+    <div class="st-side">
+      <p class="st-big">A high valley of the Swat River in Khyber Pakhtunkhwa: forest on steep slopes, glacial lakes above 3,000 m,
+        and {{ d.risk.results | length }} villages along the rivers below.</p>
+      <ul class="st-legend">
+        <li><span class="k lake"></span>{{ im.valley.lakes | length }} glacial lakes we measure</li>
+        <li><span class="k vil"></span>{{ im.valley.villages | length }} villages</li>
+        <li><span class="k site"></span>{{ im.valley.sites | length }} places where forest lost its green since {{ f.before_year }}</li>
+      </ul>
+      {% if st.facts %}<dl class="st-facts">{% for k, v in st.facts %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}</dl>{% endif %}
+      <p class="st-note">In August 2022, flash floods hit this part of Khyber Pakhtunkhwa:
+        <a href="{{ st.flood_source.url }}" target="_blank" rel="noopener">“{{ st.flood_source.text }}”</a> ({{ st.flood_source.by }}).</p>
+    </div>
+  </div>
+</section>
+
+<section class="st-sec" id="sees" data-step="2">
+  <div class="st-num">2 · What the satellite sees</div>
+  <h2 class="st-h">Forest slopes that turned bare</h2>
+  <div class="st-sites">
+    {% for s in st.sites %}
+    <figure class="st-site">
+      <div class="ba" style="--pos:50%">
+        <img class="after" src="/shinghar/img/{{ s.files.after }}" alt="Site {{ s.rank }}, summer {{ f.after_year }}">
+        <img class="before" src="/shinghar/img/{{ s.files.before }}" alt="Site {{ s.rank }}, summer {{ f.before_year }}">
+        <span class="tag l">{{ f.before_year }}</span><span class="tag r">{{ f.after_year }}</span>
+        <div class="handle"></div>
+        <input type="range" min="0" max="100" value="50" aria-label="Drag to compare {{ f.before_year }} and {{ f.after_year }}">
+      </div>
+      <figcaption><strong>Site {{ s.rank }}.</strong> {{ s.sentence }}
+        {% if s.seen %}<span class="seen">What you can see: {{ s.seen }}</span>{% endif %}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  <p class="st-small">Drag the line to compare. Each picture is {{ (st.sites[0].chip_m / 1000) if st.sites else "" }} km across; the yellow line is the area our method flagged.
+    Losing green can also mean a landslide, a debris flow or new construction, so every site still needs a ranger visit.
+    {% if st.notes_by %}“What you can see”: {{ st.notes_by }}{% endif %}</p>
+
+</section>
+
+<section class="st-sec" id="lake" data-step="3">
+  <div class="st-num">2 · What the satellite sees: a glacial lake</div>
+  {% if st.lake %}{% set L = st.lake %}
+  <h2 class="st-h">{{ L.name.split(" (")[0] }}, {{ L.name.split("(")[1].rstrip(")") if "(" in L.name else "" }}</h2>
+  <div class="st-lake">
+    {% for y, info in L.years.items() %}{% if info %}
+    <figure><img src="/shinghar/img/{{ info.file }}" alt="{{ L.name }} on {{ info.date }} with our measured outline">
+      <figcaption>{{ info.date }} · we measured <strong>{{ "%.1f" | format(info.db_area_ha) }} ha</strong> (yellow line)</figcaption></figure>
+    {% endif %}{% endfor %}
+    <figure class="st-chart">{{ L.chart | safe }}
+      <figcaption>Summer size each year (middle value of the clear July–September photos)</figcaption></figure>
+  </div>
+  <p class="st-big">{% if L.stable %}Stable: about {{ L.typical_ha }} ha every summer since {{ L.first }}. Good news, and we keep watching.
+    {% else %}Summer size changed by {{ "%+.1f" | format(L.trend.growth_pct_per_yr) }} % a year since {{ L.first }}; we keep watching.{% endif %}</p>
+  <p class="st-finding">{% if st.lakes_fast == 0 %}Finding: none of the {{ d.glacier | length }} lakes is growing fast. Each changed by at most
+    {{ "%.1f" | format(st.lakes_max_change) }} % a year; we raise a flag at 5 % a year.{% else %}Finding: {{ st.lakes_fast }} lake(s) growing faster than 5 % a year.{% endif %}</p>
+  {% endif %}
+</section>
+
+<section class="st-sec" id="who" data-step="4">
+  <div class="st-num">3 · Who should be checked first</div>
+  <p class="st-big">{% if st.bands.high + st.bands.watch == 0 %}Today no village reaches “watch”. If rangers have time, these five come first:
+    {% else %}{{ st.bands.high }} village(s) “high” and {{ st.bands.watch }} “watch”. Start here:{% endif %}</p>
+  <div class="st-cards">
+    {% for v in st.villages %}
+    <div class="st-card {{ v.band }}">
+      <div class="top"><span class="rank">{{ loop.index }}</span><span class="name">{{ v.name }}</span>
+        <span class="band {{ v.band }}">{{ v.band }}</span></div>
+      <p>{{ v.reason }}</p>
+      <div class="score">score {{ "%.1f" | format(v.score) }} of 100</div>
+    </div>
+    {% endfor %}
+  </div>
+  <h2 class="st-h" style="margin-top:26px">What adds up to each score (0–100)</h2>
+  <div class="st-bars">
+    {% for v in st.breakdown %}
+    <div class="row"><span class="nm">{{ v.name }}</span>
+      <span class="track">{% for p in v.parts %}<span class="seg {{ p.key }}" style="width:{{ p.points }}%" title="{{ p.label }}: {{ '%.1f' | format(p.points) }} points"></span>{% endfor %}
+        <span class="mark" style="left:30%" title="watch starts at 30"></span></span>
+      <span class="sc">{{ "%.1f" | format(v.score) }}</span></div>
+    {% endfor %}
+  </div>
+  <div class="st-keys">{% for k, lab in st.plain_parts.items() %}<span><i class="seg {{ k }}"></i>{{ lab }}</span>{% endfor %}<span><i class="markkey"></i>“watch” starts at 30</span></div>
+  <p class="st-small">Being on a lake's water path counts more the closer the village is to the lake: full points within {{ st.path_rule[1] | int }} km, none beyond {{ st.path_rule[0] | int }} km.
+    Fixed weights; the Expert view shows every number.</p>
+</section>
+
+<section class="st-sec" id="next" data-step="5">
+  <div class="st-num">4 · What happens next</div>
+  {% set a = st.alert %}
+  {% if a %}
+  {% if a.example %}<p class="st-example">Example only: {{ a.village }} is “{{ a.band }}”, so no real alert is needed today. This shows how one would flow.</p>{% endif %}
+  <div class="st-flow" data-alert="{{ a.alert_id }}" data-state="{{ a.state }}">
+    <div class="st-step"><div class="n">1</div><h3>Briefing for officials</h3>
+      <p class="mini">To: {{ st.alert_to }}</p>
+      <p><strong>{{ a.village }}</strong>: score {{ "%.1f" | format(a.score) }}/100, {{ a.band }}.</p>
+      <ul>{% for r in st.alert_reasons %}<li>{{ r }}</li>{% endfor %}</ul></div>
+    <div class="st-step"><div class="n">2</div><h3>Message for the village</h3>
+      <p class="rtl" lang="ur">{{ a.message_ur }}</p>
+      <p class="mini">Urdu above. Pashto: <span class="rtl-inline" lang="ps">{{ a.message_ps[:90] }}…</span></p>
+      <p class="mini">{{ d.lang_note }}</p></div>
+    <div class="st-step"><div class="n">3</div><h3>Listen</h3>
+      {% if a.audio_ur %}<p class="mini">Urdu</p><audio controls preload="metadata" src="/shinghar/{{ a.audio_ur }}"></audio>{% endif %}
+      {% if a.audio_ps %}<p class="mini">Pashto</p><audio controls preload="metadata" src="/shinghar/{{ a.audio_ps }}"></audio>{% endif %}
+      {% if not a.audio_ur and not a.audio_ps %}<p>Voice: not built.</p>{% endif %}</div>
+    <div class="st-step"><div class="n">4</div><h3>Expert review</h3>
+      <input class="txt" id="rev-name" placeholder="Reviewer name" value="">
+      <button class="btn primary" type="button" id="rev-btn">Reviewed by expert</button>
+      <button class="btn" type="button" id="ready-btn">Mark ready</button>
+      <p class="mini" id="flow-msg"></p></div>
+    <div class="st-step"><div class="n">5</div><h3>Status</h3>
+      <div class="st-states"><span data-s="draft">draft</span><span data-s="reviewed">reviewed</span><span data-s="ready">ready</span></div>
+      <p class="st-notsent">Not sent. This prototype has no sending code.</p>
+      <button class="linkbtn" type="button" id="reset-btn">reset demo</button></div>
+  </div>
+  {% else %}<p class="st-big">No alert is drafted.</p>{% endif %}
+</section>
+
+<div class="st-demobar" id="demobar" hidden>
+  <button type="button" id="demo-prev" aria-label="Previous">◀</button>
+  <span class="dots">{% for n in ["Start", "1 Place", "2 Forest", "2 Lake", "3 Who first", "4 Next"] %}<span data-i="{{ loop.index0 }}">{{ n }}</span>{% endfor %}</span>
+  <button type="button" id="demo-next" aria-label="Next">▶</button>
+  <button type="button" id="demo-exit" aria-label="Exit demo">✕</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // before/after sliders
+  document.querySelectorAll(".ba").forEach(function (b) {
+    var r = b.querySelector("input");
+    r.addEventListener("input", function () { b.style.setProperty("--pos", r.value + "%"); });
+  });
+  // demo mode: one section per step, keyboard or buttons
+  var secs = Array.prototype.slice.call(document.querySelectorAll(".st-sec"));
+  var bar = document.getElementById("demobar"), i = 0;
+  function go(n) {
+    i = Math.max(0, Math.min(secs.length - 1, n));
+    secs[i].scrollIntoView({behavior: "smooth", block: "start"});
+    bar.querySelectorAll(".dots span").forEach(function (s, k) { s.classList.toggle("on", k === i); });
+  }
+  function start() { document.body.classList.add("demo"); bar.hidden = false; go(1); }
+  function stop() { document.body.classList.remove("demo"); bar.hidden = true; }
+  var sb = document.getElementById("demo-start");
+  if (sb) sb.addEventListener("click", start);
+  if (bar) {
+    document.getElementById("demo-next").addEventListener("click", function () { go(i + 1); });
+    document.getElementById("demo-prev").addEventListener("click", function () { go(i - 1); });
+    document.getElementById("demo-exit").addEventListener("click", stop);
+    bar.querySelectorAll(".dots span").forEach(function (s, k) { s.addEventListener("click", function () { go(k); }); });
+    document.addEventListener("keydown", function (e) {
+      if (!document.body.classList.contains("demo") || e.target.tagName === "INPUT") return;
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].indexOf(e.key) >= 0) { e.preventDefault(); go(i + 1); }
+      if (["ArrowLeft", "ArrowUp", "PageUp"].indexOf(e.key) >= 0) { e.preventDefault(); go(i - 1); }
+      if (e.key === "Escape") stop();
+    });
+  }
+  // alert flow: the same review / ready / reset actions as the Alerts page, without leaving the story
+  var flow = document.querySelector(".st-flow");
+  if (!flow) return;
+  var id = flow.dataset.alert, msg = document.getElementById("flow-msg");
+  function show(state) {
+    flow.dataset.state = state;
+    flow.querySelectorAll(".st-states span").forEach(function (s) {
+      var order = ["draft", "reviewed", "ready"];
+      s.className = s.dataset.s === state ? "now" : (order.indexOf(s.dataset.s) < order.indexOf(state) ? "done" : "");
+    });
+    document.getElementById("rev-btn").disabled = state !== "draft";
+    document.getElementById("ready-btn").disabled = state !== "reviewed";
+  }
+  function post(action, body) {
+    return fetch("/shinghar/alerts/" + id + "/" + action, {method: "POST", body: body || "",
+      headers: {"content-type": "application/x-www-form-urlencoded"}}).then(function (r) {
+        if (!r.ok) return r.json().then(function (j) { throw new Error(j.detail || r.status); });
+      });
+  }
+  document.getElementById("rev-btn").addEventListener("click", function () {
+    var name = document.getElementById("rev-name").value.trim();
+    if (!name) { msg.textContent = "Enter the reviewer's name first."; return; }
+    post("review", "reviewer=" + encodeURIComponent(name)).then(function () { msg.textContent = "Reviewed by " + name + "."; show("reviewed"); })
+      .catch(function (e) { msg.textContent = e.message; });
+  });
+  document.getElementById("ready-btn").addEventListener("click", function () {
+    post("ready").then(function () { msg.textContent = "Marked ready. Nothing was sent."; show("ready"); })
+      .catch(function (e) { msg.textContent = e.message; });
+  });
+  document.getElementById("reset-btn").addEventListener("click", function () {
+    post("reset").then(function () { msg.textContent = ""; show("draft"); });
+  });
+  show(flow.dataset.state);
+})();
+</script>
+{% endblock %}

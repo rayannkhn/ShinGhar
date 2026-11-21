@@ -11,7 +11,7 @@ def test_weights_sum_to_one_and_every_component_has_a_scale():
 
 @pytest.mark.parametrize("name,value,expected", [
     ("lake_growth", -3.0, 0.0), ("lake_growth", 5.0, 0.5), ("lake_growth", 25.0, 1.0),
-    ("flood_path", 20_000.0, 0.0), ("flood_path", 500.0, 1.0), ("flood_path", 5250.0, 0.5),
+    ("flood_path", 60.0, 0.0), ("flood_path", 5.0, 1.0), ("flood_path", 27.5, 0.5), ("flood_path", 2.0, 1.0),
     ("loss_slope", 25.0, 0.5), ("lake_anomaly", None, None),
 ])
 def test_scale(name, value, expected):
@@ -28,7 +28,7 @@ def test_all_maximal_gives_100_high():
 
 
 def test_hand_computed_score_and_contributions():
-    res = r.fuse("v", {"lake_growth": 5.0, "lake_anomaly": None, "flood_path": 5250.0,
+    res = r.fuse("v", {"lake_growth": 5.0, "lake_anomaly": None, "flood_path": 27.5,
                        "forest_loss_upslope": 10.0, "loss_slope": 15.0})
     pts = {c.name: c.points for c in res.components}
     # 25*0.5 + 0 (missing) + 20*0.5 + 25*0.5 + 15*0
@@ -38,12 +38,12 @@ def test_hand_computed_score_and_contributions():
 
 
 def test_reasons_come_from_numbers_and_name_missing_data():
-    res = r.fuse("v", {"lake_growth": 7.2, "lake_anomaly": None, "flood_path": 800.0,
+    res = r.fuse("v", {"lake_growth": 7.2, "lake_anomaly": None, "flood_path": 8.0,
                        "forest_loss_upslope": 4.0, "loss_slope": 31.0},
                  details={"lake_growth": "Lake X", "flood_path": "Lake X"})
     text = " ".join(res.reasons)
     assert "+7.2 %/yr" in text and "fast-expansion flag" in text
-    assert "Houses of the village are 800 m from the downhill path water would take out of Lake X." in text
+    assert "on the downhill path of water from Lake X, 8 km below the lake" in text
     assert len(res.reasons) == 4          # 3 top reasons + the missing-data note
     assert res.reasons[-1].startswith("No data for: lake anomaly")
 
@@ -83,3 +83,12 @@ def test_site_without_a_village_below_is_not_applicable_not_missing():
                  not_applicable={"village_below": "no listed village is lower than this site"})
     assert res.not_applicable == ["village_below"] and res.missing == [] and res.coverage == 1.0
     assert any(r.startswith("Does not apply: village below") for r in res.reasons)
+
+
+def test_outflow_path_points_fall_with_distance_along_the_path():
+    # the reason for the 2026-11-21 change: 24 km and 38 km down the path must not score the same
+    near = r.fuse("v", {"flood_path": 24.0}).components
+    far = r.fuse("v", {"flood_path": 38.0}).components
+    pn = next(c.points for c in near if c.name == "flood_path")
+    pf = next(c.points for c in far if c.name == "flood_path")
+    assert pn > pf > 0 and pn == round(20 * (50 - 24) / 45, 1) and pf == round(20 * (50 - 38) / 45, 1)

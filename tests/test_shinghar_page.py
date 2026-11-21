@@ -52,7 +52,7 @@ def write_cache(d):
 
 def test_page_says_not_built_without_cached_files(source_db, tmp_path, monkeypatch):
     c = make_client(source_db, tmp_path, monkeypatch, tmp_path / "empty")
-    for url in ("/shinghar", "/shinghar/villages", "/shinghar/forest", "/shinghar/lakes", "/shinghar/alerts", "/shinghar/method"):
+    for url in ("/shinghar", "/shinghar/overview", "/shinghar/villages", "/shinghar/forest", "/shinghar/lakes", "/shinghar/alerts", "/shinghar/method"):
         html = c.get(url).text
         assert "Hazard screening, not a forecast." in html and "not sent to anyone" in html, url
         assert "Not built" in html, url
@@ -64,7 +64,7 @@ def test_page_shows_cached_numbers_and_review_gate(source_db, tmp_path, monkeypa
     res = write_cache(d)
     assert res.band == "high"
     c = make_client(source_db, tmp_path, monkeypatch, d)
-    over = c.get("/shinghar").text
+    over = c.get("/shinghar/overview").text
     assert "Testkot" in over and "/static/shinghar.css" in over and "SailAb GLOF</a>" not in over   # own layout
     assert "1 / 0" in over                                  # villages high / watch
     vill = c.get("/shinghar/villages").text
@@ -98,3 +98,61 @@ def test_file_routes_only_serve_known_files(source_db, tmp_path, monkeypatch):
     assert c.get("/shinghar/files/valley.json").status_code == 404
     assert c.get("/shinghar/audio/../alerts.json").status_code == 404
 
+
+
+def write_story(d):
+    """Minimal story images metadata (the images themselves are not needed to render the page)."""
+    st = d / "story"
+    st.mkdir(parents=True, exist_ok=True)
+    (st / "story_images.json").write_text(json.dumps({
+        "source": {"before_year": "2019", "after_year": "2025", "images_before": 5, "images_after": 6},
+        "valley": {"files": {"before": "valley_2019.jpg", "after": "valley_2025.jpg"}, "width": 100, "height": 100,
+                   "scale_m_per_px": 10.0, "lakes": [], "villages": [{"name": "Testkot", "xy": [50, 50]}],
+                   "sites": [{"rank": 1, "area_ha": 1.23, "xy": [40, 40]}]},
+        "sites": [{"rank": 1, "patch_id": 7, "files": {"before": "s_2019.jpg", "after": "s_2025.jpg"}, "chip_m": 1200}],
+        "lake": None}))
+    (st / "valley_2025.jpg").write_bytes(b"\xff\xd8\xff")
+
+
+def test_story_page_plain_language_and_demo(source_db, tmp_path, monkeypatch):
+    d = tmp_path / "sg"
+    write_cache(d)
+    c = make_client(source_db, tmp_path, monkeypatch, d)
+    assert "Not built" in c.get("/shinghar").text           # no story images yet: says so
+    write_story(d)
+    html = c.get("/shinghar").text
+    assert "Start demo" in html and "Which mountain villages should be checked first" in html
+    assert "slope sites flagged for ranger visits" in html and "villages screened" in html
+    assert 'id="place"' in html and 'id="sees"' in html and 'id="who"' in html and 'id="next"' in html
+    # plain language: no jargon on the landing page (it lives in the Expert view)
+    import re
+    text = re.sub(r"<script.*?</script>|<[^>]+>", " ", html, flags=re.S)
+    for jargon in ("NDVI", "GHSL", "Dynamic World", "z-score", "NDWI", "Hansen"):
+        assert jargon not in text, jargon
+    assert "1.2 ha of forest lost its green between 2019 and 2025" in html          # site sentence from the numbers
+    assert c.get("/shinghar/img/valley_2025.jpg").status_code == 200
+    assert c.get("/shinghar/img/../alerts.json").status_code == 404
+
+
+def test_reset_puts_an_alert_back_to_draft_and_keeps_history(source_db, tmp_path, monkeypatch):
+    d = tmp_path / "sg"
+    write_cache(d)
+    c = make_client(source_db, tmp_path, monkeypatch, d)
+    c.post("/shinghar/alerts/testkot-high/review", content="reviewer=Dr+Test",
+           headers={"content-type": "application/x-www-form-urlencoded"}, follow_redirects=False)
+    assert c.post("/shinghar/alerts/testkot-high/reset", follow_redirects=False).status_code == 303
+    stored = A.AlertStore(d / "alerts.json").load()["testkot-high"]
+    assert stored.state == "draft" and [h["event"] for h in stored.history] == ["reviewed by expert", "reset to draft (demo)"]
+
+
+def test_plain_sentences_use_the_villages_own_numbers():
+    from webapp.shinghar_page import plain_village_reason, site_sentence
+    comp = lambda n, raw, pts: {"name": n, "raw": raw, "points": pts, "weight": .2}
+    r = {"components": [comp("forest_loss_upslope", 5.76, 7.2), comp("loss_slope", 35.7, 15.0), comp("flood_path", 34.2, 7.0)]}
+    assert plain_village_reason(r) == "5.8 ha of forest on the slopes above the village lost its green since 2019, on ground about 36° steep."
+    r = {"components": [comp("flood_path", 9.9, 17.8), comp("forest_loss_upslope", 3.73, 4.7)]}
+    assert plain_village_reason(r) == "It lies 10 km downstream of a glacial lake, on the path its water would take."
+    assert plain_village_reason({"components": []}).startswith("Nothing we measure adds to the score")
+    p = {"area_ha": 2.94, "mean_slope_deg": 38.5, "nearest_settlement": "Asharopatoi", "dist_settlement_m": 3133, "mean_elev_m": 2385}
+    s = site_sentence(p, {"Asharopatoi": {"elev_m": 1851}}).format(b=2019, a=2025)
+    assert s == "2.9 ha of forest lost its green between 2019 and 2025, on a 38° slope, 3.1 km from Asharopatoi and 530 m above it."

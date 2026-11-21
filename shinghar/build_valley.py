@@ -144,11 +144,10 @@ def build(skip_forest=False, skip_voice=False) -> dict:
                                  "height_above_path_m": round(float(above[j])), "built_cells_checked": int(mine.sum())})
         raw, det, na = {}, {}, {}
         if upstream:
-            near = min(upstream, key=lambda u: u["dist_to_path_m"])
-            raw["flood_path"] = near["dist_to_path_m"]
-            ups_sorted = sorted(upstream, key=lambda u: u["along_km"])
-            names = [f"{gl[u['code']]['name'].split(' (')[0]} ({u['along_km']:.0f} km upstream)" for u in ups_sorted]
-            det["flood_path"] = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+            # Distance DOWN the path from the nearest monitored lake (km): closer = more points (risk.SCALES)
+            near = min(upstream, key=lambda u: u["along_km"])
+            raw["flood_path"] = near["along_km"]
+            det["flood_path"] = gl[near["code"]]["name"].split(" (")[0]
             growths = [(gl[u["code"]]["trend"]["growth_pct_per_yr"], u["code"]) for u in upstream
                        if gl[u["code"]]["trend"]["growth_pct_per_yr"] is not None]
             if growths:
@@ -219,15 +218,19 @@ def build(skip_forest=False, skip_voice=False) -> dict:
     as_of = (f"built {datetime.now(timezone.utc):%Y-%m-%d}; newest lake image {newest}; "
              f"vegetation change summer {forest.get('before_year')} vs {forest.get('after_year')}")
     alerts = {}
-    for r in results:
-        if r["band"] == "low":
-            continue
+    to_draft = [(r, False) for r in results if r["band"] != "low"]
+    if not to_draft and results and results[0]["score"] > 0:
+        to_draft = [(results[0], True)]    # no village needs an alert: one clearly labelled example for the demo
+    for r, example in to_draft:
         v = r["village"]
-        aid = f"{v['name'].lower().replace(' ', '-')}-{r['band']}"
+        aid = f"{v['name'].lower().replace(' ', '-')}-{'example' if example else r['band']}"
         brief = A.briefing_en(f"{v['name']} ({v['area']})", f"{cfg['tehsil']}, {cfg['district']}", r["score"], r["band"],
-                              r["coverage"], r["reasons"], as_of)
-        al = A.Alert(aid, v["name"], r["band"], r["score"], brief, A.community_message("ur", r["band"], v["name_local"]),
-                     A.community_message("ps", r["band"], v["name_local"]))
+                              r["coverage"], r["reasons"], as_of, example=example)
+        facts = A.top_facts(r["components"])
+        rk = R.FOREST_RADIUS_M / 1000
+        al = A.Alert(aid, v["name"], r["band"], r["score"], brief,
+                     A.community_message("ur", r["band"], v["name_local"], facts, rk, example),
+                     A.community_message("ps", r["band"], v["name_local"], facts, rk, example), example=example)
         prev = old.get(aid)
         if prev and (prev.briefing_en, prev.message_ur, prev.message_ps) == (al.briefing_en, al.message_ur, al.message_ps):
             al.state, al.history = prev.state, prev.history
@@ -242,6 +245,9 @@ def build(skip_forest=False, skip_voice=False) -> dict:
                 setattr(al, f"audio_{lang}", f"audio/{mp3.name}")
         alerts[aid] = al
     store.save(alerts)
+    for f in (OUT / "audio").glob("*"):          # voice files of alerts that no longer exist would be stale
+        if f.suffix in (".mp3", ".txt") and f.stem.rsplit("_", 1)[0] not in alerts:
+            f.unlink()
     log["finished"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     log["alerts"] = {a.alert_id: a.state for a in alerts.values()}
     (OUT / "build_log.json").write_text(json.dumps(log, indent=1, default=str))

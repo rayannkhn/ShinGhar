@@ -5,12 +5,13 @@
   <div><h1>Alerts: drafts for expert review</h1>
     <div class="muted">Written from fixed templates using only the numbers and reasons on the Villages page. An expert reviews every high alert. Nothing is sent.</div></div>
 </div>
-{% if not d.alerts %}<section class="card"><p>No village is in the watch or high band, so no alert is drafted.</p></section>{% endif %}
+{% if not d.alerts or d.alerts | selectattr("example") | list %}<section class="card note-box"><p><strong>No village is in the watch or high band today, so no real alert is needed.</strong>
+  {% if d.alerts %}The alert below is a clearly labelled <em>example</em> for the highest-scoring village, to show how an alert would flow.{% endif %}</p></section>{% endif %}
 <div class="stack">
 {% for a in d.alerts %}
 <section class="card alert-card {{ a.band }}" id="alert-{{ a.alert_id }}">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-    <h2 style="margin:0">{{ a.village }} <span class="band {{ a.band }}">{{ a.band }}</span> <span class="num small">{{ "%.0f" | format(a.score) }}/100</span></h2>
+    <h2 style="margin:0">{% if a.example %}<span class="band example">example</span> {% endif %}{{ a.village }} <span class="band {{ a.band }}">{{ a.band }}</span> <span class="num small">{{ "%.0f" | format(a.score) }}/100</span></h2>
     <div class="steps">
       {% set order = ["draft", "reviewed", "ready"] %}{% set now = order.index(a.state) %}
       {% for st in order %}<span class="{{ 'now' if loop.index0 == now else ('done' if loop.index0 < now else '') }}">{{ st }}</span>{% if not loop.last %}<span class="arrow">→</span>{% endif %}{% endfor %}
@@ -21,10 +22,10 @@
   <div class="grid g2" style="margin-top:10px">
     <div><strong>Urdu</strong> <span class="small">{{ d.lang_note }}</span>
       <p class="rtl" lang="ur">{{ a.message_ur }}</p>
-      {% if a.audio_ur %}<audio controls preload="none" src="/shinghar/{{ a.audio_ur }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
+      {% if a.audio_ur %}<audio controls preload="metadata" src="/shinghar/{{ a.audio_ur }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
     <div><strong>Pashto</strong> <span class="small">{{ d.lang_note }}</span>
       <p class="rtl" lang="ps">{{ a.message_ps }}</p>
-      {% if a.audio_ps %}<audio controls preload="none" src="/shinghar/{{ a.audio_ps }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
+      {% if a.audio_ps %}<audio controls preload="metadata" src="/shinghar/{{ a.audio_ps }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
     {% if a.state == "draft" %}

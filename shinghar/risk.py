@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 WEIGHTS = {
     "lake_growth": 0.25,         # upstream lake area growth, %/yr (summer median trend)
     "lake_anomaly": 0.15,        # latest seasonal z-score of an upstream lake (only "bigger than usual" counts)
-    "flood_path": 0.20,          # how close the village is to an upstream lake's downhill outflow path
+    "flood_path": 0.20,          # village ON an upstream lake's downhill path: how far down that path it is (km)
     "forest_loss_upslope": 0.25, # tree cover loss (ha) within FOREST_RADIUS_M and above the village
     "loss_slope": 0.15,          # mean slope of that loss (steeper = more runoff / landslide potential)
 }
@@ -24,7 +24,7 @@ WEIGHTS = {
 SCALES = {
     "lake_growth": (0.0, 10.0),            # %/yr
     "lake_anomaly": (0.0, 3.0),            # z-score
-    "flood_path": (10_000.0, 500.0),       # metres: 0 at >= 10 km, 1 at <= 500 m (reversed scale)
+    "flood_path": (50.0, 5.0),             # km along the path from the lake: 1 at <= 5 km, 0 at >= 50 km (reversed)
     "forest_loss_upslope": (0.0, 20.0),    # ha
     "loss_slope": (15.0, 35.0),            # degrees
 }
@@ -41,7 +41,8 @@ SCALES.update({
     "village_below": (5_000.0, 250.0),     # metres, reversed: 1 at <= 250 m, 0 at >= 5 km
     "near_water": (1_000.0, 50.0),         # metres, reversed
 })
-UNITS = {"site_area": "ha", "village_below": "m", "near_water": "m","lake_growth": "%/yr", "lake_anomaly": "z", "flood_path": "m", "forest_loss_upslope": "ha", "loss_slope": "°"}
+UNITS = {"lake_growth": "%/yr", "lake_anomaly": "z", "flood_path": "km", "forest_loss_upslope": "ha", "loss_slope": "°",
+         "site_area": "ha", "village_below": "m", "near_water": "m"}
 FOREST_RADIUS_M = 3000.0
 BANDS = ((60.0, "high"), (30.0, "watch"), (0.0, "low"))   # score >= 60 high, >= 30 watch, else low
 FAST_EXPANSION_PCT_PER_YR = 5.0                            # the glacier-layer "fast expansion" flag
@@ -116,9 +117,7 @@ def _fmt(name: str, v: float) -> str:
     if name in ("village_below", "near_water"):
         return f"{v / 1000:.1f} km" if v >= 1000 else f"{v:.0f} m"
     if name == "flood_path":
-        if v < 30:
-            return "on or next to (under 30 m from)"
-        return (f"{v / 1000:.1f} km" if v >= 1000 else f"{v:.0f} m") + " from"
+        return f"{v:.0f} km"
     if name == "lake_anomaly":
         return f"{v:+.2f}"
     if name == "lake_growth":
@@ -131,7 +130,8 @@ def _fmt(name: str, v: float) -> str:
 _TEMPLATES = {
     "lake_growth": "Upstream glacial lake {detail}is growing by {value} (summer median trend){flag}.",
     "lake_anomaly": "Latest clear-sky area of {detail}is {value} standard deviations from its usual size for that month.",
-    "flood_path": "Houses of the village are {value} the downhill path water would take out of {detail_plain}.",
+    "flood_path": "The village is on the downhill path of water from {detail_plain}, {value} below the lake "
+                  "(closer means more points: full at 5 km, none beyond 50 km).",
     "forest_loss_upslope": "{value} of vegetation loss in forest areas {detail}within {r:.0f} km upslope of the village "
                            "(satellite, 2019-2025; cause not known).",
     "site_area": "{value} of vegetation lost in this patch{detail_paren}.",

@@ -32,7 +32,23 @@
     <tr><td>Clear values</td>{% for y in t.yearly %}<td class="num">{{ y.n }}</td>{% endfor %}</tr>
   </table></div>
   {% endif %}
-  {% if d.charts[code] %}{{ d.charts[code] | safe }}{% else %}<p class="small">No measurements stored yet.</p>{% endif %}
+  {% set ch = d.charts[code] %}{% set rd = d.radar[code] %}
+  {% if ch and ch.optical %}
+  <div class="chart-wrap" id="chart-{{ code }}">
+    <div class="opt">{{ ch.optical | safe }}</div>
+    {% if ch.with_radar %}<div class="rad" hidden>{{ ch.with_radar | safe }}</div>{% endif %}
+  </div>
+  <div class="small" style="margin-top:6px">
+    {% if ch.with_radar %}
+    <label><input type="checkbox" onchange="var w=document.getElementById('chart-{{ code }}');w.querySelector('.opt').hidden=this.checked;w.querySelector('.rad').hidden=!this.checked">
+      Show radar (Sentinel-1) too</label> · {{ rd.off }} of {{ rd.ok }} radar values are more than {{ (rd.fraction * 100) | int }} % away from the usual optical size; the trend uses optical only.
+    {% elif rd.ok %}
+    Radar not shown for this lake: {{ rd.off }} of its {{ rd.ok }} radar values ({{ "%.0f" | format(100 * rd.off / rd.ok) }} %) are more than {{ (rd.fraction * 100) | int }} % away
+    from the usual optical size ({{ "%.1f" | format(rd.optical_median) }} ha), so most radar values would be off the chart's scale (likely causes: wet snow and radar shadow on steep slopes).
+    The trend and flag use optical only.
+    {% else %}No radar measurements for this lake.{% endif %}
+  </div>
+  {% else %}<p class="small">No measurements stored yet.</p>{% endif %}
 </section>
 {% endfor %}
 </div>

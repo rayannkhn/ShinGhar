@@ -53,7 +53,8 @@ def test_the_only_routes_that_can_change_anything_are_live_check_and_reload(clie
     # ShinGhar (2026-11-20): the two alert-review POSTs write only the review state in data/shinghar/alerts.json; nothing
     # is sent (tests/test_shinghar_page.py::test_page_shows_cached_numbers_and_review_gate).
     assert changing == {("/live/check", "POST"), ("/reload", "POST"),
-                        ("/shinghar/alerts/{alert_id}/review", "POST"), ("/shinghar/alerts/{alert_id}/ready", "POST")}, changing
+                        ("/shinghar/alerts/{alert_id}/review", "POST"), ("/shinghar/alerts/{alert_id}/ready", "POST"),
+                        ("/shinghar/alerts/{alert_id}/reset", "POST")}, changing
 
 
 def test_real_pages_do_not_carry_the_preview_banner(client):

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/static/shinghar.css?v={{ css_version }}">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block bodyclass %}{% endblock %}">
 <header class="sg-header">
   <div class="sg-header-inner">
     <div class="sg-top">
@@ -25,7 +25,9 @@
       {% if d.valley %}<div class="sg-place"><strong>{{ d.valley.valley }} pilot valley</strong><br>{{ d.valley.tehsil }}, {{ d.valley.district }}, {{ d.valley.province }}</div>{% endif %}
     </div>
     <nav class="sg-nav">
-      {% for key, label, url in [("overview", "Overview", "/shinghar"), ("villages", "Villages", "/shinghar/villages"),
+      <a href="/shinghar" class="{{ 'on' if nav == 'story' }}">Story</a>
+      <span class="nav-sep">Expert view:</span>
+      {% for key, label, url in [("overview", "Overview", "/shinghar/overview"), ("villages", "Villages", "/shinghar/villages"),
                                  ("forest", "Forest", "/shinghar/forest"), ("lakes", "Glacial lakes", "/shinghar/lakes"),
                                  ("alerts", "Alerts", "/shinghar/alerts"), ("method", "Method & limits", "/shinghar/method")] %}
       <a href="{{ url }}" class="{{ 'on' if nav == key }}">{{ label }}{% if key == "alerts" and d.alerts_open %}<span class="count">{{ d.alerts_open }}</span>{% endif %}</a>
@@ -44,8 +46,10 @@
 {% endif %}
 </main>
 <footer class="sg-footer">
-  ShinGhar prototype · results cached {% if d.build_log %}{{ d.build_log.finished[:16].replace("T", " ") }} UTC{% endif %} in <span class="num">data/shinghar/</span> (works offline) ·
-  glacier layer from the SailAb GLOF pipeline (<a href="/lakes/UTA">SailAb pages</a>) · Sentinel-2, Hansen GFC, ESA WorldCover, JRC GHSL &amp; GSW, Copernicus DEM, OpenStreetMap.
+  {% if nav == "story" %}ShinGhar prototype · results saved on this computer, so the page works without internet ·
+  data sources and methods: <a href="/shinghar/method">Expert view → Method &amp; limits</a>.
+  {% else %}ShinGhar prototype · results cached {% if d.build_log %}{{ d.build_log.finished[:16].replace("T", " ") }} UTC{% endif %} in <span class="num">data/shinghar/</span> (works offline) ·
+  glacier layer from the SailAb GLOF pipeline (<a href="/lakes/UTA">SailAb pages</a>) · Sentinel-2, Hansen GFC, ESA WorldCover, JRC GHSL &amp; GSW, Copernicus DEM, OpenStreetMap.{% endif %}
 </footer>
 {% if d.built %}{% block scripts %}{% endblock %}{% endif %}
 </body>
