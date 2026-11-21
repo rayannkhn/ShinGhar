@@ -1,0 +1,145 @@
+{
+ "valley": "Utror-Kalam",
+ "district": "Swat District",
+ "tehsil": "Kalam Tehsil",
+ "province": "Khyber Pakhtunkhwa",
+ "bbox": [
+  72.38,
+  35.38,
+  72.72,
+  35.68
+ ],
+ "lakes": [
+  "UTA",
+  "UTB",
+  "KLN"
+ ],
+ "sources": {
+  "settlements": "JRC GHSL P2023A GHS_BUILT_S 2020 built-up clusters (>=500 m2 per 100 m cell, 8-connected, >=3 ha cluster footprint); names from OpenStreetMap Nominatim reverse geocoding (zoom 14), 2026-11-20. Where several clusters share a name, the largest is used.",
+  "name_local": "Urdu-script spelling: machine transliteration of the OSM name, to be checked by a native speaker.",
+  "selection": "logs/2026-11-20_shinghar_valley_candidates/README.md"
+ },
+ "villages": [
+  {
+   "name": "Boyun",
+   "area": "Kalam",
+   "name_local": "بیون",
+   "lon": 72.58312,
+   "lat": 35.47615,
+   "elev_m": 2051,
+   "built_ha_largest_cluster": 10.02,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Boyun, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Kass",
+   "area": "Utror",
+   "name_local": "کس",
+   "lon": 72.46988,
+   "lat": 35.49079,
+   "elev_m": 2259,
+   "built_ha_largest_cluster": 1.69,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Kass, Utror, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Churat",
+   "area": "Kalam",
+   "name_local": "چورت",
+   "lon": 72.678,
+   "lat": 35.53761,
+   "elev_m": 2401,
+   "built_ha_largest_cluster": 1.44,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Churat, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Matiltan",
+   "area": "Kalam",
+   "name_local": "مٹلتان",
+   "lon": 72.66358,
+   "lat": 35.54317,
+   "elev_m": 2289,
+   "built_ha_largest_cluster": 1.39,
+   "ghsl_clusters": 2,
+   "osm_display_name": "Matiltan, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Pishmal",
+   "area": "Kalam",
+   "name_local": "پشمال",
+   "lon": 72.59837,
+   "lat": 35.44765,
+   "elev_m": 1945,
+   "built_ha_largest_cluster": 1.21,
+   "ghsl_clusters": 3,
+   "osm_display_name": "Pishmal, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Shahu",
+   "area": "Kalam",
+   "name_local": "شاہو",
+   "lon": 72.58358,
+   "lat": 35.50389,
+   "elev_m": 2067,
+   "built_ha_largest_cluster": 0.91,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Shahu, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Asharopatoi",
+   "area": "Shunail",
+   "name_local": "اشاڑوپٹئی",
+   "lon": 72.60484,
+   "lat": 35.40269,
+   "elev_m": 1851,
+   "built_ha_largest_cluster": 0.69,
+   "ghsl_clusters": 2,
+   "osm_display_name": "Asharopatoi, Shunail, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Kuz Laikot",
+   "area": "Kalam",
+   "name_local": "کوز لائیکوٹ",
+   "lon": 72.58731,
+   "lat": 35.4579,
+   "elev_m": 2122,
+   "built_ha_largest_cluster": 0.62,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Kuz Laikot, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Bafar",
+   "area": "Kalam",
+   "name_local": "بفر",
+   "lon": 72.64339,
+   "lat": 35.52741,
+   "elev_m": 2151,
+   "built_ha_largest_cluster": 0.48,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Bafar, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Gall",
+   "area": "Utror",
+   "name_local": "گل",
+   "lon": 72.46006,
+   "lat": 35.4911,
+   "elev_m": 2261,
+   "built_ha_largest_cluster": 0.44,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Gall, Utror, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  },
+  {
+   "name": "Bara Jabba",
+   "area": "Kalam",
+   "name_local": "بڑا جبہ",
+   "lon": 72.42109,
+   "lat": 35.5766,
+   "elev_m": 2520,
+   "built_ha_largest_cluster": 0.44,
+   "ghsl_clusters": 1,
+   "osm_display_name": "Bara Jabba, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+  }
+ ]
+}

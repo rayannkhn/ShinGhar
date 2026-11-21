@@ -1,0 +1,39 @@
+{% extends "sg/base.html" %}
+{% block title %}Glacial lakes{% endblock %}
+{% block main %}
+<div class="sg-head">
+  <div><h1>Glacial lakes: area over time</h1>
+    <div class="muted">Measured by the SailAb GLOF pipeline (Sentinel-2 NDWI &gt; 0.2 + region growing, with its cloud and snow checks)</div></div>
+</div>
+<div class="note-box" style="margin-bottom:18px">
+  <strong>Fast-expansion flag:</strong> the yearly median of clear July–September areas (years with at least {{ d.settings.min_values }} values),
+  trend over at least {{ d.settings.min_years }} years, above <strong>{{ d.settings.fast | int }} % per year</strong>. Winter and spring scenes are mostly
+  refused (snow, ice, cloud), so the record is mainly summer and autumn.
+</div>
+<div class="stack">
+{% for code, g in d.glacier.items() %}
+{% set t = g.trend %}
+<section class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <h2 style="margin:0">{{ g.name }} <span class="small num">{{ code }} · {{ "%.5f" | format(g.lat) }} N {{ "%.5f" | format(g.lon) }} E</span></h2>
+    <div>
+      {% if t.fast_expansion is none %}<span class="chip">trend: not enough data yet</span>
+      {% elif t.fast_expansion %}<span class="band high">fast expansion {{ "%+.1f" | format(t.growth_pct_per_yr) }} %/yr</span>
+      {% else %}<span class="band low">{{ "%+.1f" | format(t.growth_pct_per_yr) }} %/yr</span>{% endif %}
+      {% if g.anomaly %}<span class="chip glacier">latest z {{ "%+.2f" | format(g.anomaly.z) }} ({{ g.anomaly.date }})</span>{% else %}<span class="chip">no seasonal score yet</span>{% endif %}
+    </div>
+  </div>
+  <p class="small" style="margin:8px 0">{{ t.note }} Clear optical measurements: {{ g.optical_ok }} of {{ g.optical_scenes }} Sentinel-2 scenes; newest scene {{ (g.newest_scene or "none")[:10] }}.
+    <a href="/lakes/{{ code }}">Every measurement (SailAb page)</a></p>
+  {% if t.yearly %}
+  <table class="t" style="max-width:640px;margin-bottom:10px">
+    <tr><th>Summer</th>{% for y in t.yearly %}<th class="num">{{ y.year }}</th>{% endfor %}</tr>
+    <tr><td>Median area</td>{% for y in t.yearly %}<td class="num">{{ y.median_ha }} ha</td>{% endfor %}</tr>
+    <tr><td>Clear values</td>{% for y in t.yearly %}<td class="num">{{ y.n }}</td>{% endfor %}</tr>
+  </table>
+  {% endif %}
+  {% if d.charts[code] %}{{ d.charts[code] | safe }}{% else %}<p class="small">No measurements stored yet.</p>{% endif %}
+</section>
+{% endfor %}
+</div>
+{% endblock %}

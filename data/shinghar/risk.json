@@ -1,0 +1,1068 @@
+{
+ "weights": {
+  "lake_growth": 0.25,
+  "lake_anomaly": 0.15,
+  "flood_path": 0.2,
+  "forest_loss_upslope": 0.25,
+  "loss_slope": 0.15
+ },
+ "scales": {
+  "lake_growth": [
+   0.0,
+   10.0
+  ],
+  "lake_anomaly": [
+   0.0,
+   3.0
+  ],
+  "flood_path": [
+   10000.0,
+   500.0
+  ],
+  "forest_loss_upslope": [
+   0.0,
+   20.0
+  ],
+  "loss_slope": [
+   15.0,
+   35.0
+  ]
+ },
+ "bands": [
+  [
+   60.0,
+   "high"
+  ],
+  [
+   30.0,
+   "watch"
+  ],
+  [
+   0.0,
+   "low"
+  ]
+ ],
+ "forest_radius_m": 3000.0,
+ "upstream_path_max_m": 1500.0,
+ "path_max_height_above_m": 50.0,
+ "risk_loss_sources": [
+  "both",
+  "ndvi_only",
+  "hansen_only"
+ ],
+ "results": [
+  {
+   "village": {
+    "name": "Asharopatoi",
+    "area": "Shunail",
+    "name_local": "اشاڑوپٹئی",
+    "lon": 72.60484,
+    "lat": 35.40269,
+    "elev_m": 1851,
+    "built_ha_largest_cluster": 0.69,
+    "ghsl_clusters": 2,
+    "osm_display_name": "Asharopatoi, Shunail, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "KLN",
+     "dist_to_path_m": 0.0,
+     "along_km": 34.22857356761986,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2356
+    },
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 38.02474672492188,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2356
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 36.18018828369472,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2356
+    }
+   ],
+   "upstream_lakes": [
+    "KLN",
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    2326,
+    2328,
+    2320,
+    2318,
+    2301
+   ],
+   "score": 42.8,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Kalam north lake (34 km upstream), Utror lake B (36 km upstream) and Utror lake A (38 km upstream). (+20 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 36°), where bare soil sheds water and can slide. (+15 points)",
+    "5.8 ha of vegetation loss in forest areas in 5 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+7 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": 0.23,
+     "scaled": 0.023,
+     "weight": 0.25,
+     "points": 0.6,
+     "detail": "Kalam north lake (unnamed, 3,345 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Kalam north lake (34 km upstream), Utror lake B (36 km upstream) and Utror lake A (38 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 5.76,
+     "scaled": 0.288,
+     "weight": 0.25,
+     "points": 7.2,
+     "detail": "in 5 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 35.688541666666666,
+     "scaled": 1.0,
+     "weight": 0.15,
+     "points": 15.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Boyun",
+    "area": "Kalam",
+    "name_local": "بیون",
+    "lon": 72.58312,
+    "lat": 35.47615,
+    "elev_m": 2051,
+    "built_ha_largest_cluster": 10.02,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Boyun, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "KLN",
+     "dist_to_path_m": 0.0,
+     "along_km": 24.16681599804627,
+     "height_above_path_m": 0,
+     "built_cells_checked": 10544
+    },
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 27.962989155348293,
+     "height_above_path_m": 0,
+     "built_cells_checked": 10544
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 26.118430714121136,
+     "height_above_path_m": 0,
+     "built_cells_checked": 10544
+    }
+   ],
+   "upstream_lakes": [
+    "KLN",
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    1631,
+    1502
+   ],
+   "score": 38.0,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Kalam north lake (24 km upstream), Utror lake B (26 km upstream) and Utror lake A (28 km upstream). (+20 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 36°), where bare soil sheds water and can slide. (+15 points)",
+    "1.9 ha of vegetation loss in forest areas in 2 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+2 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": 0.23,
+     "scaled": 0.023,
+     "weight": 0.25,
+     "points": 0.6,
+     "detail": "Kalam north lake (unnamed, 3,345 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Kalam north lake (24 km upstream), Utror lake B (26 km upstream) and Utror lake A (28 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 1.88,
+     "scaled": 0.094,
+     "weight": 0.25,
+     "points": 2.4,
+     "detail": "in 2 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 36.09361702127659,
+     "scaled": 1.0,
+     "weight": 0.15,
+     "points": 15.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Kuz Laikot",
+    "area": "Kalam",
+    "name_local": "کوز لائیکوٹ",
+    "lon": 72.58731,
+    "lat": 35.4579,
+    "elev_m": 2122,
+    "built_ha_largest_cluster": 0.62,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Kuz Laikot, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "KLN",
+     "dist_to_path_m": 0.0,
+     "along_km": 27.78387227289398,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2085
+    },
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 31.580045430196,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2085
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 29.735486988968844,
+     "height_above_path_m": -1,
+     "built_cells_checked": 2085
+    }
+   ],
+   "upstream_lakes": [
+    "KLN",
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    2179
+   ],
+   "score": 36.8,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Kalam north lake (28 km upstream), Utror lake B (30 km upstream) and Utror lake A (32 km upstream). (+20 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 36°), where bare soil sheds water and can slide. (+15 points)",
+    "0.9 ha of vegetation loss in forest areas in 1 patch within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+1 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": 0.23,
+     "scaled": 0.023,
+     "weight": 0.25,
+     "points": 0.6,
+     "detail": "Kalam north lake (unnamed, 3,345 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Kalam north lake (28 km upstream), Utror lake B (30 km upstream) and Utror lake A (32 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 0.94,
+     "scaled": 0.047,
+     "weight": 0.25,
+     "points": 1.2,
+     "detail": "in 1 patch",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 36.4,
+     "scaled": 1.0,
+     "weight": 0.15,
+     "points": 15.0,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Pishmal",
+    "area": "Kalam",
+    "name_local": "پشمال",
+    "lon": 72.59837,
+    "lat": 35.44765,
+    "elev_m": 1945,
+    "built_ha_largest_cluster": 1.21,
+    "ghsl_clusters": 3,
+    "osm_display_name": "Pishmal, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "KLN",
+     "dist_to_path_m": 0.0,
+     "along_km": 27.78387227289398,
+     "height_above_path_m": -1,
+     "built_cells_checked": 3799
+    },
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 31.580045430196,
+     "height_above_path_m": -1,
+     "built_cells_checked": 3799
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 29.735486988968844,
+     "height_above_path_m": -1,
+     "built_cells_checked": 3799
+    }
+   ],
+   "upstream_lakes": [
+    "KLN",
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    2179,
+    2198
+   ],
+   "score": 36.6,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Kalam north lake (28 km upstream), Utror lake B (30 km upstream) and Utror lake A (32 km upstream). (+20 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 33°), where bare soil sheds water and can slide. (+13 points)",
+    "2.3 ha of vegetation loss in forest areas in 2 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+3 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": 0.23,
+     "scaled": 0.023,
+     "weight": 0.25,
+     "points": 0.6,
+     "detail": "Kalam north lake (unnamed, 3,345 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Kalam north lake (28 km upstream), Utror lake B (30 km upstream) and Utror lake A (32 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 2.26,
+     "scaled": 0.11299999999999999,
+     "weight": 0.25,
+     "points": 2.8,
+     "detail": "in 2 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 32.66194690265487,
+     "scaled": 0.8830973451327434,
+     "weight": 0.15,
+     "points": 13.2,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Shahu",
+    "area": "Kalam",
+    "name_local": "شاہو",
+    "lon": 72.58358,
+    "lat": 35.50389,
+    "elev_m": 2067,
+    "built_ha_largest_cluster": 0.91,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Shahu, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "KLN",
+     "dist_to_path_m": 22.360679774997898,
+     "along_km": 20.590937213259476,
+     "height_above_path_m": 0,
+     "built_cells_checked": 2299
+    },
+    {
+     "code": "UTA",
+     "dist_to_path_m": 22.360679774997898,
+     "along_km": 24.387110370561498,
+     "height_above_path_m": 0,
+     "built_cells_checked": 2299
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 22.360679774997898,
+     "along_km": 22.54255192933434,
+     "height_above_path_m": 0,
+     "built_cells_checked": 2299
+    }
+   ],
+   "upstream_lakes": [
+    "KLN",
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    1122,
+    1017,
+    1502
+   ],
+   "score": 30.2,
+   "band": "watch",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Kalam north lake (21 km upstream), Utror lake B (23 km upstream) and Utror lake A (24 km upstream). (+20 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 22°), where bare soil sheds water and can slide. (+5 points)",
+    "3.6 ha of vegetation loss in forest areas in 3 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+4 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": 0.23,
+     "scaled": 0.023,
+     "weight": 0.25,
+     "points": 0.6,
+     "detail": "Kalam north lake (unnamed, 3,345 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 22.360679774997898,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Kalam north lake (21 km upstream), Utror lake B (23 km upstream) and Utror lake A (24 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 3.63,
+     "scaled": 0.1815,
+     "weight": 0.25,
+     "points": 4.5,
+     "detail": "in 3 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 21.864462809917356,
+     "scaled": 0.3432231404958678,
+     "weight": 0.15,
+     "points": 5.1,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Kass",
+    "area": "Utror",
+    "name_local": "کس",
+    "lon": 72.46988,
+    "lat": 35.49079,
+    "elev_m": 2259,
+    "built_ha_largest_cluster": 1.69,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Kass, Utror, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 11.70520994748919,
+     "height_above_path_m": 0,
+     "built_cells_checked": 3243
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 9.860651506262034,
+     "height_above_path_m": 0,
+     "built_cells_checked": 3243
+    }
+   ],
+   "upstream_lakes": [
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    1620,
+    1026,
+    1612,
+    1206
+   ],
+   "score": 27.6,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Utror lake B (10 km upstream) and Utror lake A (12 km upstream). (+20 points)",
+    "3.7 ha of vegetation loss in forest areas in 4 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+5 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 19°), where bare soil sheds water and can slide. (+3 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": -0.03,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Utror lake B (10 km upstream) and Utror lake A (12 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 3.73,
+     "scaled": 0.1865,
+     "weight": 0.25,
+     "points": 4.7,
+     "detail": "in 4 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 18.820107238605896,
+     "scaled": 0.1910053619302948,
+     "weight": 0.15,
+     "points": 2.9,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Gall",
+    "area": "Utror",
+    "name_local": "گل",
+    "lon": 72.46006,
+    "lat": 35.4911,
+    "elev_m": 2261,
+    "built_ha_largest_cluster": 0.44,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Gall, Utror, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [
+    {
+     "code": "UTA",
+     "dist_to_path_m": 0.0,
+     "along_km": 11.547930726875611,
+     "height_above_path_m": 1,
+     "built_cells_checked": 3290
+    },
+    {
+     "code": "UTB",
+     "dist_to_path_m": 0.0,
+     "along_km": 9.703372285648456,
+     "height_above_path_m": 1,
+     "built_cells_checked": 3290
+    }
+   ],
+   "upstream_lakes": [
+    "UTA",
+    "UTB"
+   ],
+   "loss_patch_ids": [
+    1620,
+    1026,
+    1612,
+    1206
+   ],
+   "score": 27.6,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "Houses of the village are on or next to (under 30 m from) the downhill path water would take out of Utror lake B (10 km upstream) and Utror lake A (12 km upstream). (+20 points)",
+    "3.7 ha of vegetation loss in forest areas in 4 patches within 3 km upslope of the village (satellite, 2019-2025; cause not known). (+5 points)",
+    "The vegetation loss upslope is on steep ground (mean slope 19°), where bare soil sheds water and can slide. (+3 points)"
+   ],
+   "missing": [],
+   "not_applicable": [],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": -0.03,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m)",
+     "not_applicable": false
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": -0.2018763884237934,
+     "scaled": 0.0,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "Utror lake A (unnamed, 3,028 m) (2026-11-08)",
+     "not_applicable": false
+    },
+    {
+     "name": "flood_path",
+     "raw": 0.0,
+     "scaled": 1.0,
+     "weight": 0.2,
+     "points": 20.0,
+     "detail": "Utror lake B (10 km upstream) and Utror lake A (12 km upstream)",
+     "not_applicable": false
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 3.73,
+     "scaled": 0.1865,
+     "weight": 0.25,
+     "points": 4.7,
+     "detail": "in 4 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": 18.820107238605896,
+     "scaled": 0.1910053619302948,
+     "weight": 0.15,
+     "points": 2.9,
+     "detail": "",
+     "not_applicable": false
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Churat",
+    "area": "Kalam",
+    "name_local": "چورت",
+    "lon": 72.678,
+    "lat": 35.53761,
+    "elev_m": 2401,
+    "built_ha_largest_cluster": 1.44,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Churat, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [],
+   "upstream_lakes": [],
+   "loss_patch_ids": [],
+   "score": 0.0,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "None of the measured factors adds to the score at the moment.",
+    "Does not apply: lake growth, lake anomaly, flood path (not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist); loss slope (no vegetation loss upslope)."
+   ],
+   "missing": [],
+   "not_applicable": [
+    "lake_growth",
+    "lake_anomaly",
+    "flood_path",
+    "loss_slope"
+   ],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "flood_path",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.2,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 0,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "in 0 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "no vegetation loss upslope",
+     "not_applicable": true
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Matiltan",
+    "area": "Kalam",
+    "name_local": "مٹلتان",
+    "lon": 72.66358,
+    "lat": 35.54317,
+    "elev_m": 2289,
+    "built_ha_largest_cluster": 1.39,
+    "ghsl_clusters": 2,
+    "osm_display_name": "Matiltan, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [],
+   "upstream_lakes": [],
+   "loss_patch_ids": [],
+   "score": 0.0,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "None of the measured factors adds to the score at the moment.",
+    "Does not apply: lake growth, lake anomaly, flood path (not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist); loss slope (no vegetation loss upslope)."
+   ],
+   "missing": [],
+   "not_applicable": [
+    "lake_growth",
+    "lake_anomaly",
+    "flood_path",
+    "loss_slope"
+   ],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "flood_path",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.2,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 0,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "in 0 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "no vegetation loss upslope",
+     "not_applicable": true
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Bafar",
+    "area": "Kalam",
+    "name_local": "بفر",
+    "lon": 72.64339,
+    "lat": 35.52741,
+    "elev_m": 2151,
+    "built_ha_largest_cluster": 0.48,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Bafar, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [],
+   "upstream_lakes": [],
+   "loss_patch_ids": [],
+   "score": 0.0,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "None of the measured factors adds to the score at the moment.",
+    "Does not apply: lake growth, lake anomaly, flood path (not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist); loss slope (no vegetation loss upslope)."
+   ],
+   "missing": [],
+   "not_applicable": [
+    "lake_growth",
+    "lake_anomaly",
+    "flood_path",
+    "loss_slope"
+   ],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "flood_path",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.2,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 0,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "in 0 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "no vegetation loss upslope",
+     "not_applicable": true
+    }
+   ]
+  },
+  {
+   "village": {
+    "name": "Bara Jabba",
+    "area": "Kalam",
+    "name_local": "بڑا جبہ",
+    "lon": 72.42109,
+    "lat": 35.5766,
+    "elev_m": 2520,
+    "built_ha_largest_cluster": 0.44,
+    "ghsl_clusters": 1,
+    "osm_display_name": "Bara Jabba, Kalam Tehsil, Swat District, Malakand Division, Khyber Pakhtunkhwa, Pakistan"
+   },
+   "upstream": [],
+   "upstream_lakes": [],
+   "loss_patch_ids": [],
+   "score": 0.0,
+   "band": "low",
+   "coverage": 1.0,
+   "reasons": [
+    "None of the measured factors adds to the score at the moment.",
+    "Does not apply: lake growth, lake anomaly, flood path (not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist); loss slope (no vegetation loss upslope)."
+   ],
+   "missing": [],
+   "not_applicable": [
+    "lake_growth",
+    "lake_anomaly",
+    "flood_path",
+    "loss_slope"
+   ],
+   "components": [
+    {
+     "name": "lake_growth",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "lake_anomaly",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "flood_path",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.2,
+     "points": 0.0,
+     "detail": "not on the downhill path of a monitored lake (UTA, UTB, KLN); unmonitored lakes may exist",
+     "not_applicable": true
+    },
+    {
+     "name": "forest_loss_upslope",
+     "raw": 0,
+     "scaled": 0.0,
+     "weight": 0.25,
+     "points": 0.0,
+     "detail": "in 0 patches",
+     "not_applicable": false
+    },
+    {
+     "name": "loss_slope",
+     "raw": null,
+     "scaled": null,
+     "weight": 0.15,
+     "points": 0.0,
+     "detail": "no vegetation loss upslope",
+     "not_applicable": true
+    }
+   ]
+  }
+ ]
+}

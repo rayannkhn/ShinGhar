@@ -1,0 +1,62 @@
+{% extends "sg/base.html" %}
+{% block title %}Forest{% endblock %}
+{% block main %}
+{% set f = d.forest %}{% set a = f.agreement %}
+<div class="sg-head">
+  <div><h1>Forest: vegetation loss on the slopes</h1>
+    <div class="muted">Sentinel-2 summer {{ f.before_year }} vs {{ f.after_year }} ({{ f.s2_images_before }} and {{ f.s2_images_after }} images), checked against Hansen Global Forest Change</div></div>
+</div>
+
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="card kpi accent-forest"><div class="label">Forest in the valley</div><div class="value">{{ "{:,.0f}".format(f.forest_ha) }}</div><div class="note">ha (WorldCover trees or Hansen ≥ 30 %)</div></div>
+  <div class="card kpi accent-loss"><div class="label">Our NDVI loss</div><div class="value">{{ "%.1f" | format(f.ours_loss_ha) }}</div><div class="note">ha, NDVI drop &gt; {{ d.settings.ndvi }}</div></div>
+  <div class="card kpi accent-watch"><div class="label">Hansen loss {{ f.hansen_years[0] }}–{{ f.hansen_years[1] }}</div><div class="value">{{ "%.2f" | format(f.hansen_loss_ha) }}</div><div class="note">ha ({{ f.hansen_asset.split("/")[-1] }})</div></div>
+  <div class="card kpi accent-glacier"><div class="label">Agreement</div>
+    <div class="value">{% if a.ours_confirmed_by_hansen is not none %}{{ "%.1f" | format(a.ours_confirmed_by_hansen * 100) }} %{% else %}–{% endif %}</div>
+    <div class="note">of our loss also in Hansen; we find {% if a.hansen_found_by_ours is not none %}{{ "%.0f" | format(a.hansen_found_by_ours * 100) }} %{% else %}–{% endif %} of Hansen's</div></div>
+</div>
+
+<div class="grid g2" style="margin-bottom:18px">
+  <section class="card">
+    <h2>What the numbers mean</h2>
+    <p>Hansen (30 m, yearly maps) finds very little recent loss in this valley. Our 10 m NDVI comparison finds much more, and it is not all
+      tree cutting: a drop in NDVI also comes from debris flows, river-bank erosion, construction, crops or a dry summer. So ShinGhar calls it
+      <strong>vegetation loss in forest areas</strong> and does not claim a cause. Hansen's own "tree cover loss" also includes fire, landslides and disease;
+      neither is the same as deforestation.</p>
+    {% if d.visual_check %}
+    <div class="note-box"><strong>Visual check:</strong> {{ d.visual_check.verdicts | selectattr("real_change") | list | length }} of {{ d.visual_check.verdicts | length }}
+      top-ranked sites show real change in true-colour images. {{ d.visual_check.by }}</div>
+    {% endif %}
+  </section>
+  {% if d.visual_check %}
+  <section class="card">
+    <h2>Visual check: 2019 (left) vs 2025 (right)</h2>
+    <a href="/shinghar/files/forest_visual_check.png"><img src="/shinghar/files/forest_visual_check.png" alt="True-colour chips of the top 8 sites, 2019 and 2025" style="width:100%;border-radius:8px"></a>
+    <ul class="small">{% for v in d.visual_check.verdicts %}<li>Site {{ v.rank }}: {{ v.seen }}</li>{% endfor %}</ul>
+    <p class="small">{{ d.visual_check.rank_at_check }}</p>
+  </section>
+  {% endif %}
+</div>
+
+<section class="card">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <h2>Sites ranked for ranger visits ({{ d.patch_count }} sites ≥ {{ d.settings.min_patch }} ha)</h2>
+    <span class="small">Download: <a href="/shinghar/files/forest_patches.csv">CSV</a> · <a href="/shinghar/files/forest_patches.geojson">GeoJSON</a></span>
+  </div>
+  <table class="t">
+    <tr><th>Rank</th><th>Priority</th><th>Area</th><th>Found by</th><th>Hansen year</th><th>Slope</th><th>Nearest village</th><th>To water</th><th>Location (lat, lon)</th></tr>
+    {% for p in d.patches %}
+    <tr><td class="num">{{ p.rank }}</td><td class="num"><span class="bar" style="width:{{ (p.rank_score * 0.6) | int }}px;background:var(--loss)"></span>{{ "%.0f" | format(p.rank_score) }}</td>
+      <td class="num">{{ "%.2f" | format(p.area_ha) }} ha</td>
+      <td>{{ {"both": "NDVI + Hansen", "ndvi_only": "our NDVI", "hansen_only": "Hansen"}[p.source] }}</td>
+      <td class="num">{{ p.hansen_main_year or "–" }}</td>
+      <td class="num">{{ "%.0f°" | format(p.mean_slope_deg) if p.mean_slope_deg is not none else "–" }}</td>
+      <td>{{ p.nearest_settlement }} <span class="num small">{{ "%.1f" | format(p.dist_settlement_m / 1000) }} km</span></td>
+      <td class="num small">{{ "%.1f km" | format(p.dist_water_m / 1000) if p.dist_water_m is not none else "–" }}</td>
+      <td class="num small">{{ p.lat }}, {{ p.lon }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="small">Priority = {% for k, w in d.settings.rank_weights.items() %}{{ k.replace("_", " ") }} {{ "%.0f" | format(w * 100) }} %{{ ", " if not loop.last }}{% endfor %},
+    each scaled 0–1 within the valley (nearness is 1 at the village, 0 at 5 km or more). To water = distance to surface water mapped by JRC (≥ 50 % of the time).</p>
+</section>
+{% endblock %}

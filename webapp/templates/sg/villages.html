@@ -1,0 +1,45 @@
+{% extends "sg/base.html" %}
+{% block title %}Villages{% endblock %}
+{% block main %}
+<div class="sg-head">
+  <div><h1>Villages: screening score and why</h1>
+    <div class="muted">One transparent score from 0 to 100 per village. No model training: fixed weights and scales, all shown.</div></div>
+</div>
+
+<section class="card" style="margin-bottom:18px">
+  <h2>How the score is made</h2>
+  <table class="t" style="max-width:900px">
+    <tr><th>Part</th><th>Weight</th><th>Scale: 0 at → 1 at</th></tr>
+    {% for k, w in d.risk.weights.items() %}
+    <tr><td>{{ d.component_labels[k] }}</td><td class="num">{{ "%.0f" | format(w * 100) }} %</td>
+      <td class="num">{{ d.risk.scales[k][0] | int }} → {{ d.risk.scales[k][1] | int }} {{ d.units[k] }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="small">Bands: <span class="band high">high</span> ≥ {{ d.risk.bands[0][0] | int }},
+    <span class="band watch">watch</span> ≥ {{ d.risk.bands[1][0] | int }}, otherwise <span class="band low">low</span>.
+    "No data" adds 0 points and lowers the Data share (never guessed); "does not apply" (e.g. no monitored lake upstream) adds 0 points and counts as known.
+    A lake is upstream of a village when the village's built-up area (GHSL) is within {{ d.risk.upstream_path_max_m | int }} m of the lake's downhill path
+    and at most {{ d.risk.path_max_height_above_m | int }} m above it. Vegetation loss upslope: patches within {{ (d.risk.forest_radius_m / 1000) | int }} km and higher than the village.</p>
+</section>
+
+<div class="stack">
+{% for r in d.risk.results %}
+<section class="card village" id="v-{{ r.slug }}">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div><h2 style="margin:0">{{ loop.index }}. {{ r.village.name }} <span class="small">{{ r.village.area }} · {{ r.village.elev_m }} m</span></h2></div>
+    <div><span class="band {{ r.band }}">{{ r.band }}</span> <span class="num" style="font-size:24px;font-weight:700;margin-left:8px">{{ "%.0f" | format(r.score) }}</span><span class="small">/100 · data for {{ "%.0f" | format(r.coverage * 100) }} % of the weight</span></div>
+  </div>
+  <ul class="reasons">{% for t in r.reasons %}<li>{{ t }}</li>{% endfor %}</ul>
+  <table class="t">
+    <tr><th>Part</th><th>Value</th><th>Weight</th><th>Points</th></tr>
+    {% for c in r.components %}
+    <tr><td>{{ d.component_labels[c.name] }}</td>
+      <td class="num">{% if c.not_applicable %}<span class="small">does not apply</span>{% elif c.raw is none %}<span class="small">no data</span>{% else %}{{ "%.2f" | format(c.raw) }} {{ d.units[c.name] }}{% endif %}</td>
+      <td class="num">{{ "%.0f" | format(c.weight * 100) }} %</td>
+      <td class="num"><span class="bar" style="width:{{ (c.points * 3) | int }}px"></span>{{ "%.1f" | format(c.points) }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endfor %}
+</div>
+{% endblock %}

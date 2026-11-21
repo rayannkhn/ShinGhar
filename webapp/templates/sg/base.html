@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Overview{% endblock %} · ShinGhar</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%231e5a43'/%3E%3Cpath d='M5 31 16 13l6 9 4-5 9 14z' fill='%23e8f3ec'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/shinghar.css?v={{ css_version }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="sg-header">
+  <div class="sg-header-inner">
+    <div class="sg-top">
+      <a class="sg-brand" href="/shinghar">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="9" fill="rgba(255,255,255,.12)"/>
+          <path d="M4 31 15 12l6 9 4-5 11 15z" fill="#e8f3ec"/>
+          <path d="M15 12l3 5-3-1-2 2z" fill="#ffffff"/>
+          <ellipse cx="27" cy="29" rx="6" ry="2" fill="#7fb8e6"/>
+          <path d="M8 31c1-4 3-6 3-6s2 2 2 6z" fill="#3f9b72"/>
+        </svg>
+        <span><span class="name">ShinGhar</span><br><span class="tag">Valley hazard screening: glacial lakes · forest slopes · villages</span></span>
+      </a>
+      {% if d.valley %}<div class="sg-place"><strong>{{ d.valley.valley }} pilot valley</strong><br>{{ d.valley.tehsil }}, {{ d.valley.district }}, {{ d.valley.province }}</div>{% endif %}
+    </div>
+    <nav class="sg-nav">
+      {% for key, label, url in [("overview", "Overview", "/shinghar"), ("villages", "Villages", "/shinghar/villages"),
+                                 ("forest", "Forest", "/shinghar/forest"), ("lakes", "Glacial lakes", "/shinghar/lakes"),
+                                 ("alerts", "Alerts", "/shinghar/alerts"), ("method", "Method & limits", "/shinghar/method")] %}
+      <a href="{{ url }}" class="{{ 'on' if nav == key }}">{{ label }}{% if key == "alerts" and d.alerts_open %}<span class="count">{{ d.alerts_open }}</span>{% endif %}</a>
+      {% endfor %}
+    </nav>
+  </div>
+</header>
+<div class="sg-strip"><div><strong>Hazard screening, not a forecast.</strong> Ranks where to look first, from satellite data and fixed, shown rules.
+  <strong>Alerts are drafts and are not sent to anyone.</strong> Urdu/Pashto text and voice are machine-generated, to be checked by a native speaker.</div></div>
+<main class="sg-main">
+{% if not d.built %}
+  <section class="card"><h2>Not built</h2><p>The cached valley results (<span class="num">data/shinghar/build_log.json</span>) do not exist yet.
+  Run <span class="num">.venv/bin/python -m shinghar.build_valley</span>.</p></section>
+{% else %}
+{% block main %}{% endblock %}
+{% endif %}
+</main>
+<footer class="sg-footer">
+  ShinGhar prototype · results cached {% if d.build_log %}{{ d.build_log.finished[:16].replace("T", " ") }} UTC{% endif %} in <span class="num">data/shinghar/</span> (works offline) ·
+  glacier layer from the SailAb GLOF pipeline (<a href="/lakes/UTA">SailAb pages</a>) · Sentinel-2, Hansen GFC, ESA WorldCover, JRC GHSL &amp; GSW, Copernicus DEM, OpenStreetMap.
+</footer>
+{% if d.built %}{% block scripts %}{% endblock %}{% endif %}
+</body>
+</html>

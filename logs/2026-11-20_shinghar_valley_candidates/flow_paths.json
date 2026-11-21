@@ -1,0 +1,353 @@
+{
+ "SA": {
+  "path_km": 22.5,
+  "end": [
+   72.1977,
+   35.4298
+  ],
+  "villages": [
+   {
+    "village": "Kalkot Tehsil",
+    "min_dist_to_path_m": 15,
+    "along_path_km": 14.0,
+    "elev_drop_m": 1444
+   },
+   {
+    "village": "Lamutai",
+    "min_dist_to_path_m": 288,
+    "along_path_km": 20.5,
+    "elev_drop_m": 1659
+   }
+  ]
+ },
+ "SB": {
+  "path_km": 68.7,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Gall",
+    "min_dist_to_path_m": 322,
+    "along_path_km": 34.4,
+    "elev_drop_m": 1832
+   },
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 49.2,
+    "elev_drop_m": 2081
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 55.7,
+    "elev_drop_m": 2155
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 56.9,
+    "elev_drop_m": 2160
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 58.0,
+    "elev_drop_m": 2174
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 62.3,
+    "elev_drop_m": 2247
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 63.1,
+    "elev_drop_m": 2274
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 68.6,
+    "elev_drop_m": 2370
+   }
+  ]
+ },
+ "SC": {
+  "path_km": 65.5,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Gall",
+    "min_dist_to_path_m": 322,
+    "along_path_km": 31.2,
+    "elev_drop_m": 1619
+   },
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 45.9,
+    "elev_drop_m": 1868
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 52.4,
+    "elev_drop_m": 1942
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 53.6,
+    "elev_drop_m": 1946
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 54.8,
+    "elev_drop_m": 1960
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 59.1,
+    "elev_drop_m": 2033
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 59.8,
+    "elev_drop_m": 2060
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 65.4,
+    "elev_drop_m": 2156
+   }
+  ]
+ },
+ "SD": {
+  "path_km": 43.4,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Kass",
+    "min_dist_to_path_m": 99,
+    "along_path_km": 9.8,
+    "elev_drop_m": 927
+   },
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 23.8,
+    "elev_drop_m": 1183
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 30.3,
+    "elev_drop_m": 1257
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 31.5,
+    "elev_drop_m": 1261
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 32.7,
+    "elev_drop_m": 1275
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 37.0,
+    "elev_drop_m": 1348
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 37.7,
+    "elev_drop_m": 1376
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 43.3,
+    "elev_drop_m": 1472
+   }
+  ]
+ },
+ "SE": {
+  "path_km": 45.1,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Kass",
+    "min_dist_to_path_m": 99,
+    "along_path_km": 11.6,
+    "elev_drop_m": 772
+   },
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 25.6,
+    "elev_drop_m": 1027
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 32.1,
+    "elev_drop_m": 1101
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 33.3,
+    "elev_drop_m": 1106
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 34.4,
+    "elev_drop_m": 1120
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 38.7,
+    "elev_drop_m": 1193
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 39.5,
+    "elev_drop_m": 1220
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 45.0,
+    "elev_drop_m": 1316
+   }
+  ]
+ },
+ "SF": {
+  "path_km": 41.1,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 21.6,
+    "elev_drop_m": 1349
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 28.1,
+    "elev_drop_m": 1423
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 29.3,
+    "elev_drop_m": 1428
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 30.5,
+    "elev_drop_m": 1442
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 34.7,
+    "elev_drop_m": 1515
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 35.5,
+    "elev_drop_m": 1542
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 41.0,
+    "elev_drop_m": 1638
+   }
+  ]
+ },
+ "SI": {
+  "path_km": 37.5,
+  "end": [
+   72.6069,
+   35.3577
+  ],
+  "villages": [
+   {
+    "village": "Shahu",
+    "min_dist_to_path_m": 488,
+    "along_path_km": 18.0,
+    "elev_drop_m": 1913
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 160,
+    "along_path_km": 24.5,
+    "elev_drop_m": 1987
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 139,
+    "along_path_km": 25.7,
+    "elev_drop_m": 1992
+   },
+   {
+    "village": "Pishmal",
+    "min_dist_to_path_m": 222,
+    "along_path_km": 26.8,
+    "elev_drop_m": 2005
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 71,
+    "along_path_km": 31.1,
+    "elev_drop_m": 2078
+   },
+   {
+    "village": "Asharopatoi",
+    "min_dist_to_path_m": 153,
+    "along_path_km": 31.9,
+    "elev_drop_m": 2106
+   },
+   {
+    "village": "Zarhinal",
+    "min_dist_to_path_m": 94,
+    "along_path_km": 37.4,
+    "elev_drop_m": 2202
+   }
+  ]
+ }
+}

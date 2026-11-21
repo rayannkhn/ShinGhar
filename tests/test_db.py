@@ -48,9 +48,10 @@ def test_seed_inserts_the_lakes_with_the_exact_given_coordinates(conn):
     db.seed_lakes(conn)
     lakes = {row["code"]: dict(row) for row in db.get_lakes(conn)}
 
-    assert list(lakes) == ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU"]   # the order the ids are given in
-    assert {c: lakes[c]["country"] for c in lakes} == {**{c: "Pakistan" for c in ("KRB", "ATS", "SHP", "DKT", "BRT", "PSU")},
+    assert list(lakes) == ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU", "UTA", "UTB", "KLN"]   # the order the ids are given in
+    assert {c: lakes[c]["country"] for c in lakes} == {**{c: "Pakistan" for c in ("KRB", "ATS", "SHP", "DKT", "BRT", "PSU", "UTA", "UTB", "KLN")},
                                                        "TRL": "Nepal", "THU": "Nepal"}
+    assert (lakes["UTA"]["centre_lon"], lakes["UTA"]["centre_lat"], lakes["UTA"]["history_since"]) == (72.43293, 35.41921, "2018-12-31")
     assert (lakes["TRL"]["centre_lon"], lakes["TRL"]["centre_lat"]) == (86.47656, 27.86090)
     assert (lakes["THU"]["centre_lon"], lakes["THU"]["centre_lat"]) == (84.48544, 28.48859)
     assert lakes["KRB"]["name"] == "Karambar Lake"
@@ -64,14 +65,14 @@ def test_seed_inserts_the_lakes_with_the_exact_given_coordinates(conn):
     assert (lakes["SHP"]["centre_lon"], lakes["SHP"]["centre_lat"], lakes["SHP"]["history_since"]) == (74.5650, 36.3590, "2018-12-31")
     assert (lakes["DKT"]["centre_lon"], lakes["DKT"]["centre_lat"]) == (73.40701, 36.64219)     # published position
     assert {c: lakes[c]["detects_drainage"] for c in lakes} == {"KRB": 0, "ATS": 0, "SHP": 1, "DKT": 1, "BRT": 0, "PSU": 0,
-                                                                      "TRL": 0, "THU": 0}
+                                                                      "TRL": 0, "THU": 0, "UTA": 0, "UTB": 0, "KLN": 0}
 
 
 def test_seeding_twice_does_not_duplicate(conn):
     first_ids = db.seed_lakes(conn)
     second_ids = db.seed_lakes(conn)
     assert first_ids == second_ids
-    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == len(db.SEED_LAKES) == 8
+    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == len(db.SEED_LAKES) == 11
 
 
 def test_seeding_refuses_to_overwrite_a_changed_coordinate(conn):
@@ -270,7 +271,7 @@ def test_an_older_database_gets_the_new_lake_columns(tmp_path):
     row = dict(conn.execute("SELECT * FROM lake WHERE code = 'KRB'").fetchone())
     assert (row["history_since"], row["detects_drainage"]) == (None, 0)
     db.seed_lakes(conn)                                   # the old row still matches its seed: no error
-    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == 8
+    assert conn.execute("SELECT COUNT(*) FROM lake").fetchone()[0] == 11   # 8 SailAb + 3 ShinGhar (2026-11-20)
 
 
 @pytest.mark.parametrize("kwargs", [{"history_since": "2019-13-01"}, {"detects_drainage": 2}])

@@ -1,0 +1,15 @@
+{
+ "what": "Visual check of the 8 top-ranked loss patches: Sentinel-2 true-colour summer (Jun-Sep) medians, 2019 vs 2025, 800 m chips (logs/2026-11-20_shinghar_forest_check/top8_truecolour_2019_vs_2025.png).",
+ "by": "Developer check by eye (Claude Code, 2026-11-20), not a field visit and not an expert interpretation.",
+ "rank_at_check": "Ranks as of the first build (Hansen-only risk input); patch ids may be re-ranked later.",
+ "verdicts": [
+  {"rank": 1, "seen": "brown clearing on a forested slope in 2025, green in 2019", "real_change": true},
+  {"rank": 2, "seen": "side-stream channel much wider in 2025 (debris flow or flash flood scar)", "real_change": true},
+  {"rank": 3, "seen": "river channel wider, bank vegetation gone (river erosion)", "real_change": true},
+  {"rank": 4, "seen": "side-stream channel wider (debris flow or flash flood scar)", "real_change": true},
+  {"rank": 5, "seen": "new construction and bare ground at Kalam", "real_change": true},
+  {"rank": 6, "seen": "small clearing (the one patch Hansen also maps)", "real_change": true},
+  {"rank": 7, "seen": "stream channel / track wider", "real_change": true},
+  {"rank": 8, "seen": "no clear difference visible at this scale", "real_change": null}
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "stack": "/home/rayannn/Documents/ShinGhar/data/shinghar/forest_stack.tif",
+ "epsg": 32643,
+ "pixel_m": 10.0,
+ "before_year": "2019",
+ "after_year": "2025",
+ "s2_images_before": "98",
+ "s2_images_after": "118",
+ "hansen_asset": "UMD/hansen/global_forest_change_2025_v1_13",
+ "hansen_years": [
+  2020,
+  2025
+ ],
+ "settings": {
+  "ndvi_drop_threshold": 0.2,
+  "hansen_forest_min_cover": 30,
+  "min_patch_ha": 0.5,
+  "rank_weights": {
+   "area": 0.4,
+   "slope": 0.3,
+   "near_settlement": 0.3
+  },
+  "near_settlement_scale_m": 5000.0,
+  "water_occurrence_min": 50
+ },
+ "forest_ha": 23683.2,
+ "valid_forest_share": 1.0,
+ "ours_loss_ha": 152.22,
+ "hansen_loss_ha": 0.93,
+ "both_loss_ha": 0.91,
+ "agreement": {
+  "valid_px": 2368217,
+  "ours_px": 15222,
+  "hansen_px": 93,
+  "both_px": 91,
+  "either_px": 15224,
+  "ours_confirmed_by_hansen": 0.005978189462619892,
+  "hansen_found_by_ours": 0.978494623655914,
+  "iou": 0.005977404098791382
+ },
+ "patches": 39,
+ "patches_by_source": {
+  "both": 1,
+  "ndvi_only": 38,
+  "hansen_only": 0
+ }
+}

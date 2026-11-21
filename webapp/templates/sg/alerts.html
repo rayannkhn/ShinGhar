@@ -1,0 +1,45 @@
+{% extends "sg/base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block main %}
+<div class="sg-head">
+  <div><h1>Alerts: drafts for expert review</h1>
+    <div class="muted">Written from fixed templates using only the numbers and reasons on the Villages page. An expert reviews every high alert. Nothing is sent.</div></div>
+</div>
+{% if not d.alerts %}<section class="card"><p>No village is in the watch or high band, so no alert is drafted.</p></section>{% endif %}
+<div class="stack">
+{% for a in d.alerts %}
+<section class="card alert-card {{ a.band }}" id="alert-{{ a.alert_id }}">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <h2 style="margin:0">{{ a.village }} <span class="band {{ a.band }}">{{ a.band }}</span> <span class="num small">{{ "%.0f" | format(a.score) }}/100</span></h2>
+    <div class="steps">
+      {% set order = ["draft", "reviewed", "ready"] %}{% set now = order.index(a.state) %}
+      {% for st in order %}<span class="{{ 'now' if loop.index0 == now else ('done' if loop.index0 < now else '') }}">{{ st }}</span>{% if not loop.last %}<span class="arrow">→</span>{% endif %}{% endfor %}
+      <span class="arrow">·</span><span>sent: no</span>
+    </div>
+  </div>
+  <details open><summary>Department briefing (English)</summary><pre class="brief">{{ a.briefing_en }}</pre></details>
+  <div class="grid g2" style="margin-top:10px">
+    <div><strong>Urdu</strong> <span class="small">{{ d.lang_note }}</span>
+      <p class="rtl" lang="ur">{{ a.message_ur }}</p>
+      {% if a.audio_ur %}<audio controls preload="none" src="/shinghar/{{ a.audio_ur }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
+    <div><strong>Pashto</strong> <span class="small">{{ d.lang_note }}</span>
+      <p class="rtl" lang="ps">{{ a.message_ps }}</p>
+      {% if a.audio_ps %}<audio controls preload="none" src="/shinghar/{{ a.audio_ps }}"></audio>{% else %}<p class="small">Voice: not built.</p>{% endif %}</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+    {% if a.state == "draft" %}
+    <form method="post" action="/shinghar/alerts/{{ a.alert_id }}/review" style="display:flex;gap:8px">
+      <input class="txt" name="reviewer" placeholder="Reviewer name" required>
+      <button class="btn primary" type="submit">Reviewed by expert</button></form>
+    {% endif %}
+    {% if a.state != "ready" %}
+    <form method="post" action="/shinghar/alerts/{{ a.alert_id }}/ready">
+      <button class="btn" type="submit" {{ "disabled title='A high alert must be reviewed first'" if a.band == "high" and a.state != "reviewed" }}>Mark ready to send</button></form>
+    {% endif %}
+    {% if a.state == "ready" %}<span class="small">Marked ready. This prototype has no sending code; the label is all that changes.</span>{% endif %}
+  </div>
+  {% if a.history %}<ul class="small">{% for h in a.history %}<li>{{ h.at }}: {{ h.event }}{% if h.by %} ({{ h.by }}){% endif %}</li>{% endfor %}</ul>{% endif %}
+</section>
+{% endfor %}
+</div>
+{% endblock %}

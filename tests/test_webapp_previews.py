@@ -50,7 +50,10 @@ def test_the_only_routes_that_can_change_anything_are_live_check_and_reload(clie
     test_webapp_scenes.py::test_reload_never_writes_the_source_database)."""
     changing = {(route.path, m) for route in client.app.routes for m in getattr(route, "methods", set())
                 if m not in {"GET", "HEAD"}}
-    assert changing == {("/live/check", "POST"), ("/reload", "POST")}, changing
+    # ShinGhar (2026-11-20): the two alert-review POSTs write only the review state in data/shinghar/alerts.json; nothing
+    # is sent (tests/test_shinghar_page.py::test_page_shows_cached_numbers_and_review_gate).
+    assert changing == {("/live/check", "POST"), ("/reload", "POST"),
+                        ("/shinghar/alerts/{alert_id}/review", "POST"), ("/shinghar/alerts/{alert_id}/ready", "POST")}, changing
 
 
 def test_real_pages_do_not_carry_the_preview_banner(client):

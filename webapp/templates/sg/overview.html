@@ -1,0 +1,130 @@
+{% extends "sg/base.html" %}
+{% block title %}Overview{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">{% endblock %}
+{% block main %}
+{% set s = d.summary %}
+<div class="sg-head">
+  <div><h1>{{ d.valley.valley }}: where to look first</h1>
+    <div class="muted">{{ s.villages }} villages, {{ s.lakes }} monitored glacial lakes, {{ "{:,.0f}".format(d.forest.forest_ha) }} ha of forest</div></div>
+</div>
+
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="card kpi accent-watch">
+    <div class="label">Villages: high / watch</div>
+    <div class="value">{{ s.bands.high }} / {{ s.bands.watch }}</div>
+    <div class="note">of {{ s.villages }}; {{ s.bands.low }} low</div>
+  </div>
+  <div class="card kpi accent-glacier">
+    <div class="label">Lakes growing fast</div>
+    {% if s.lakes_with_trend %}
+    <div class="value">{{ s.lakes_fast }} / {{ s.lakes_with_trend }}</div>
+    <div class="note">summer trend above {{ d.settings.fast | int }} %/yr</div>
+    {% else %}
+    <div class="value">–</div>
+    <div class="note">no lake has enough summers yet</div>
+    {% endif %}
+  </div>
+  <div class="card kpi accent-loss">
+    <div class="label">Vegetation loss in forest</div>
+    <div class="value">{{ "%.0f" | format(d.forest.ours_loss_ha) }} ha</div>
+    <div class="note">summer {{ d.forest.before_year }} → {{ d.forest.after_year }}, {{ d.patch_count }} patches ≥ {{ d.settings.min_patch }} ha</div>
+  </div>
+  <div class="card kpi accent-forest">
+    <div class="label">Alerts awaiting review</div>
+    <div class="value">{{ s.alerts_draft }}</div>
+    <div class="note">{{ s.alerts_total }} drafted · 0 sent</div>
+  </div>
+</div>
+
+<div class="grid g2">
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+      <h2>Valley map</h2>
+      <span class="small"><span id="map-mode">static map (our own data)</span> · <a href="/shinghar?offline=1">static</a> / <a href="/shinghar">online</a></span>
+    </div>
+    <div id="sg-map" class="sg-map" style="display:none"></div>
+    <img id="sg-png" class="sg-png" src="/shinghar/files/forest_overview.png" alt="Valley map drawn from our own data: relief, forest, vegetation loss, villages and lakes">
+    <div class="legend">
+      <span><i style="background:#3b7be0"></i>glacial lake (monitored)</span>
+      <span><i style="background:#2a5bd7;height:3px"></i>lake's downhill path (online map)</span>
+      <span><i style="background:#c0392b;border-radius:50%"></i>village: high</span>
+      <span><i style="background:#e0a90f;border-radius:50%"></i>watch</span>
+      <span><i style="background:#2e8b57;border-radius:50%"></i>low</span>
+      <span><i style="background:#dc1e1e"></i>loss: NDVI + Hansen</span>
+      <span><i style="background:#c828c8"></i>loss: our NDVI only</span>
+      <span><i style="background:#faaa1e"></i>loss: Hansen only</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Villages ranked</h2>
+    <ul class="rank-list">
+      {% for r in d.risk.results %}
+      <li>
+        <span class="pos">{{ loop.index }}</span>
+        <span>
+          <a href="/shinghar/villages#v-{{ r.slug }}"><strong>{{ r.village.name }}</strong></a>
+          <span class="small">{{ r.village.area }}</span> <span class="band {{ r.band }}">{{ r.band }}</span>
+          <div class="meter"><span class="{{ r.band }}" style="width:{{ r.score }}%"></span></div>
+          <div class="small" style="margin-top:4px">{{ r.headline }}</div>
+        </span>
+        <span class="score">{{ "%.0f" | format(r.score) }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<div class="grid g3" style="margin-top:18px">
+  <a class="card layer" href="/shinghar/forest">
+    <div class="kicker" style="color:var(--loss)">Forest layer</div>
+    <h3 style="margin-top:6px">{{ d.patch_count }} vegetation-loss sites ranked for ranger visits</h3>
+    <p class="small">Our Sentinel-2 NDVI change {{ d.forest.before_year }}→{{ d.forest.after_year }}, checked against Hansen Global Forest Change.
+      Top site: {{ "%.1f" | format(d.patches[0].area_ha) }} ha on a {{ "%.0f" | format(d.patches[0].mean_slope_deg) }}° slope near {{ d.patches[0].nearest_settlement }}.</p>
+  </a>
+  <a class="card layer" href="/shinghar/lakes">
+    <div class="kicker" style="color:var(--glacier)">Glacier layer</div>
+    <h3 style="margin-top:6px">{{ s.lakes }} glacial lakes measured since 2019</h3>
+    <p class="small">{% for code, g in d.glacier.items() %}{{ g.name.split(" (")[0] }}: {% if g.trend.growth_pct_per_yr is not none %}{{ "%+.1f" | format(g.trend.growth_pct_per_yr) }} %/yr{% else %}trend pending{% endif %}{{ "; " if not loop.last }}{% endfor %}.</p>
+  </a>
+  <a class="card layer" href="/shinghar/alerts">
+    <div class="kicker" style="color:var(--forest)">Alert layer</div>
+    <h3 style="margin-top:6px">{{ s.alerts_total }} draft alerts, {{ s.alerts_draft }} awaiting expert review</h3>
+    <p class="small">English briefing for PDMA, district and Forest Department; Urdu and Pashto messages with voice. Nothing is sent.</p>
+  </a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+/* Online: Leaflet + OpenStreetMap tiles over our own GeoJSON. Offline, or with ?offline=1: the static PNG stays. */
+(function () {
+  if (typeof L === "undefined" || /[?&]offline=1/.test(location.search)) { return; }
+  var el = document.getElementById("sg-map"), png = document.getElementById("sg-png"), mode = document.getElementById("map-mode");
+  el.style.display = "block"; png.style.display = "none"; mode.textContent = "online map (OpenStreetMap tiles + our data)";
+  var map = L.map(el, {scrollWheelZoom: false});
+  var tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 17, attribution: "&copy; OpenStreetMap contributors"}).addTo(map);
+  var failed = 0;
+  tiles.on("tileerror", function () { failed += 1; if (failed > 6) { el.style.display = "none"; png.style.display = "block"; mode.textContent = "static map (our own data)"; } });
+  var colour = {both: "#dc1e1e", ndvi_only: "#c828c8", hansen_only: "#faaa1e"};
+  var villages = {{ d.risk.results | tojson }};
+  var lakes = {{ d.glacier | tojson }};
+  var group = L.featureGroup().addTo(map);
+  fetch("/shinghar/files/forest_patches.geojson").then(function (r) { return r.json(); }).then(function (g) {
+    L.geoJSON(g, {style: function (f) { return {color: colour[f.properties.source], weight: 1, fillOpacity: 0.6}; },
+      onEachFeature: function (f, layer) { var p = f.properties; layer.bindPopup("Site rank " + p.rank + ": " + p.area_ha + " ha, " +
+        p.source.replace("_", " ") + (p.hansen_main_year ? ", Hansen " + p.hansen_main_year : "")); }}).addTo(map);
+  });
+  fetch("/shinghar/files/lake_paths.geojson").then(function (r) { return r.json(); }).then(function (g) {
+    L.geoJSON(g, {style: {color: "#2a5bd7", weight: 2, dashArray: "6 4"}}).addTo(map);
+  });
+  Object.keys(lakes).forEach(function (code) { var l = lakes[code];
+    L.circleMarker([l.lat, l.lon], {radius: 8, color: "#1d3f9e", fillColor: "#3b7be0", fillOpacity: 0.9}).addTo(group).bindPopup(l.name); });
+  var bc = {high: "#c0392b", watch: "#e0a90f", low: "#2e8b57"};
+  villages.forEach(function (r) { var v = r.village;
+    L.circleMarker([v.lat, v.lon], {radius: 7, color: "#222", fillColor: bc[r.band], fillOpacity: 0.95}).addTo(group)
+      .bindPopup("<b>" + v.name + "</b>: " + Math.round(r.score) + "/100 (" + r.band + ")"); });
+  map.fitBounds(group.getBounds().pad(0.15));
+})();
+</script>
+{% endblock %}

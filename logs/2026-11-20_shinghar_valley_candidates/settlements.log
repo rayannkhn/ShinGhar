@@ -1,0 +1,42 @@
+
+Attention required for FAO/GAUL/2015/level2! You are using a deprecated asset.
+To make sure your code keeps working, please update it.
+This dataset has been superseded by FAO/GAUL/2025/level2
+
+Learn more: https://developers.google.com/earth-engine/datasets/catalog/FAO_GAUL_2015_level2
+
+SA {'district': 'Upper Dir District', 'province': 'North-West Frontier'}
+SB {'district': 'Swat District', 'province': 'North-West Frontier'}
+SC {'district': 'Swat District', 'province': 'North-West Frontier'}
+SD {'district': 'Swat District', 'province': 'North-West Frontier'}
+SE {'district': 'Swat District', 'province': 'North-West Frontier'}
+SF {'district': 'Swat District', 'province': 'North-West Frontier'}
+SG {'district': 'Administrative unit not available', 'province': 'Administrative unit not available'}
+SH {'district': 'Kohistan District', 'province': 'North-West Frontier'}
+SI {'district': 'Swat District', 'province': 'North-West Frontier'}
+SJ {'district': 'Kohistan District', 'province': 'North-West Frontier'}
+built  10.02 ha  35.4761 N 72.5831 E  elev  2051 m  trees<=3km    2788 ha (54.1%)  Hansen loss<=3km 21.64 ha  Swat District
+built   2.62 ha  35.4769 N 72.2440 E  elev  2052 m  trees<=3km    1764 ha (47.5%)  Hansen loss<=3km  3.95 ha  Upper Dir District
+built   1.44 ha  35.5376 N 72.6780 E  elev  2401 m  trees<=3km    1313 ha (36.1%)  Hansen loss<=3km  0.18 ha  Swat District
+built   1.39 ha  35.5432 N 72.6636 E  elev  2289 m  trees<=3km    1345 ha (37.8%)  Hansen loss<=3km  0.18 ha  Swat District
+built   1.30 ha  35.4160 N 72.1782 E  elev  1889 m  trees<=3km    2477 ha (69.7%)  Hansen loss<=3km  2.25 ha  Upper Dir District
+built   1.21 ha  35.4477 N 72.5984 E  elev  1945 m  trees<=3km    1961 ha (55.2%)  Hansen loss<=3km 14.73 ha  Swat District
+built   1.69 ha  35.4908 N 72.4699 E  elev  2259 m  trees<=3km    2187 ha (62.7%)  Hansen loss<=3km  0.99 ha  Swat District
+built   1.06 ha  35.4087 N 72.1774 E  elev  1821 m  trees<=3km    2515 ha (69.7%)  Hansen loss<=3km  2.60 ha  Upper Dir District
+built   0.91 ha  35.5039 N 72.5836 E  elev  2067 m  trees<=3km    2169 ha (61.6%)  Hansen loss<=3km  5.98 ha  Swat District
+built   0.87 ha  35.5402 N 72.6682 E  elev  2315 m  trees<=3km    1283 ha (38.1%)  Hansen loss<=3km  0.18 ha  Swat District
+built   0.75 ha  35.4303 N 72.2666 E  elev  2117 m  trees<=3km    2549 ha (75.4%)  Hansen loss<=3km  2.18 ha  Upper Dir District
+built   0.62 ha  35.4579 N 72.5873 E  elev  2122 m  trees<=3km    1588 ha (48.5%)  Hansen loss<=3km 14.72 ha  Swat District
+built   0.62 ha  35.4263 N 72.1871 E  elev  1833 m  trees<=3km    2168 ha (64.2%)  Hansen loss<=3km  6.11 ha  Upper Dir District
+built   0.75 ha  35.4401 N 72.6012 E  elev  1963 m  trees<=3km    1934 ha (59.7%)  Hansen loss<=3km 14.91 ha  Swat District
+built   0.44 ha  35.4911 N 72.4601 E  elev  2261 m  trees<=3km    2045 ha (61.6%)  Hansen loss<=3km  3.05 ha  Swat District
+built   0.63 ha  35.5145 N 72.2439 E  elev  2217 m  trees<=3km    2018 ha (59.8%)  Hansen loss<=3km 12.48 ha  Upper Dir District
+built   0.52 ha  35.4365 N 72.2153 E  elev  1888 m  trees<=3km    1914 ha (56.7%)  Hansen loss<=3km  5.12 ha  Upper Dir District
+built   0.48 ha  35.5274 N 72.6434 E  elev  2151 m  trees<=3km    1348 ha (41.7%)  Hansen loss<=3km  0.00 ha  Swat District
+built   0.47 ha  35.4576 N 72.5997 E  elev  1952 m  trees<=3km    1675 ha (51.0%)  Hansen loss<=3km 13.11 ha  Swat District
+built   0.51 ha  35.4886 N 72.2491 E  elev  2122 m  trees<=3km    1637 ha (49.4%)  Hansen loss<=3km  4.40 ha  Upper Dir District
+built   0.49 ha  35.4931 N 72.2482 E  elev  2162 m  trees<=3km    1627 ha (51.1%)  Hansen loss<=3km  4.40 ha  Upper Dir District
+built   0.50 ha  35.3580 N 72.6057 E  elev  1720 m  trees<=3km    2309 ha (72.7%)  Hansen loss<=3km  8.07 ha  Swat District
+built   0.69 ha  35.4027 N 72.6048 E  elev  1851 m  trees<=3km    1940 ha (61.4%)  Hansen loss<=3km  4.67 ha  Swat District
+built   0.44 ha  35.5766 N 72.4211 E  elev  2520 m  trees<=3km     499 ha (15.5%)  Hansen loss<=3km  0.18 ha  Swat District
+built   0.57 ha  35.4068 N 72.6028 E  elev  1854 m  trees<=3km    1972 ha (61.7%)  Hansen loss<=3km  4.74 ha  Swat District

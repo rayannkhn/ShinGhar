@@ -1,0 +1,197 @@
+{
+ "KLN": {
+  "name": "Kalam north lake (unnamed, 3,345 m)",
+  "lon": 72.51194,
+  "lat": 35.64618,
+  "trend": {
+   "yearly": [
+    {
+     "year": 2019,
+     "median_ha": 29.18,
+     "n": 8
+    },
+    {
+     "year": 2020,
+     "median_ha": 29.52,
+     "n": 6
+    },
+    {
+     "year": 2021,
+     "median_ha": 29.57,
+     "n": 8
+    },
+    {
+     "year": 2022,
+     "median_ha": 30.5,
+     "n": 14
+    },
+    {
+     "year": 2023,
+     "median_ha": 29.39,
+     "n": 12
+    },
+    {
+     "year": 2024,
+     "median_ha": 29.5,
+     "n": 7
+    },
+    {
+     "year": 2025,
+     "median_ha": 30.01,
+     "n": 15
+    },
+    {
+     "year": 2026,
+     "median_ha": 29.84,
+     "n": 13
+    }
+   ],
+   "skipped_years": [],
+   "slope_ha_per_yr": 0.068,
+   "growth_pct_per_yr": 0.23,
+   "fast_expansion": false,
+   "first_ha": 29.18,
+   "last_ha": 29.84,
+   "note": "8 summers (2019-2026), median 29.2 -> 29.8 ha; trend +0.07 ha/yr = +0.2 %/yr (not above the 5 %/yr flag)."
+  },
+  "anomaly": {
+   "z": -4.544228458420668,
+   "baseline_ha": 29.32390243902439,
+   "date": "2026-10-31",
+   "extent_ha": 27.99
+  },
+  "optical_ok": 139,
+  "optical_scenes": 1191,
+  "newest_scene": "2026-11-20T05:59:18+00:00"
+ },
+ "UTA": {
+  "name": "Utror lake A (unnamed, 3,028 m)",
+  "lon": 72.43293,
+  "lat": 35.41921,
+  "trend": {
+   "yearly": [
+    {
+     "year": 2019,
+     "median_ha": 41.61,
+     "n": 6
+    },
+    {
+     "year": 2020,
+     "median_ha": 44.42,
+     "n": 5
+    },
+    {
+     "year": 2021,
+     "median_ha": 41.08,
+     "n": 10
+    },
+    {
+     "year": 2022,
+     "median_ha": 45.66,
+     "n": 5
+    },
+    {
+     "year": 2023,
+     "median_ha": 44.2,
+     "n": 15
+    },
+    {
+     "year": 2024,
+     "median_ha": 44.24,
+     "n": 11
+    },
+    {
+     "year": 2025,
+     "median_ha": 42.5,
+     "n": 14
+    },
+    {
+     "year": 2026,
+     "median_ha": 41.66,
+     "n": 14
+    }
+   ],
+   "skipped_years": [],
+   "slope_ha_per_yr": -0.015,
+   "growth_pct_per_yr": -0.03,
+   "fast_expansion": false,
+   "first_ha": 41.61,
+   "last_ha": 41.66,
+   "note": "8 summers (2019-2026), median 41.6 -> 41.7 ha; trend -0.01 ha/yr = -0.0 %/yr (not above the 5 %/yr flag)."
+  },
+  "anomaly": {
+   "z": -0.2018763884237934,
+   "baseline_ha": 32.69444444444444,
+   "date": "2026-11-08",
+   "extent_ha": 32.11
+  },
+  "optical_ok": 155,
+  "optical_scenes": 1195,
+  "newest_scene": "2026-11-20T05:59:18+00:00"
+ },
+ "UTB": {
+  "name": "Utror lake B (unnamed, 3,183 m)",
+  "lon": 72.45197,
+  "lat": 35.43385,
+  "trend": {
+   "yearly": [
+    {
+     "year": 2019,
+     "median_ha": 17.16,
+     "n": 14
+    },
+    {
+     "year": 2020,
+     "median_ha": 17.2,
+     "n": 13
+    },
+    {
+     "year": 2021,
+     "median_ha": 16.27,
+     "n": 21
+    },
+    {
+     "year": 2022,
+     "median_ha": 17.17,
+     "n": 10
+    },
+    {
+     "year": 2023,
+     "median_ha": 16.96,
+     "n": 16
+    },
+    {
+     "year": 2024,
+     "median_ha": 16.69,
+     "n": 11
+    },
+    {
+     "year": 2025,
+     "median_ha": 17.06,
+     "n": 21
+    },
+    {
+     "year": 2026,
+     "median_ha": 16.82,
+     "n": 17
+    }
+   ],
+   "skipped_years": [],
+   "slope_ha_per_yr": -0.024,
+   "growth_pct_per_yr": -0.14,
+   "fast_expansion": false,
+   "first_ha": 17.16,
+   "last_ha": 16.82,
+   "note": "8 summers (2019-2026), median 17.2 -> 16.8 ha; trend -0.02 ha/yr = -0.1 %/yr (not above the 5 %/yr flag)."
+  },
+  "anomaly": {
+   "z": -1.2616469248424729,
+   "baseline_ha": 10.241333333333333,
+   "date": "2026-10-09",
+   "extent_ha": 6.9
+  },
+  "optical_ok": 173,
+  "optical_scenes": 1194,
+  "newest_scene": "2026-11-20T05:59:18+00:00"
+ }
+}

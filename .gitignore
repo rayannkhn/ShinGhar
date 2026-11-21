@@ -14,3 +14,4 @@ data/archive_v1/
 .webapp/
 # Local editor/app config (machine-specific paths)
 .claude/
+data/shinghar/*.tif

@@ -1,0 +1,53 @@
+{% extends "sg/base.html" %}
+{% block title %}Method & limits{% endblock %}
+{% block main %}
+<div class="sg-head"><div><h1>Method and honest limits</h1>
+  <div class="muted">What each layer uses, what is real, what is cached, and what is not built</div></div></div>
+
+<div class="grid g2" style="margin-bottom:18px">
+  <section class="card">
+    <h2>Data and method</h2>
+    <table class="t">
+      <tr><th>Layer</th><th>Data</th><th>Method</th></tr>
+      <tr><td>Glacial lakes</td><td>Sentinel-2 L2A, 2019 onwards</td><td>SailAb GLOF pipeline (our FYP), unchanged: NDWI &gt; 0.2, region growing from the lake centre, cloud/snow checks; seasonal z-score; summer-median trend</td></tr>
+      <tr><td>Forest</td><td>Sentinel-2 summer medians {{ d.forest.before_year }} / {{ d.forest.after_year }}; Hansen GFC {{ d.forest.hansen_asset.split("/")[-1] }}; ESA WorldCover 2021</td><td>NDVI drop &gt; {{ d.settings.ndvi }} inside forest; connected patches ≥ {{ d.settings.min_patch }} ha; agreement with Hansen</td></tr>
+      <tr><td>Terrain, paths</td><td>Copernicus GLO-30 DEM (2024)</td><td>Slope; downhill path from each lake (sink filling + steepest descent, FYP code)</td></tr>
+      <tr><td>Villages</td><td>JRC GHSL built-up 2020; names from OpenStreetMap</td><td>Built-up clusters ≥ 3 ha footprint in the valley</td></tr>
+      <tr><td>Risk</td><td>All of the above</td><td>Weighted sum of five scaled parts, fixed weights (Villages page)</td></tr>
+      <tr><td>Alerts</td><td>Risk results</td><td>Fixed templates; Urdu/Pashto voice by edge-tts (Microsoft neural voices), saved as MP3</td></tr>
+    </table>
+    <p class="small">All satellite data via Google Earth Engine (not Microsoft Planetary Computer). Valley chosen from Chitral and Upper Swat candidates:
+      Chitral had almost no forest (≤ 84 ha per search area). Evidence: <span class="num">logs/2026-11-20_shinghar_valley_candidates/</span>.</p>
+  </section>
+  <section class="card">
+    <h2>Honest limits</h2>
+    <ul>
+      <li><strong>Screening, not forecasting.</strong> Weights and thresholds are judgement calls, not calibrated on past events. No field validation.</li>
+      <li><strong>Clouds and snow:</strong> lake areas need clear, snow-free days, so the record is mostly June–October.</li>
+      <li><strong>Resolution:</strong> 10 m Sentinel-2, 30 m DEM and Hansen, 100 m GHSL. Sites under {{ d.settings.min_patch }} ha are not reported.</li>
+      <li><strong>Vegetation loss ≠ deforestation:</strong> the cause is not known. Only {% if d.forest.agreement.ours_confirmed_by_hansen is not none %}{{ "%.1f" | format(d.forest.agreement.ours_confirmed_by_hansen * 100) }} %{% else %}–{% endif %} of our loss is also in Hansen.</li>
+      <li><strong>Downhill path is one line</strong>, not a flood model: no depth, volume or timing.</li>
+      <li><strong>Lakes are unnamed</strong> in OpenStreetMap; village names and Urdu spellings need local checking.</li>
+      <li><strong>Urdu/Pashto</strong> text and voices are machine-generated; the Pashto voice is an Afghan voice and may not match Swat speech.</li>
+      <li><strong>Glacier layer reused</strong> from our final-year project (SailAb GLOF).</li>
+      <li><strong>Nothing is sent.</strong> "Ready" is only a label.</li>
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Real, cached, not built</h2>
+  <table class="t">
+    <tr><th>Part</th><th>Status</th></tr>
+    <tr><td>Lake areas, seasonal score, trend</td><td>Real, computed from Sentinel-2</td></tr>
+    <tr><td>Vegetation loss, Hansen agreement, site ranking</td><td>Real, computed</td></tr>
+    <tr><td>Visual check of the top 8 sites</td><td>Real images, judged by eye (not a field visit)</td></tr>
+    <tr><td>Downhill paths, village scores and reasons</td><td>Real, computed</td></tr>
+    <tr><td>Alert text and MP3s</td><td>Generated from templates; machine Urdu/Pashto</td></tr>
+    <tr><td>Everything shown in ShinGhar</td><td>Cached in <span class="num">data/shinghar/</span>, built {{ d.build_log.finished[:10] }}; works offline</td></tr>
+    <tr><td>Dynamic World layer</td><td><strong>Not built</strong></td></tr>
+    <tr><td>AI-written alert text</td><td><strong>Not built</strong> (templates used)</td></tr>
+    <tr><td>Sending alerts</td><td><strong>Not built, on purpose</strong></td></tr>
+  </table>
+</section>
+{% endblock %}

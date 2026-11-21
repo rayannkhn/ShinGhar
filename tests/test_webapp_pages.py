@@ -51,7 +51,7 @@ def write_lake_window(path, lon, lat, rows=30, cols=30):
 def test_dashboard_shows_the_real_counts(client):
     html = client.get("/").text
     text = visible_text(html)
-    assert "Lakes monitored 8 " in text
+    assert "Lakes monitored 11 " in text
     assert "Scenes recorded 5 5 optical, 0 radar" in text
     assert "40% 2 of 5 optical scenes" in text                       # too cloudy: 2 of 5 OPTICAL scenes
     assert "Usable measurements 2 2 of 3 measurement attempts passed every check (optical 2 of 3, radar 0 of 0)." in text
@@ -64,8 +64,9 @@ def test_dashboard_shows_the_real_counts(client):
 
 def test_dashboard_banners_come_from_the_data(client):
     text = visible_text(client.get("/").text)
-    assert ("for 8 of 8 lakes (Karambar Lake, Atro Sar, Shishper glacier lake, Darkut glacial lake, Borith Lake, "
-            "Passu glacier lake, Tsho Rolpa, Thulagi lake)") in text                               # no lake has a usable image in 7 days
+    assert ("for 11 of 11 lakes (Karambar Lake, Atro Sar, Shishper glacier lake, Darkut glacial lake, Borith Lake, "
+            "Passu glacier lake, Tsho Rolpa, Thulagi lake, Utror lake A (unnamed, 3,028 m), Utror lake B (unnamed, 3,183 m), "
+            "Kalam north lake (unnamed, 3,345 m))") in text                               # no lake has a usable image in 7 days
     assert "The latest pipeline run (run 2) recorded an error." in text
     assert "EarthEngineError: quota" in text
 
@@ -279,7 +280,9 @@ from html_check import unbalanced_tags  # noqa: E402  (also applied to every HTM
 
 PAGE_URLS = ["/", "/lakes/KRB", "/lakes/ATS", "/lakes/KRB?range=12m", "/lakes/KRB?range=24m", "/lakes/KRB?page=2",
              "/lakes/XXX", "/live", "/preview/confirm-advisory", "/preview/delivery-status", "/preview/risk-threshold",
-             "/preview/nope", "/scenes/1", "/scenes/2", "/scenes/3", "/scenes/6", "/scenes/7", "/scenes/9999"]
+             "/preview/nope", "/scenes/1", "/scenes/2", "/scenes/3", "/scenes/6", "/scenes/7", "/scenes/9999",
+             "/shinghar", "/shinghar/villages", "/shinghar/forest", "/shinghar/lakes", "/shinghar/alerts",
+             "/shinghar/method", "/shinghar/nope"]   # ShinGhar pages (2026-11-20); with cached data it is also checked in test_shinghar_page.py
 
 
 @pytest.mark.parametrize("url", PAGE_URLS)

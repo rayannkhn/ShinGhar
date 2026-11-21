@@ -35,6 +35,9 @@
       <a href="/live" class="{{ 'active' if nav == 'live' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>
         Live check</a>
+      <a href="/shinghar" class="{{ 'active' if nav == 'shinghar' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20l6-10 4 6 3-4 5 8z"/><circle cx="17" cy="6" r="2"/></svg>
+        ShinGhar valley</a>
       {% for country, group in nav_lakes | groupby("country") | sort(attribute="grouper", reverse=True) %}
       <div class="section">{{ "Lakes" if country == "Pakistan" else country ~ " (test lakes)" }}</div>
       {% for l in group %}

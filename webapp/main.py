@@ -28,6 +28,7 @@ from fastapi.templating import Jinja2Templates
 from sailab import queries
 from webapp import images, pages, scene_view
 from webapp import algorithms, flowchart, run_note
+from webapp import shinghar_page
 from webapp.walkthrough import copernicus_url
 from webapp.live import LiveChecker, explain_error, warm_esa_cache
 
@@ -461,5 +462,9 @@ def create_app(source_db: Path | None = None, work_dir: Path | None = None,
         if not png.is_file():
             images.render_scene_png(tif, found, png)
         return FileResponse(png, media_type="image/png")
+
+    # ShinGhar pilot-valley page (hackathon prototype, 2026-11-20): reads cached files only; see webapp/shinghar_page.py
+    shinghar_page.register(app, render, read_only, today,
+                           Path(os.environ.get("SHINGHAR_DATA_DIR", REPO / "data" / "shinghar")))
 
     return app

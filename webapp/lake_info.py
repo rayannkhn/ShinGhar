@@ -145,6 +145,26 @@ FACTS: dict[str, LakeFacts] = {
                     "being prepared, but no warning system covers this lake yet.", ("annapurna-thu", "ktm-2026"))],
         history=[],
         gaps="No outburst of this lake has happened."),
+    # ShinGhar pilot lakes (2026-11-20). Places come from FAO GAUL 2015 and OpenStreetMap Nominatim at the lake centre;
+    # no published source was searched for or found yet, so nothing else is claimed.
+    "UTA": LakeFacts(
+        place="Utror, Kalam Tehsil, Swat District, Khyber Pakhtunkhwa, Pakistan (from its coordinates)",
+        kind="Lake near glaciers at 3,028 m (from satellite data)",
+        about=[], history=[],
+        gaps="No published source found yet, and no name in OpenStreetMap. ShinGhar pilot lake; everything shown comes "
+             "from this system's own measurements."),
+    "UTB": LakeFacts(
+        place="Utror, Kalam Tehsil, Swat District, Khyber Pakhtunkhwa, Pakistan (from its coordinates)",
+        kind="Lake near glaciers at 3,183 m (from satellite data)",
+        about=[], history=[],
+        gaps="No published source found yet, and no name in OpenStreetMap. ShinGhar pilot lake; everything shown comes "
+             "from this system's own measurements."),
+    "KLN": LakeFacts(
+        place="North of Kalam, Kalam Tehsil, Swat District, Khyber Pakhtunkhwa, Pakistan (from its coordinates)",
+        kind="Lake near glaciers at 3,345 m (from satellite data)",
+        about=[], history=[],
+        gaps="No published source found yet, and no name in OpenStreetMap. ShinGhar pilot lake; everything shown comes "
+             "from this system's own measurements."),
 }
 
 # A radar orbit pass whose median differs from the optical median by more than this is called out.

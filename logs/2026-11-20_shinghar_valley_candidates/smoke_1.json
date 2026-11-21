@@ -1,0 +1,258 @@
+{
+ "SA": {
+  "label": "Utror-Gabral 77.5 ha, 3535 m",
+  "lon": 72.34591,
+  "lat": 35.36737,
+  "scenes_listed": 161,
+  "tested": [
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (4371 px) borders 795 snow/ice pixels"
+   ],
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (4412 px) borders 872 snow/ice pixels"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=103, col=102) is not water (NDWI <= 0.2)"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=103, col=102) is not water (NDWI <= 0.2)"
+   ],
+   [
+    "2025-07-05",
+    0.0,
+    "ok",
+    74.59,
+    "7459 water pixels connected to the centre"
+   ],
+   [
+    "2025-08-22",
+    0.0,
+    "ok",
+    74.41,
+    "7441 water pixels connected to the centre"
+   ],
+   [
+    "2025-08-27",
+    0.0,
+    "ok",
+    73.94,
+    "7394 water pixels connected to the centre"
+   ],
+   [
+    "2025-09-01",
+    0.0,
+    "ok",
+    74.35,
+    "7435 water pixels connected to the centre"
+   ]
+  ]
+ },
+ "SB": {
+  "label": "Utror-Gabral 31.6 ha, 4077 m",
+  "lon": 72.29714,
+  "lat": 35.63584,
+  "scenes_listed": 161,
+  "tested": [
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=102, col=102) is not water (NDWI <= 0.2)"
+   ],
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=102, col=102) is not water (NDWI <= 0.2)"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (2067 px) borders 2270 snow/ice pixels"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (2064 px) borders 2269 snow/ice pixels"
+   ],
+   [
+    "2025-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (1871 px) borders 29 snow/ice pixels"
+   ],
+   [
+    "2025-07-01",
+    0.0,
+    "ok",
+    20.25,
+    "2025 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-03",
+    0.0,
+    "ok",
+    25.9,
+    "2590 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (2585 px) borders 27 snow/ice pixels"
+   ]
+  ]
+ },
+ "SC": {
+  "label": "Utror-Gabral 18.7 ha, 3865 m",
+  "lon": 72.23468,
+  "lat": 35.60824,
+  "scenes_listed": 161,
+  "tested": [
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (61 px) borders 104 snow/ice pixels"
+   ],
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (63 px) borders 113 snow/ice pixels"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "lake region (523 px) borders 58 no-data pixels; it may be cut off"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "lake region (509 px) borders 64 no-data pixels; it may be cut off"
+   ],
+   [
+    "2025-07-01",
+    0.0,
+    "ok",
+    11.91,
+    "1191 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "lake region (1066 px) borders 54 no-data pixels; it may be cut off"
+   ],
+   [
+    "2025-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=103, col=102) is not water (NDWI <= 0.2)"
+   ],
+   [
+    "2025-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "centre pixel Pixel(row=103, col=102) is not water (NDWI <= 0.2)"
+   ]
+  ]
+ },
+ "SD": {
+  "label": "Utror-Gabral 18.3 ha, 3183 m",
+  "lon": 72.45197,
+  "lat": 35.43385,
+  "scenes_listed": 80,
+  "tested": [
+   [
+    "2024-07-01",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (1603 px) borders 78 snow/ice pixels"
+   ],
+   [
+    "2024-07-03",
+    0.0,
+    "insufficient_observation",
+    null,
+    "check C: lake region (1801 px) borders 69 snow/ice pixels"
+   ],
+   [
+    "2024-07-26",
+    0.0,
+    "ok",
+    17.14,
+    "1714 water pixels connected to the centre"
+   ],
+   [
+    "2024-08-10",
+    0.0,
+    "ok",
+    17.54,
+    "1754 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-01",
+    0.0,
+    "ok",
+    11.39,
+    "1139 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-03",
+    0.0,
+    "ok",
+    17.71,
+    "1771 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-05",
+    0.0,
+    "ok",
+    17.88,
+    "1788 water pixels connected to the centre"
+   ],
+   [
+    "2025-07-11",
+    0.0,
+    "ok",
+    17.49,
+    "1749 water pixels connected to the centre"
+   ]
+  ]
+ }
+}

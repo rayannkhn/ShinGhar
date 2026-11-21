@@ -1,0 +1,30 @@
+SE (Utror-Gabral 45.3 ha, 3028 m) 2024-06-30..2024-09-30: 36 scenes, 13 clear over the lake
+   2024-07-03 cloud  0.0%  insufficient_observation None  check C: lake region (4585 px) borders 23 snow/ice pixels
+   2024-07-26 cloud  0.0%  ok                       45.15  4515 water pixels connected to the centre
+   2024-08-10 cloud  0.0%  ok                       44.99  4499 water pixels connected to the centre
+   2024-09-11 cloud  0.0%  ok                       44.15  4415 water pixels connected to the centre
+SE (Utror-Gabral 45.3 ha, 3028 m) 2025-06-30..2025-09-30: 44 scenes, 18 clear over the lake
+   2025-07-01 cloud  0.0%  ok                       11.57  1157 water pixels connected to the centre
+   2025-07-05 cloud  0.0%  ok                       45.35  4535 water pixels connected to the centre
+   2025-08-05 cloud  0.0%  ok                       43.13  4313 water pixels connected to the centre
+   2025-09-01 cloud  0.0%  ok                       42.04  4204 water pixels connected to the centre
+SF (Kalam 34.2 ha, 3345 m) 2024-06-30..2024-09-30: 36 scenes, 15 clear over the lake
+   2024-07-01 cloud  0.0%  insufficient_observation None  check C: lake region (2289 px) borders 820 snow/ice pixels
+   2024-07-03 cloud  0.0%  insufficient_observation None  check C: lake region (3063 px) borders 521 snow/ice pixels
+   2024-07-06 cloud  0.0%  insufficient_observation None  check C: lake region (2993 px) borders 704 snow/ice pixels
+   2024-07-26 cloud  0.0%  insufficient_observation None  check C: lake region (2942 px) borders 269 snow/ice pixels
+SF (Kalam 34.2 ha, 3345 m) 2025-06-30..2025-09-30: 44 scenes, 20 clear over the lake
+   2025-07-01 cloud  0.0%  insufficient_observation None  check C: lake region (2848 px) borders 80 snow/ice pixels
+   2025-07-03 cloud  0.0%  ok                       29.58  2958 water pixels connected to the centre
+   2025-07-05 cloud  0.0%  ok                       30.4  3040 water pixels connected to the centre
+   2025-07-28 cloud  0.0%  ok                       30.51  3051 water pixels connected to the centre
+SI (Kalam 18.3 ha, 3887 m) 2024-06-30..2024-09-30: 36 scenes, 8 clear over the lake
+   2024-07-01 cloud  0.0%  insufficient_observation None  centre pixel Pixel(row=102, col=102) is not water (NDWI <= 0.2)
+   2024-07-03 cloud  0.0%  insufficient_observation None  centre pixel Pixel(row=102, col=102) is not water (NDWI <= 0.2)
+   2024-09-09 cloud  0.0%  insufficient_observation None  check C: lake region (1776 px) borders 19 snow/ice pixels
+   2024-09-21 cloud  0.0%  insufficient_observation None  check C: lake region (1770 px) borders 22 snow/ice pixels
+SI (Kalam 18.3 ha, 3887 m) 2025-06-30..2025-09-30: 44 scenes, 15 clear over the lake
+   2025-07-03 cloud  0.0%  ok                       17.65  1765 water pixels connected to the centre
+   2025-07-05 cloud  0.0%  ok                       17.82  1782 water pixels connected to the centre
+   2025-07-28 cloud  0.0%  insufficient_observation None  check C: lake region (1783 px) borders 4 snow/ice pixels
+   2025-08-05 cloud  0.0%  ok                       17.63  1763 water pixels connected to the centre

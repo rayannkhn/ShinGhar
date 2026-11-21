@@ -199,6 +199,46 @@ SEED_LAKES = (
         "detects_drainage": 0,
         "country": "Nepal",
     },
+    # ShinGhar pilot valley (added 2026-11-20, agreed with the project owner): Utror-Kalam, Kalam Tehsil, Swat District,
+    # Khyber Pakhtunkhwa. Chosen and smoke-tested with the pipeline's own download + measure_scene on real summer
+    # 2024/2025 scenes: logs/2026-11-20_shinghar_valley_candidates/README.md. Centres: JRC GSW v1.4 max_extent
+    # centroids. No name in OpenStreetMap at any of the three centres; local names still to be confirmed.
+    # History from 2019 so the summer-median growth trend has 7 summers. detects_drainage 0: not validated here.
+    {
+        # Candidate "SE": max extent 45.3 ha, water in 92.5 % of JRC observations, 3,028 m; 7 of 8 test scenes usable
+        # (42.0-45.4 ha). Downhill path passes Kass (Utror) after 11.6 km.
+        "code": "UTA",
+        "name": "Utror lake A (unnamed, 3,028 m)",
+        "centre_lon": 72.43293,
+        "centre_lat": 35.41921,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 0,
+    },
+    {
+        # Candidate "SD": max extent 18.3 ha, 87.6 %, 3,183 m; 6 of 8 usable (17.1-17.9 ha). Path passes Kass after 9.8 km.
+        "code": "UTB",
+        "name": "Utror lake B (unnamed, 3,183 m)",
+        "centre_lon": 72.45197,
+        "centre_lat": 35.43385,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 0,
+    },
+    {
+        # Candidate "SF": max extent 34.2 ha, 93.3 %, 3,345 m, north of Kalam; 3 of 8 usable (29.6-30.5 ha; the
+        # others refused for snow touching the lake).
+        "code": "KLN",
+        "name": "Kalam north lake (unnamed, 3,345 m)",
+        "centre_lon": 72.51194,
+        "centre_lat": 35.64618,
+        "boundary_radius_m": 1000.0,
+        "growth_distance_limit_m": 1000.0,
+        "history_since": "2018-12-31",
+        "detects_drainage": 0,
+    },
 )
 
 

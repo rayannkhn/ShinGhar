@@ -130,7 +130,7 @@ def test_one_clear_and_one_cloudy_scene(repo):
 
     assert result.errors is None
     assert (result.lakes_processed, result.scenes_recorded, result.scenes_downloaded,
-            result.measurements, result.risk_scores) == (8, 2, 1, 1, 1)
+            result.measurements, result.risk_scores) == (11, 2, 1, 1, 1)
     assert client.downloads == ["20261021T0546_1_T43SCA"]
     _, db_path = repo
     scenes = rows(db_path, "SELECT * FROM scene ORDER BY acquired_at")
@@ -144,7 +144,7 @@ def test_one_clear_and_one_cloudy_scene(repo):
         ("insufficient_history", "anomaly_detector", None, None)
     [log_row] = rows(db_path, "SELECT * FROM run_log")
     assert log_row["finished_at"] is not None and log_row["errors"] is None
-    assert (log_row["lakes_processed"], log_row["scenes_downloaded"]) == (8, 1)
+    assert (log_row["lakes_processed"], log_row["scenes_downloaded"]) == (11, 1)
     assert not pipeline.resume_state_path(db_path).exists()
 
 
@@ -301,7 +301,7 @@ def test_a_failure_is_recorded_and_the_next_run_resumes_after_the_last_finished_
     resumed = run(repo, retry)
 
     assert resumed.errors is None
-    assert [code for code, _ in retry.listing_calls] == ["ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU"], "KRB was finished and must not be redone"
+    assert [code for code, _ in retry.listing_calls] == ["ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU", "UTA", "UTB", "KLN"], "KRB was finished and must not be redone"
     assert any("resuming after lake 1" in n for n in resumed.notes)
     assert len(rows(db_path, "SELECT * FROM measurement")) == 2
     assert not pipeline.resume_state_path(db_path).exists()
@@ -380,7 +380,7 @@ def test_the_real_client_signs_in_before_listing(repo, monkeypatch):
     result = pipeline.run_pipeline_once(db_path, tmp_path / "data", initial_since_date=date(2026, 10, 1))
 
     assert result.errors is None
-    assert order == ["init"] + [x for c in ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU"] for x in (c, c + " radar")]
+    assert order == ["init"] + [x for c in ["KRB", "ATS", "SHP", "DKT", "BRT", "PSU", "TRL", "THU", "UTA", "UTB", "KLN"] for x in (c, c + " radar")]
 
 
 # --- check F: enough same-month history before scoring ------------------------------------------
